@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Army Cadet Force — Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Public Sans',system-ui,sans-serif;background:radial-gradient(circle at 20% 0%,#2A3F86,#0D1B4C 60%);color:#fff;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);overflow-x:hidden}
+.wrap{max-width:560px;margin:0 auto;padding:20px 18px;min-height:100%;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.brand img{height:26px}.brand span{font-weight:800;letter-spacing:.06em;font-size:.85rem}
+.card{background:#fff;color:#0D1B4C;border-radius:18px;padding:22px}
+h1{font-size:1.4rem;margin-bottom:6px}p{color:#6B7A94;line-height:1.45}
+input{width:100%;font-size:18px;padding:14px;border:2px solid #D8DEE8;border-radius:12px;margin:14px 0 12px;font-family:inherit}
+.go{width:100%;background:#6B4FA8;color:#fff;border:0;border-radius:12px;padding:15px;font-size:1.05rem;font-weight:800;font-family:inherit}
+.go:disabled{opacity:.4}
+.reroll{background:#F0EAFB;color:#4A2F86;border:0;border-radius:100px;padding:8px 16px;font-weight:700;font-family:inherit;margin-top:8px}
+.me{display:flex;flex-direction:column;align-items:center;margin:14px 0 4px}
+.nick{font-weight:900;font-size:1.3rem;margin-top:10px}
+.av{display:inline-flex;width:60px;height:76px}.av svg{width:100%;height:100%;overflow:visible}
+.av.lg{width:120px;height:152px}.av.sm{width:26px;height:33px;vertical-align:middle}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.tile{background:#F7F9FC;border:2px solid #E6EAF0;border-radius:12px;padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;font-family:inherit;font-weight:700;font-size:.72rem;color:#0D1B4C}
+.tile.sel{border-color:#6B4FA8;background:#F0EAFB;transform:scale(1.04)}
+.tile.taken{opacity:.35;filter:grayscale(1)}.tile.taken span{color:#C74444}
+.bob{animation:bob 1.4s ease-in-out infinite}@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+.dance{animation:dance .7s ease-in-out infinite}@keyframes dance{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg) scale(1.12) translateY(-10px)}}
+
+.centre{text-align:center;margin:auto 0}
+.big{font-size:1.6rem;font-weight:900;margin:12px 0 6px}
+.muted{color:#B8CBEC}
+.qhead{display:flex;justify-content:space-between;align-items:center;color:#B8CBEC;font-size:.85rem;margin-bottom:10px;gap:8px}
+.bonus{display:inline-block;background:linear-gradient(90deg,#E3A21A,#E0473E);font-weight:900;padding:5px 12px;border-radius:100px;font-size:.8rem;letter-spacing:.06em;margin-bottom:8px}
+.q{font-size:1.2rem;font-weight:800;line-height:1.35;margin-bottom:6px}
+.hint{color:#C9B6F2;font-weight:800;font-size:.85rem;margin-bottom:6px}
+.opts{display:grid;gap:10px;margin-top:10px}
+.opt{border:0;border-radius:14px;padding:16px;color:#fff;font-size:1.02rem;font-weight:800;text-align:left;display:flex;gap:12px;align-items:center;min-height:64px;font-family:inherit;transition:transform .1s,opacity .2s;animation:slide .35s ease-out both}
+@keyframes slide{from{transform:translateY(14px);opacity:0}}
+.opt:active{transform:scale(.96)}.opt.sel{outline:4px solid #fff;transform:scale(1.02)}.opt.off{opacity:.3}
+.res{font-size:4rem;animation:pop .5s cubic-bezier(.3,1.6,.5,1)}@keyframes pop{from{transform:scale(0)}}
+.ok{color:#8FF5C0}.bad{color:#FF9A93}
+.pts{font-size:2rem;font-weight:900;color:#8FF5C0;animation:pop .5s .2s cubic-bezier(.3,1.6,.5,1) both}
+.flame{display:inline-block;background:linear-gradient(90deg,#FF8A00,#E0473E);border-radius:100px;padding:6px 14px;font-weight:900;margin-top:10px;animation:flick .8s ease-in-out infinite}
+@keyframes flick{50%{transform:scale(1.1) rotate(-3deg)}}
+.why{background:rgba(255,255,255,.1);border-radius:12px;padding:14px;margin-top:16px;line-height:1.45}
+.err{color:#C74444;margin-top:8px}
+.medal{font-size:3.4rem}
+.conf{position:fixed;top:-14px;width:9px;height:14px;border-radius:2px;animation:fall linear infinite;pointer-events:none}
+@keyframes fall{to{transform:translate(var(--x),110vh) rotate(720deg)}}
+</style></head><body>
+<div class="wrap">
+  <div class="brand"><img src="acf-logo.png" alt="" onerror="this.remove()"><span>ARMY CADET FORCE</span></div>
+  <div id="app"></div>
+</div>
+<script>
+// ===== Sector 3 quiz avatars: animals and mythical creatures in sports kit (drawn as SVG) =====
+const QZ_AVATARS = [
+ { id:'panda',   name:'Panda',   fur:'#FFFFFF', dark:'#222',    kit:'#D7263D', trim:'#FFFFFF', pat:'stripes', no:9,  hat:'headband', prop:'football' },
+ { id:'tiger',   name:'Tiger',   fur:'#F28C28', dark:'#2B1B0E', kit:'#5B2A86', trim:'#F6C343', pat:'plain',   no:23, hat:'none',     prop:'basketball' },
+ { id:'fox',     name:'Fox',     fur:'#E8672A', dark:'#3A1F10', kit:'#FFFFFF', trim:'#1F8A5B', pat:'plain',   no:1,  hat:'headband', prop:'racket' },
+ { id:'lion',    name:'Lion',    fur:'#F2B544', dark:'#8A4B14', kit:'#1F8A5B', trim:'#FFFFFF', pat:'hoops',   no:10, hat:'none',     prop:'rugby' },
+ { id:'frog',    name:'Frog',    fur:'#5DBB63', dark:'#1E5B25', kit:'#E0473E', trim:'#FFFFFF', pat:'plain',   no:7,  hat:'none',     prop:'gloves' },
+ { id:'penguin', name:'Penguin', fur:'#1F2A44', dark:'#111',    kit:'#2B5BD7', trim:'#F6C343', pat:'stripes', no:4,  hat:'helmet',   prop:'hockey' },
+ { id:'unicorn', name:'Unicorn', fur:'#FFF3FA', dark:'#C04A94', kit:'#9B5DE5', trim:'#FFFFFF', pat:'plain',   no:8,  hat:'unicorn',  prop:'volleyball' },
+ { id:'dragon',  name:'Dragon',  fur:'#3FA34D', dark:'#1C5A26', kit:'#111827', trim:'#E0473E', pat:'stripes', no:99, hat:'none',   prop:'football' },
+ { id:'bear',    name:'Bear',    fur:'#8B5A2B', dark:'#3E2410', kit:'#0E7C86', trim:'#FFFFFF', pat:'plain',   no:5,  hat:'cap',      prop:'baseball' },
+ { id:'koala',   name:'Koala',   fur:'#9AA3AE', dark:'#3C4048', kit:'#F6C343', trim:'#1F8A5B', pat:'hoops',   no:3,  hat:'none',     prop:'cricket' },
+ { id:'owl',     name:'Owl',     fur:'#9C6B3F', dark:'#4A2E14', kit:'#FFFFFF', trim:'#2B5BD7', pat:'plain',   no:11, hat:'headband', prop:'basketball' },
+ { id:'shark',   name:'Shark',   fur:'#6F8FAF', dark:'#2E3F52', kit:'#F28C28', trim:'#111827', pat:'plain',   no:6,  hat:'goggles',  prop:'none' },
+ { id:'pig',     name:'Pig',     fur:'#F7A8B8', dark:'#B5566B', kit:'#2B5BD7', trim:'#FFFFFF', pat:'stripes', no:2,  hat:'cap',      prop:'golf' },
+ { id:'monkey',  name:'Monkey',  fur:'#7A4B2A', dark:'#3B2212', kit:'#E0473E', trim:'#F6C343', pat:'plain',   no:12, hat:'helmet',   prop:'rugby' },
+ { id:'cat',     name:'Cat',     fur:'#8E8E9A', dark:'#34343C', kit:'#1F8A5B', trim:'#F6C343', pat:'hoops',   no:14, hat:'headband', prop:'racket' },
+ { id:'rabbit',  name:'Bunny',   fur:'#F3EEE8', dark:'#8C7B6B', kit:'#FF7AC6', trim:'#FFFFFF', pat:'plain',   no:15, hat:'none',     prop:'football' },
+ { id:'mermaid', name:'Merfolk', fur:'#F2C9A0', dark:'#2A9D8F', kit:'#2A9D8F', trim:'#F6C343', pat:'stripes', no:17, hat:'goggles',  prop:'volleyball' },
+ { id:'yeti',    name:'Yeti',    fur:'#EAF2F8', dark:'#5B7A99', kit:'#111827', trim:'#8FF5C0', pat:'plain',   no:0,  hat:'beanie',   prop:'hockey' },
+];
+function qzAvatar(id) { return QZ_AVATARS.find(a => a.id === id) || null; }
+function qzAvatarSvg(id, cls) {
+  const a = qzAvatar(id); if (!a) return '<span class="' + (cls || '') + '">🙂</span>';
+  const F = a.fur, D = a.dark, K = a.kit, T = a.trim, s = [];
+  s.push('<ellipse cx="50" cy="116" rx="26" ry="4" fill="rgba(0,0,0,.18)"/>');
+  // legs + trainers
+  s.push(`<rect x="36" y="94" width="10" height="16" rx="4" fill="${F}" stroke="${D}" stroke-width="1.2"/><rect x="54" y="94" width="10" height="16" rx="4" fill="${F}" stroke="${D}" stroke-width="1.2"/>`);
+  s.push(`<path d="M31 110h17v6H29a3 3 0 0 1 2-6z" fill="#fff" stroke="#333" stroke-width="1.2"/><path d="M52 110h17a3 3 0 0 1 2 6H52z" fill="#fff" stroke="#333" stroke-width="1.2"/><path d="M34 113h10M55 113h10" stroke="${K}" stroke-width="2"/>`);
+  // shorts
+  s.push(`<path d="M33 86h34l2 14H53l-3-5-3 5H31z" fill="${T === '#FFFFFF' ? '#1F2A44' : T}" stroke="#222" stroke-width="1.2"/>`);
+  // arms (behind jersey sleeves)
+  s.push(`<rect x="16" y="64" width="11" height="24" rx="5.5" fill="${F}" stroke="${D}" stroke-width="1.2" transform="rotate(14 21 64)"/><rect x="73" y="64" width="11" height="24" rx="5.5" fill="${F}" stroke="${D}" stroke-width="1.2" transform="rotate(-14 79 64)"/>`);
+  // jersey
+  s.push(`<clipPath id="j${a.id}"><path d="M30 60 Q50 54 70 60 L80 70 L72 76 L69 72 L68 90 H32 L31 72 L28 76 L20 70 Z"/></clipPath>`);
+  s.push(`<path d="M30 60 Q50 54 70 60 L80 70 L72 76 L69 72 L68 90 H32 L31 72 L28 76 L20 70 Z" fill="${K}"/>`);
+  if (a.pat === 'stripes') s.push(`<g clip-path="url(#j${a.id})" fill="${T}" opacity=".9"><rect x="36" y="50" width="5" height="45"/><rect x="47.5" y="50" width="5" height="45"/><rect x="59" y="50" width="5" height="45"/></g>`);
+  if (a.pat === 'hoops') s.push(`<g clip-path="url(#j${a.id})" fill="${T}" opacity=".9"><rect x="15" y="66" width="70" height="5"/><rect x="15" y="77" width="70" height="5"/></g>`);
+  s.push(`<path d="M30 60 Q50 54 70 60 L80 70 L72 76 L69 72 L68 90 H32 L31 72 L28 76 L20 70 Z" fill="none" stroke="#222" stroke-width="1.3"/>`);
+  s.push(`<path d="M43 58 Q50 64 57 58" fill="none" stroke="${T === K ? '#fff' : T}" stroke-width="2.5"/>`);
+  s.push(`<circle cx="50" cy="78" r="7.5" fill="#fff" opacity=".92"/><text x="50" y="81.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="10" fill="#111">${a.no}</text>`);
+  // hands
+  s.push(`<circle cx="18" cy="87" r="5" fill="${F}" stroke="${D}" stroke-width="1.2"/><circle cx="82" cy="87" r="5" fill="${F}" stroke="${D}" stroke-width="1.2"/>`);
+  s.push(qzProp(a));
+  s.push(qzHead(a));
+  return `<svg class="qz-avsvg ${cls || ''}" viewBox="0 -6 100 126" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${a.name}">${s.join('')}</svg>`;
+}
+function qzProp(a) {
+  switch (a.prop) {
+    case 'football': return '<circle cx="84" cy="102" r="8" fill="#fff" stroke="#222" stroke-width="1.3"/><path d="M84 97l4 3-1.5 4.5h-5L80 100z" fill="#222"/>';
+    case 'basketball': return '<circle cx="85" cy="93" r="9" fill="#EE7B20" stroke="#6B3208" stroke-width="1.3"/><path d="M76 93h18M85 84v18M78.5 86.5q6 6.5 0 13M91.5 86.5q-6 6.5 0 13" stroke="#6B3208" stroke-width="1.1" fill="none"/>';
+    case 'volleyball': return '<circle cx="85" cy="93" r="9" fill="#fff" stroke="#2B5BD7" stroke-width="1.3"/><path d="M85 84q-2 9 7 13M85 93q-8 2-9-3M85 93q4 6 0 9" stroke="#F6C343" stroke-width="2" fill="none"/>';
+    case 'racket': return '<g transform="rotate(25 84 90)"><ellipse cx="84" cy="74" rx="8" ry="10" fill="none" stroke="#2B5BD7" stroke-width="2.5"/><path d="M78 70h12M77 75h14M78 80h12M81 65v18M84 64v20M87 65v18" stroke="#aaa" stroke-width=".7"/><rect x="82.5" y="84" width="3" height="12" rx="1.5" fill="#333"/></g><circle cx="16" cy="101" r="4.5" fill="#D7F542" stroke="#8A9A1A" stroke-width="1"/>';
+    case 'rugby': return '<ellipse cx="85" cy="95" rx="10" ry="6.5" fill="#fff" stroke="#222" stroke-width="1.3" transform="rotate(-30 85 95)"/><path d="M80 98l10-6M82 93l2 3M85 91l2 3M87 89l2 3" stroke="#D7263D" stroke-width="1.2"/>';
+    case 'gloves': return '<ellipse cx="18" cy="86" rx="8" ry="9" fill="#D7263D" stroke="#6B0E1A" stroke-width="1.3"/><ellipse cx="82" cy="86" rx="8" ry="9" fill="#D7263D" stroke="#6B0E1A" stroke-width="1.3"/><rect x="13" y="93" width="10" height="4" fill="#fff"/><rect x="77" y="93" width="10" height="4" fill="#fff"/>';
+    case 'hockey': return '<path d="M86 60 L84 104 Q84 110 92 110 L96 110" fill="none" stroke="#6B4A2B" stroke-width="3.5" stroke-linecap="round"/><rect x="70" y="112" width="8" height="3" rx="1.5" fill="#111"/>';
+    case 'baseball': return '<rect x="83" y="58" width="5" height="34" rx="2.5" fill="#C98B4A" stroke="#6B4A2B" stroke-width="1" transform="rotate(15 85 90)"/><circle cx="16" cy="101" r="4.5" fill="#fff" stroke="#D7263D" stroke-width="1"/>';
+    case 'cricket': return '<rect x="81" y="66" width="8" height="26" rx="2" fill="#E9D3A4" stroke="#8A6A34" stroke-width="1" transform="rotate(12 85 90)"/><rect x="83.5" y="54" width="3" height="13" fill="#333" transform="rotate(12 85 90)"/><circle cx="16" cy="101" r="4.5" fill="#B3202D"/>';
+    case 'golf': return '<path d="M86 56 L86 104 L94 106" fill="none" stroke="#999" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="103" r="3.5" fill="#fff" stroke="#bbb"/>';
+    default: return '';
+  }
+}
+function qzEyes(y, big) {
+  const r = big ? 6.5 : 4.2, p = big ? 3 : 2.2;
+  return `<circle cx="42" cy="${y}" r="${r}" fill="#fff" stroke="#222" stroke-width="1"/><circle cx="58" cy="${y}" r="${r}" fill="#fff" stroke="#222" stroke-width="1"/><circle cx="43" cy="${y + .5}" r="${p}" fill="#111"/><circle cx="59" cy="${y + .5}" r="${p}" fill="#111"/><circle cx="43.8" cy="${y - .6}" r="${p / 3}" fill="#fff"/><circle cx="59.8" cy="${y - .6}" r="${p / 3}" fill="#fff"/>`;
+}
+const QZ_SMILE = '<path d="M45 46 Q50 51 55 46" fill="none" stroke="#222" stroke-width="1.6" stroke-linecap="round"/>';
+function qzHead(a) {
+  const F = a.fur, D = a.dark, st = `stroke="${D}" stroke-width="1.4"`; let b = '', f = '';
+  const head = `<circle cx="50" cy="34" r="21" fill="${F}" ${st}/>`;
+  switch (a.id) {
+    case 'panda': b = `<circle cx="33" cy="17" r="7" fill="#222"/><circle cx="67" cy="17" r="7" fill="#222"/>`; f = `<ellipse cx="42" cy="33" rx="6" ry="7" fill="#222" transform="rotate(-20 42 33)"/><ellipse cx="58" cy="33" rx="6" ry="7" fill="#222" transform="rotate(20 58 33)"/>${qzEyes(33)}<ellipse cx="50" cy="42" rx="3.5" ry="2.5" fill="#222"/>` + QZ_SMILE; break;
+    case 'tiger': b = `<circle cx="33" cy="17" r="6" fill="${F}" ${st}/><circle cx="67" cy="17" r="6" fill="${F}" ${st}/><circle cx="33" cy="17" r="3" fill="#FCE3C4"/><circle cx="67" cy="17" r="3" fill="#FCE3C4"/>`; f = `<path d="M50 13v7M44 14l2 6M56 14l-2 6M29 32h7M29 38h6M71 32h-7M71 38h-6" stroke="${D}" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="50" cy="44" rx="10" ry="7" fill="#FFF3E0"/>${qzEyes(32)}<path d="M47 40h6l-3 3z" fill="#E0473E"/>` + QZ_SMILE; break;
+    case 'fox': b = `<path d="M31 22 L30 4 L44 16Z M69 22 L70 4 L56 16Z" fill="${F}" ${st}/><path d="M33 16 L32 8 L39 14Z M67 16 L68 8 L61 14Z" fill="#fff"/>`; f = `<path d="M29 38 Q40 36 50 50 Q60 36 71 38 Q64 54 50 55 Q36 54 29 38Z" fill="#fff"/>${qzEyes(32)}<circle cx="50" cy="44" r="2.8" fill="#222"/>`; break;
+    case 'lion': b = `<circle cx="50" cy="34" r="28" fill="${D}"/><circle cx="50" cy="34" r="28" fill="none" stroke="#6B3A0E" stroke-width="3" stroke-dasharray="6 3"/>`; f = `${qzEyes(31)}<ellipse cx="50" cy="44" rx="9" ry="6" fill="#FFE7B8"/><path d="M46.5 40h7l-3.5 3.5z" fill="#6B3A0E"/>` + QZ_SMILE; break;
+    case 'frog': b = `<circle cx="38" cy="16" r="9" fill="${F}" ${st}/><circle cx="62" cy="16" r="9" fill="${F}" ${st}/>`; f = `<circle cx="38" cy="16" r="5.5" fill="#fff"/><circle cx="62" cy="16" r="5.5" fill="#fff"/><circle cx="39" cy="17" r="3" fill="#111"/><circle cx="63" cy="17" r="3" fill="#111"/><path d="M35 40 Q50 52 65 40" fill="#E8657A" stroke="#222" stroke-width="1.6"/><circle cx="34" cy="36" r="3" fill="#F7A8B8" opacity=".7"/><circle cx="66" cy="36" r="3" fill="#F7A8B8" opacity=".7"/>`; break;
+    case 'penguin': f = `<path d="M50 20 Q66 22 64 40 Q58 52 50 52 Q42 52 36 40 Q34 22 50 20Z" fill="#fff"/>${qzEyes(31)}<path d="M45 39h10l-5 6z" fill="#F28C28" stroke="#A85A10" stroke-width="1"/>`; break;
+    case 'unicorn': b = `<path d="M34 20 L31 8 L42 15Z M66 20 L69 8 L58 15Z" fill="${F}" ${st}/>`; f = `<path d="M50 14 L46 -2 L54 14Z" fill="#F6C343" stroke="#B8860B" stroke-width="1"/><path d="M29 26 Q24 10 44 12 Q34 14 34 26Z" fill="#FF7AC6"/><path d="M31 30 Q26 22 34 18" fill="none" stroke="#7ED6F2" stroke-width="4" stroke-linecap="round"/>${qzEyes(32)}<ellipse cx="50" cy="45" rx="9" ry="6" fill="#FFD6EA"/><circle cx="47" cy="45" r="1.2" fill="#C04A94"/><circle cx="53" cy="45" r="1.2" fill="#C04A94"/><circle cx="36" cy="40" r="3" fill="#FF9AC8" opacity=".6"/><circle cx="64" cy="40" r="3" fill="#FF9AC8" opacity=".6"/>`; break;
+    case 'dragon': b = `<path d="M37 17 L32 4 L43 14Z M63 17 L68 4 L57 14Z" fill="#F6C343" stroke="#B8860B" stroke-width="1"/><path d="M50 13 l-4 -7 l4 3 l4 -3z" fill="#E0473E"/>`; f = `${qzEyes(31)}<ellipse cx="50" cy="44" rx="11" ry="7.5" fill="#8FD694" ${st}/><circle cx="46" cy="42" r="1.4" fill="${D}"/><circle cx="54" cy="42" r="1.4" fill="${D}"/><path d="M44 48 Q50 51 56 48" fill="none" stroke="#222" stroke-width="1.4"/><path d="M46 49l1.5 2.5 1.5-2.5M51 49l1.5 2.5 1.5-2.5" fill="#fff"/>`; break;
+    case 'bear': b = `<circle cx="33" cy="17" r="7" fill="${F}" ${st}/><circle cx="67" cy="17" r="7" fill="${F}" ${st}/><circle cx="33" cy="17" r="3.5" fill="#D9A877"/><circle cx="67" cy="17" r="3.5" fill="#D9A877"/>`; f = `${qzEyes(31)}<ellipse cx="50" cy="43" rx="9" ry="7" fill="#D9A877"/><ellipse cx="50" cy="40.5" rx="3.5" ry="2.5" fill="#222"/>` + QZ_SMILE; break;
+    case 'koala': b = `<circle cx="29" cy="24" r="11" fill="${F}" ${st}/><circle cx="71" cy="24" r="11" fill="${F}" ${st}/><circle cx="29" cy="24" r="6" fill="#F3F4F6"/><circle cx="71" cy="24" r="6" fill="#F3F4F6"/>`; f = `${qzEyes(31)}<ellipse cx="50" cy="41" rx="5.5" ry="7" fill="#2A2D33"/><path d="M45 49 Q50 52 55 49" fill="none" stroke="#222" stroke-width="1.5"/>`; break;
+    case 'owl': b = `<path d="M33 20 L30 6 L41 15Z M67 20 L70 6 L59 15Z" fill="${F}" ${st}/>`; f = `<circle cx="42" cy="32" r="8.5" fill="#F6C343" stroke="${D}" stroke-width="1"/><circle cx="58" cy="32" r="8.5" fill="#F6C343" stroke="${D}" stroke-width="1"/>${qzEyes(32, true)}<path d="M47 40h6l-3 6z" fill="#F28C28"/><path d="M38 48 Q50 56 62 48" fill="none" stroke="#E7CBA0" stroke-width="3"/>`; break;
+    case 'shark': b = `<path d="M50 14 L60 -2 L62 16Z" fill="${F}" ${st}/>`; f = `<path d="M30 38 Q50 58 70 38 Q66 54 50 55 Q34 54 30 38Z" fill="#fff" stroke="${D}" stroke-width="1"/><path d="M38 42l3 5 3-4 3 5 3-5 3 5 3-4 3 5 3-5" fill="none" stroke="#999" stroke-width="1"/>${qzEyes(29)}<path d="M29 34l-4-2M29 37l-4 0M71 34l4-2M71 37l4 0" stroke="${D}" stroke-width="1.3"/>`; break;
+    case 'pig': b = `<path d="M31 22 L28 8 L43 15Z M69 22 L72 8 L57 15Z" fill="${F}" ${st}/>`; f = `${qzEyes(30)}<ellipse cx="50" cy="42" rx="9" ry="6.5" fill="#F48CA4" ${st}/><ellipse cx="46.5" cy="42" rx="1.8" ry="2.6" fill="${D}"/><ellipse cx="53.5" cy="42" rx="1.8" ry="2.6" fill="${D}"/><path d="M45 50 Q50 53 55 50" fill="none" stroke="#222" stroke-width="1.4"/>`; break;
+    case 'monkey': b = `<circle cx="28" cy="34" r="8" fill="${F}" ${st}/><circle cx="72" cy="34" r="8" fill="${F}" ${st}/><circle cx="28" cy="34" r="4.5" fill="#F2C9A0"/><circle cx="72" cy="34" r="4.5" fill="#F2C9A0"/>`; f = `<path d="M50 24 Q58 16 64 26 Q70 38 60 50 Q50 56 40 50 Q30 38 36 26 Q42 16 50 24Z" fill="#F2C9A0"/>${qzEyes(32)}<circle cx="48" cy="41" r="1.2" fill="#5A3A20"/><circle cx="52" cy="41" r="1.2" fill="#5A3A20"/><path d="M44 46 Q50 51 56 46" fill="none" stroke="#222" stroke-width="1.6"/>`; break;
+    case 'cat': b = `<path d="M31 24 L30 5 L45 16Z M69 24 L70 5 L55 16Z" fill="${F}" ${st}/><path d="M34 18 L33 10 L40 15Z M66 18 L67 10 L60 15Z" fill="#F7A8B8"/>`; f = `${qzEyes(32)}<path d="M47.5 40h5l-2.5 3z" fill="#F48CA4"/><path d="M50 43v2M50 45q-3 3-5 1M50 45q3 3 5 1" fill="none" stroke="#222" stroke-width="1.3"/><path d="M28 40l12 1M28 45l12-1M72 40l-12 1M72 45l-12-1" stroke="${D}" stroke-width="1"/>`; break;
+    case 'rabbit': b = `<ellipse cx="41" cy="2" rx="6" ry="17" fill="${F}" ${st}/><ellipse cx="59" cy="2" rx="6" ry="17" fill="${F}" ${st}/><ellipse cx="41" cy="3" rx="2.8" ry="12" fill="#F7A8B8"/><ellipse cx="59" cy="3" rx="2.8" ry="12" fill="#F7A8B8"/>`; f = `${qzEyes(32)}<path d="M47.5 40h5l-2.5 3z" fill="#F48CA4"/><path d="M50 43v2M50 45q-3 3-5 1M50 45q3 3 5 1" fill="none" stroke="#222" stroke-width="1.3"/><rect x="48" y="46" width="4" height="3.5" fill="#fff" stroke="#999" stroke-width=".6"/><circle cx="36" cy="40" r="3" fill="#F7A8B8" opacity=".6"/><circle cx="64" cy="40" r="3" fill="#F7A8B8" opacity=".6"/>`; break;
+    case 'mermaid': b = `<path d="M27 36 Q22 6 50 10 Q78 6 73 36 Q76 60 66 64 L64 30 Q50 20 36 30 L34 64 Q24 60 27 36Z" fill="#2A9D8F"/>`; f = `<path d="M30 28 Q40 14 50 22 Q60 14 70 28 Q60 20 50 26 Q40 20 30 28Z" fill="#2A9D8F"/>${qzEyes(33)}<circle cx="36" cy="41" r="3" fill="#FF9AA2" opacity=".6"/><circle cx="64" cy="41" r="3" fill="#FF9AA2" opacity=".6"/>` + QZ_SMILE + `<path d="M60 12l3 -4 3 4 -3 3z" fill="#F7A8B8"/>`; break;
+    case 'yeti': b = `<circle cx="50" cy="34" r="24" fill="${F}" stroke="#B8C9D8" stroke-width="3" stroke-dasharray="4 3"/>`; f = `<ellipse cx="50" cy="38" rx="13" ry="12" fill="#9FB6CC"/>${qzEyes(34)}<path d="M44 45 Q50 50 56 45" fill="#fff" stroke="#222" stroke-width="1.5"/><path d="M46 45l1 3 1-3M52 45l1 3 1-3" fill="#fff" stroke="#222" stroke-width=".6"/>`; break;
+  }
+  const noHead = a.id === 'yeti'; // yeti draws its own furry head
+  return b + (noHead ? '' : head) + f + qzHat(a);
+}
+function qzHat(a) {
+  const K = a.kit, T = a.trim;
+  switch (a.hat) {
+    case 'headband': return `<path d="M29.5 26 Q50 18 70.5 26 L70 31 Q50 23 30 31Z" fill="${K === '#FFFFFF' ? T : K}" stroke="#222" stroke-width="1"/>`;
+    case 'cap': return `<path d="M29 28 Q30 10 50 10 Q70 10 71 28Z" fill="${K}" stroke="#222" stroke-width="1.2"/><path d="M50 26 Q68 24 84 30 Q70 33 50 30Z" fill="${K}" stroke="#222" stroke-width="1.2"/><circle cx="50" cy="10" r="2" fill="${T}"/>`;
+    case 'helmet': return `<path d="M27 30 Q27 8 50 8 Q73 8 73 30 L69 30 Q69 16 50 15 Q31 16 31 30Z" fill="${K}" stroke="#222" stroke-width="1.2"/><path d="M40 10v8M50 8v7M60 10v8" stroke="${T}" stroke-width="2"/>`;
+    case 'goggles': return `<path d="M29 27h42" stroke="#222" stroke-width="2.5"/><rect x="34" y="21" width="13" height="10" rx="5" fill="#7ED6F2" stroke="#222" stroke-width="1.5" opacity=".9"/><rect x="53" y="21" width="13" height="10" rx="5" fill="#7ED6F2" stroke="#222" stroke-width="1.5" opacity=".9"/>`;
+    case 'beanie': return `<path d="M28 26 Q28 6 50 6 Q72 6 72 26Z" fill="${T}" stroke="#222" stroke-width="1.2"/><rect x="27" y="22" width="46" height="7" rx="3" fill="${K}"/><circle cx="50" cy="4" r="4.5" fill="${K}"/>`;
+    case 'unicorn': case 'dragon': return `<path d="M29.5 27 Q50 20 70.5 27 L70 31 Q50 24 30 31Z" fill="${K}" stroke="#222" stroke-width="1"/>`;
+    default: return '';
+  }
+}
+const QZ_ADJ = ['Turbo','Rocket','Mighty','Speedy','Cosmic','Nitro','Blazing','Sneaky','Funky','Thunder','Slam-Dunk','Flying','Super','Captain','Ninja','Dazzling','Bouncy','Hyper','Zippy','Golden','Galactic','Lightning'];
+
+const SB = { url:'https://YOUR-PROJECT.supabase.co', key:'YOUR-ANON-KEY' };   // Army Cadet Force Supabase project
+// Sound files: this site first, then the shared copy
+const SOUND_BASES=['', 'https://sector3.digitaltrainingcentre.app/'];
+const COLS=['#E0473E','#2B5BD7','#E3A21A','#1F8A5B','#7A4FB8'], SH=['▲','◆','●','■','★'];
+// Sound files — top level of the repo. Missing files are skipped.
+const SOUNDS={pop:'quiz-pop.mp3',ping:'quiz-ping.mp3',correct:'quiz-correct.mp3',wrong:'quiz-wrong.mp3',streak:'quiz-streak.mp3',finish:'quiz-finish.mp3'};
+const code=(new URLSearchParams(location.search).get('s')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const pidKey='s3quiz_'+code;
+let me=JSON.parse(localStorage.getItem(pidKey)||'null');
+let st=null, picked=[], sentFor=-2, lastKey='', prevI=-9, prevPhase='', draft=null;
+const app=document.getElementById('app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+
+// sound
+const snd={};let unlocked=false;
+function unlock(){if(unlocked)return;unlocked=true;Object.keys(SOUNDS).forEach(k=>{const a=new Audio(SOUNDS[k]);a.onerror=()=>{if(!a._alt){a._alt=1;a.src=SOUND_BASES[1]+SOUNDS[k];}};a.preload='auto';a.muted=true;a.play().then(()=>{a.pause();a.currentTime=0;a.muted=false;}).catch(()=>{a.muted=false;});snd[k]=a;});}
+function sfx(k){const a=snd[k];if(!a)return;try{a.currentTime=0;a.play().catch(()=>{});}catch(e){}}
+function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
+
+function avHtml(id,cls){return '<span class="av '+(cls||'')+'">'+qzAvatarSvg(id)+'</span>';}
+function nickFor(id){const a=qzAvatar(id);return rnd(QZ_ADJ)+' '+(a?a.name:'Player');}
+async function api(path,opt){opt=opt||{};const r=await fetch(SB.url+'/rest/v1/'+path,{method:opt.method||'GET',headers:{apikey:SB.key,Authorization:'Bearer '+SB.key,'Content-Type':'application/json',Prefer:'return=minimal'},body:opt.body?JSON.stringify(opt.body):undefined});if(!r.ok)throw new Error(await r.text());const t=await r.text();return t?JSON.parse(t):null;}
+
+let taken=[], takenTimer=null;
+async function loadTaken(){try{const r=await api('rpc/quiz_taken',{method:'POST',body:{p_code:code}});taken=(r||[]).map(x=>x.avatar||x);}catch(e){}}
+function freeList(){return QZ_AVATARS.filter(a=>!taken.includes(a.id));}
+function pickRandom(){const f=freeList();if(!f.length){draft=null;return;}const a=rnd(f);draft={av:a.id,nick:nickFor(a.id)};}
+function joinScreen(msg){
+  if(!draft||taken.includes(draft.av))pickRandom();
+  const grid=QZ_AVATARS.map(a=>{const t=taken.includes(a.id),sel=draft&&draft.av===a.id;return '<button class="tile'+(t?' taken':'')+(sel?' sel':'')+'" '+(t?'disabled':'')+' onclick="choose(\''+a.id+'\')" aria-label="'+a.name+(t?' (taken)':'')+'">'+avHtml(a.id)+'<span>'+(t?'Taken':a.name)+'</span></button>';}).join('');
+  app.innerHTML='<div class="card"><h1>Pick your player</h1><p>Each player can only be picked once — first come, first served!</p>'+
+  (draft?'<div class="me"><div id="avBox">'+avHtml(draft.av,'lg bob')+'</div><div class="nick" id="nick">'+esc(draft.nick)+' <span id="nkName" style="font-weight:600;opacity:.75">'+esc(window._nm||'')+'</span></div><button class="reroll" id="rr">🎲 Surprise me</button></div>':'<p class="err">All players are taken — ask your trainer.</p>')+
+  '<div class="grid">'+grid+'</div>'+
+  (code?'':'<input id="c" placeholder="Quiz code" maxlength="6" autocapitalize="characters">')+
+  '<input id="n" placeholder="Your name" oninput="nkType(this.value)" maxlength="30" autocomplete="name" value="'+esc(window._nm||'')+'"><button class="go" id="j" '+(draft?'':'disabled')+'>Let\'s go!</button>'+(msg?'<div class="err">'+esc(msg)+'</div>':'')+'</div>';
+  const rr=document.getElementById('rr');if(rr)rr.onclick=()=>{unlock();sfx('pop');window._nm=document.getElementById('n').value;pickRandom();joinScreen();};
+  document.getElementById('j').onclick=join;
+}
+function nkType(v){const e=document.getElementById('nkName');if(e)e.textContent=v;}
+function choose(id){unlock();sfx('pop');window._nm=(document.getElementById('n')||{}).value||'';draft={av:id,nick:nickFor(id)};joinScreen();}
+async function startJoin(){if(code){await loadTaken();joinScreen();clearInterval(takenTimer);takenTimer=setInterval(async()=>{if(me){clearInterval(takenTimer);return;}const before=taken.join();await loadTaken();if(taken.join()!==before){window._nm=(document.getElementById('n')||{}).value||'';joinScreen();}},3000);}else joinScreen();}
+async function join(){
+  unlock();
+  const n=document.getElementById('n').value.trim(); const c=document.getElementById('c');
+  if(c&&c.value.trim()){location.search='?s='+c.value.trim().toUpperCase();return;}
+  if(!n){document.getElementById('n').focus();return;}
+  if(!draft)return;
+  const b=document.getElementById('j');b.disabled=true;sfx('pop');
+  const m={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),name:n,nick:draft.nick,av:draft.av};
+  try{await api('quiz_answers',{method:'POST',body:[{code,player_id:m.id,name:n,nick:m.nick,avatar:m.av,qi:-1,choice:[]}]});me=m;clearInterval(takenTimer);localStorage.setItem(pidKey,JSON.stringify(me));loop();}
+  catch(e){window._nm=n;const dup=/23505|duplicate/.test(String(e.message));await loadTaken();joinScreen(dup?'Someone just grabbed that player — pick another!':'Could not join. Check the code, or the quiz may have finished.');}
+}
+async function send(){
+  if(sentFor===st.i)return; sentFor=st.i; buzz(30);
+  try{await api('quiz_answers',{method:'POST',body:[{code,player_id:me.id,name:me.name,nick:me.nick,avatar:me.av,qi:st.i,choice:picked}]});}catch(e){}
+  draw(true);
+}
+function pick(k){
+  if(sentFor===st.i||st.phase!=='question')return;
+  sfx('pop');
+  if(!st.q.multi){picked=[k];return send();}
+  picked=picked.includes(k)?picked.filter(x=>x!==k):picked.concat(k).slice(-2);
+  draw(true); if(picked.length===2) send();
+}
+function myScore(){const b=st.board||[];const k=b.findIndex(p=>p.id===me.id);return k<0?null:{rank:k+1,score:b[k].score,streak:b[k].streak||0,of:b.length};}
+function confetti(){for(let i=0;i<70;i++){const c=document.createElement('i');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=rnd(COLS);c.style.animationDelay=Math.random()*2+'s';c.style.animationDuration=(2.5+Math.random()*2)+'s';c.style.setProperty('--x',(Math.random()*160-80)+'px');document.body.appendChild(c);}}
+function sounds(){
+  if(!st)return; const key=st.phase+st.i; if(key===prevPhase)return; prevPhase=key;
+  if(st.phase==='question')sfx('ping');
+  if(st.phase==='reveal'){const l=(st.last||{})[me.id];if(l&&l.ok){sfx(l.streak>=2?'streak':'correct');buzz([40,60,40]);}else{sfx('wrong');buzz(200);}}
+  if(st.phase==='end'){sfx('finish');const m=myScore();if(m&&m.rank<=3)confetti();}
+}
+function draw(force){
+  const key=JSON.stringify([st&&st.phase,st&&st.i,sentFor,picked]);
+  if(!force&&key===lastKey)return; lastKey=key;
+  if(!st){app.innerHTML='<div class="centre"><div class="big">Quiz not found</div><p class="muted">Check the code with your trainer.</p></div>';return;}
+  const head=(extra)=>'<div class="qhead"><span>'+avHtml(me.av,'sm')+' <b>'+esc(me.nick)+'</b> '+esc(me.name)+'</span><span>'+(extra||'')+'</span></div>';
+  if(st.phase==='lobby'){app.innerHTML='<div class="centre">'+avHtml(me.av,'lg dance')+'<div class="big">You\'re in, '+esc(me.nick)+' '+esc(me.name)+'!</div><p class="muted">'+esc(st.title)+'<br>Look at the big screen — the quiz starts soon.</p></div>';return;}
+  if(st.phase==='end'){const m=myScore();const medal=m&&m.rank<=3?['🥇','🥈','🥉'][m.rank-1]:'🏁';
+    app.innerHTML='<div class="centre">'+avHtml(me.av,m&&m.rank===1?'lg dance':'lg bob')+'<div class="medal">'+medal+'</div><div class="big">'+(m&&m.rank===1?'Champion!':'Quiz finished')+'</div>'+(m?'<p class="muted" style="font-size:1.1rem">You came <b>'+m.rank+'</b> of '+m.of+' with <b>'+m.score+'</b> points.</p>':'')+'<p class="muted" style="margin-top:14px">Thanks for playing!</p></div>';localStorage.removeItem(pidKey);return;}
+  const q=st.q, rev=st.phase==='reveal', done=sentFor===st.i;
+  const label=(q.bonus?'Trivia':'Q'+(st.i+1));
+  if(!rev&&done){app.innerHTML=head(label)+'<div class="centre">'+avHtml(me.av,'lg bob')+'<div class="big">Answer locked in!</div><p class="muted">Fingers crossed… waiting for everyone else.</p></div>';return;}
+  if(rev){
+    const l=(st.last||{})[me.id]||{};const m=myScore();
+    app.innerHTML=head(label)+'<div class="centre" style="margin:6px 0">'+
+      '<div class="res '+(l.ok?'ok':'bad')+'">'+(l.ok?'✓':'✗')+'</div><div class="big">'+(l.ok?'Correct!':(l.none?'Too slow!':'Not this time'))+'</div>'+
+      (l.ok?'<div class="pts">+'+l.pts+'</div>':'')+
+      (l.ok&&l.streak>=2?'<div class="flame">🔥 '+l.streak+' in a row'+(l.bonus?' · +'+l.bonus+' bonus':'')+'</div>':'')+
+      (m?'<p class="muted" style="margin-top:10px">'+m.score+' points · '+m.rank+' of '+m.of+'</p>':'')+'</div>'+
+      '<div class="q" style="margin-top:14px">'+esc(q.text)+'</div><div class="opts">'+q.opts.map((o,k)=>'<div class="opt '+(st.correct.includes(k)?'':'off')+'" style="background:'+COLS[k]+'">'+SH[k]+' '+esc(o)+(st.correct.includes(k)?' ✓':'')+'</div>').join('')+'</div><div class="why">'+esc(st.why)+'</div>';
+    return;
+  }
+  const m=myScore();
+  app.innerHTML=head(label+(m&&m.streak>=2?' · 🔥'+m.streak:''))+(q.bonus?'<div class="bonus">🧠 TRIVIA ROUND</div>':'')+'<div class="q">'+esc(q.text)+'</div>'+(q.multi?'<div class="hint">Pick two answers</div>':'')+
+   '<div class="opts">'+q.opts.map((o,k)=>'<button class="opt '+(picked.includes(k)?'sel':'')+'" style="background:'+COLS[k]+';animation-delay:'+(k*0.06)+'s" onclick="pick('+k+')">'+SH[k]+' <span>'+esc(o)+'</span></button>').join('')+'</div>';
+}
+async function loop(){
+  try{const rows=await api('quiz_sessions?select=state&code=eq.'+code);st=rows&&rows[0]?rows[0].state:null;}catch(e){}
+  if(st&&st.i!==prevI){prevI=st.i;picked=[];}
+  sounds(); draw();
+  if(!st||st.phase!=='end')setTimeout(loop,1200);
+}
+if(me){ document.addEventListener('pointerdown',unlock,{once:true}); loop(); } else startJoin();
+</script></body></html>
