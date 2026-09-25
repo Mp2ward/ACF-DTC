@@ -1496,6 +1496,45 @@ function fmtD(v) {
   .lpm-ov-legend span { display:inline-flex; align-items:center; gap:6px; }
   .lpm-ov-swatch { width:16px; height:16px; display:inline-block; border:1px solid #D8DEE8; }
 
+
+/* ---- Army Cadets practical assessment (Annex E) ---- */
+.acf-prac{padding:4px 2px 30px}
+.acf-head h3{font-size:1.05rem;margin:0 0 6px;color:var(--brand-dark)}
+.acf-head p{font-size:.78rem;color:#54616b;margin:0 0 6px;line-height:1.5}
+.acf-hint{font-size:.74rem;color:var(--brand-accent);font-weight:600}
+.acf-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #D8DEE8;border-radius:10px;margin:10px 0 14px}
+.acf-grid{border-collapse:collapse;min-width:100%;font-size:.78rem}
+.acf-grid th,.acf-grid td{border:1px solid #E2E8EE;padding:5px 6px;text-align:center;vertical-align:middle}
+.acf-grid thead th{background:var(--brand-tint);color:var(--brand-dark);font-weight:700;position:sticky;top:0}
+.acf-grid th.acf-crit,.acf-grid td.acf-crit{text-align:left;min-width:190px;position:sticky;left:0;background:#fff;z-index:2;font-weight:600;color:#25323b}
+.acf-grid thead th.acf-crit{background:var(--brand-tint);z-index:3}
+.acf-num{display:block;font-size:.7rem;color:#8a97a2}
+.acf-nm{display:block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acf-initrow{font-weight:500!important;font-size:.72rem;color:#54616b!important}
+.acf-init{width:52px;text-align:center;text-transform:uppercase;border:1px solid #CBD5DF;border-radius:6px;padding:4px;font-size:.78rem}
+.acf-cell{width:40px;height:32px;border:1px solid #CBD5DF;border-radius:6px;background:#fff;font-weight:800;font-size:.85rem;color:#b9c3cc;cursor:pointer}
+.acf-cell.ok{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+.acf-cell.ref{background:#C0563C;border-color:#C0563C;color:#fff}
+.acf-cell:disabled{opacity:.7;cursor:default}
+.acf-lbl{display:block;font-size:.78rem;font-weight:700;color:var(--brand-dark);margin-bottom:5px}
+.acf-fb{width:100%;border:1px solid #CBD5DF;border-radius:10px;padding:9px;font:inherit;font-size:.82rem;resize:vertical}
+.acf-declare{font-size:.8rem;font-weight:600;color:#25323b;margin:14px 0 8px}
+.acf-sign{display:flex;flex-wrap:wrap;gap:10px}
+.acf-sign label{flex:1 1 150px;font-size:.72rem;color:#54616b;font-weight:600}
+.acf-sign input{width:100%;margin-top:3px;border:1px solid #CBD5DF;border-radius:8px;padding:7px;font:inherit;font-size:.82rem}
+.acf-sigbox{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.acf-sigbox span{font-size:.72rem;color:#54616b;font-weight:600}
+.acf-sigbox img{height:46px;background:#fff;border-bottom:1px solid #25323b}
+.acf-sigbtn,.acf-clear{border:1px dashed var(--brand-accent);background:var(--brand-tint);color:var(--brand-accent);
+  border-radius:8px;padding:8px 14px;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer}
+.acf-clear{border-style:solid;border-color:#CBD5DF;background:#fff;color:#54616b}
+.acf-sigov{position:fixed;inset:0;background:rgba(10,58,36,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px}
+.acf-sigcard{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:460px}
+.acf-sigcard h4{margin:0 0 10px;font-size:.95rem;color:var(--brand-dark)}
+#acfSigPad{width:100%;height:170px;border:1px solid #CBD5DF;border-radius:10px;touch-action:none;background:#fff}
+.acf-sigacts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.acf-btn{background:var(--brand-accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+.acf-btn.ghost{background:#fff;border:1px solid #CBD5DF;color:#54616b}
 </style>
 
 <style id="studioTheme">
@@ -9074,7 +9113,7 @@ function lpmOpenCourse(id) {
   lpmUpdateCourseSub();
 
   document.getElementById('lpmSteps').innerHTML = LPM_STEPS.map((k,i) => {
-    const labels = {details:'Course details', learners:'Learners', skills:'Skills stations', sessions:'Scenario sessions', theory:'Theory exams', overview:'QA overview', feedback:'Feedback', pack:'Course pack', iqa:'IQA review'};
+    const labels = {details:'Course details', learners:'Learners', skills:(lpmCourseKind(lpmCourse)==='acf'?'Practical assessment':'Skills stations'), sessions:'Scenario sessions', theory:'Theory exams', overview:'QA overview', feedback:'Feedback', pack:'Course pack', iqa:'IQA review'};
     return `<button class="rn-step" id="lpmStep${i}" onclick="lpmShowStep('${k}')">${labels[k]}</button>`;
   }).join('');
 
@@ -9212,7 +9251,8 @@ function lpmShowStep(key) {
   });
   document.querySelectorAll('.lpm-view#lpm-course .rn-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('lpmPanel-' + key).classList.add('active');
-  if (key === 'skills') { if (lpmCourseKind(lpmCourse) === 'ils') { ilsRender(); } else { skCourseId = lpmCourse.id; skRender(); } }
+  if (key === 'skills') { if (lpmCourseKind(lpmCourse) === 'acf') { acfRenderPractical(); }
+    else if (lpmCourseKind(lpmCourse) === 'ils') { ilsRender(); } else { skCourseId = lpmCourse.id; skRender(); } }
   if (key === 'theory') lpmRenderTheory();
   if (key === 'feedback') lpmRenderFeedback();
   if (key === 'overview') lpmRenderOverview();
@@ -9224,11 +9264,246 @@ function lpmShowStep(key) {
 }
 
 // ---- Course details ----
-const LPM_COURSE_NAMES = ['FREC 3 - RPL - 3 Day', 'FREC 3 - 5 Day', 'FREC 3 - Custom Dates', 'FREC 4', 'BLS - 1 Day', 'ILS - 1 Day', 'Dental', 'GP', 'Health and Safety Level 2', 'Health and Safety Level 3'];
+// ======================= ARMY CADETS FIRST AID =======================
+// Course types, Annex E practical criteria, Annex D course information and
+// theory paper metadata. Question text and answer keys are NOT held here —
+// they live in Supabase behind an authenticated sitting (see supabase_acf_exams.sql).
+
+const ACF_COURSES = {
+  efaw: {
+    key: 'efaw',
+    name: 'Emergency First Aid at Work - 1 Day',
+    short: 'EFAW',
+    unit: 'J/506/7072',
+    days: 1,
+    glh: '6 hours',
+    annexE: 'Emergency First Aid at Work Practical Assessment',
+    modules: ['m1'],
+    criteria: [
+      'Unconscious Casualty Practical',
+      'CPR and AED Casualty Practical',
+      'Choking Practical',
+      'Bleeding Practical',
+      'Life-threatening (Catastrophic) Bleeding Practical'
+    ]
+  },
+  faw: {
+    key: 'faw',
+    name: 'First Aid at Work - 3 Day',
+    short: 'FAW',
+    unit: '',
+    days: 3,
+    glh: '18 hours',
+    annexE: 'First Aid at Work Practical Assessment',
+    modules: ['m1', 'm2'],
+    criteria: [
+      'Unconscious Casualty Practical',
+      'CPR and AED Casualty Practical',
+      'Choking Practical',
+      'Bleeding Practical',
+      'Life-threatening (Catastrophic) Bleeding Practical',
+      'Secondary Survey Practical',
+      'Sling Practical',
+      'Spinal Injury Practical',
+      'Anaphylaxis Practical'
+    ]
+  }
+};
+
+// Theory papers. `paper` matches the paper_code seeded in Supabase.
+const ACF_PAPERS = {
+  m1:  { id: 'm1',  label: 'Module 1 — Emergency First Aid at Work', paper: 'EFAWJAN26',   questions: 15, pass: 12, minutes: 30, unit: 'UNIT 1' },
+  m1r: { id: 'm1r', label: 'Module 1 — RESIT',                       paper: 'EFAWRJAN26',  questions: 15, pass: 12, minutes: 30, unit: 'UNIT 1' },
+  m2:  { id: 'm2',  label: 'Module 2 — First Aid at Work',           paper: 'FAWJAN26',    questions: 25, pass: 20, minutes: 40, unit: 'UNIT 2' },
+  m2r: { id: 'm2r', label: 'Module 2 — RESIT',                       paper: 'FAWRJAN26',   questions: 25, pass: 20, minutes: 40, unit: 'UNIT 2' }
+};
+
+const ACF_MAX_LEARNERS = 12;   // Annex E has 12 learner columns
+
+// Annex D — First Aid Course Information. Every field here is gathered by the matrix.
+function acfAnnexDBlank() {
+  return {
+    creNumber: '', countyUnit: LICENCE.name || '',
+    courseType: '',                       // EFAW | FAW | FAWR
+    blended: 'NO',                        // NO | VIRTUAL SESSIONS | DLE COURSES
+    noContactDAO: '',                     // learners who do not wish to be contacted by the DAO
+    trainers: [],                         // { name, trainerNo, fawInDate, qualInDate }
+    dates: [],                            // { date, timeStart, timeFinish }
+    enclosures: {},                       // checklist ticks, keyed below
+    leadAssessor: '', leadTrainerNo: '', leadSignature: '', leadDate: ''
+  };
+}
+
+const ACF_ENCLOSURES = [
+  ['nominal',   '1 x Nominal roll (first name, surname, PNumber, DOB and gender)'],
+  ['practical', '1 x practical assessment paper — initialled by learners'],
+  ['theory1',   'EFAW Theory Papers x1 per learner (also required as part of a full FAW/FAWR)'],
+  ['theory2',   'FAW Theory Papers x1 per learner (FAW and FAWR only)'],
+  ['elearning', 'Evidence of e-learning having taken place (if blended learning is used)'],
+  ['feedback',  'Feedback forms']
+];
+
+function acfCourse(c) {
+  const n = ((c || lpmCourse || {}).courseName || '').trim().toUpperCase();
+  if (n.startsWith('EMERGENCY FIRST AID')) return ACF_COURSES.efaw;
+  if (n.startsWith('FIRST AID AT WORK')) return ACF_COURSES.faw;
+  return null;
+}
+
+// ---- Annex E practical grid ----
+const ACF_PRAC_KEY = 'acf_practical_v1';
+
+function acfPracLoad() {
+  try { return JSON.parse(localStorage.getItem(ACF_PRAC_KEY) || '{}'); } catch (e) { return {}; }
+}
+function acfPracSave(all) {
+  try { localStorage.setItem(ACF_PRAC_KEY, JSON.stringify(all)); } catch (e) {}
+}
+function acfPracFor(courseId) {
+  const all = acfPracLoad();
+  return all[courseId] || (all[courseId] = { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' });
+}
+function acfPracSet(courseId, fn) {
+  const all = acfPracLoad();
+  const rec = all[courseId] || { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' };
+  fn(rec); all[courseId] = rec; acfPracSave(all);
+}
+
+function acfPracCycle(courseId, learnerIdx, critIdx) {
+  if (lpmReadOnlyNow()) return;
+  const k = learnerIdx + ':' + critIdx;
+  acfPracSet(courseId, r => {
+    const cur = r.marks[k] || '';
+    r.marks[k] = cur === '' ? 'P' : (cur === 'P' ? 'R' : '');
+  });
+  acfRenderPractical();
+}
+
+function acfPracField(courseId, field, val) {
+  acfPracSet(courseId, r => { r[field] = val; });
+}
+
+function acfRenderPractical() {
+  const host = document.getElementById('lpmPanel-skills');
+  if (!host || !lpmCourse) return;
+  const spec = acfCourse(lpmCourse);
+  if (!spec) return;
+  const rec = acfPracFor(lpmCourse.id);
+  const learners = (lpmCourse.learners || []).slice(0, ACF_MAX_LEARNERS);
+  const ro = lpmReadOnlyNow();
+  const cols = Math.max(learners.length, 1);
+
+  let head = '<th class="acf-crit">Criteria</th>';
+  for (let i = 0; i < cols; i++) {
+    const nm = learners[i] ? lpmEsc(learners[i].name || learners[i]) : '&mdash;';
+    head += `<th><span class="acf-num">${i + 1}.</span><span class="acf-nm">${nm}</span></th>`;
+  }
+
+  let initRow = '<td class="acf-crit acf-initrow">The learner is to initial this column under their name to confirm this is their own work</td>';
+  for (let i = 0; i < cols; i++) {
+    initRow += `<td><input class="acf-init" maxlength="4" value="${lpmEsc(rec.initials[i] || '')}" ${ro ? 'disabled' : ''}
+      oninput="acfPracSet('${lpmCourse.id}', r => r.initials[${i}] = this.value.toUpperCase())"></td>`;
+  }
+
+  let rows = '';
+  spec.criteria.forEach((crit, ci) => {
+    let tds = `<td class="acf-crit">${lpmEsc(crit)}</td>`;
+    for (let i = 0; i < cols; i++) {
+      const v = rec.marks[i + ':' + ci] || '';
+      const cls = v === 'P' ? 'ok' : (v === 'R' ? 'ref' : '');
+      tds += `<td><button class="acf-cell ${cls}" ${ro ? 'disabled' : ''}
+        onclick="acfPracCycle('${lpmCourse.id}',${i},${ci})">${v || '&middot;'}</button></td>`;
+    }
+    rows += `<tr>${tds}</tr>`;
+  });
+
+  host.innerHTML = `
+    <div class="acf-prac">
+      <div class="acf-head">
+        <h3>${lpmEsc(spec.annexE)}</h3>
+        <p>The Trainer/Assessor must observe each candidate carrying out the correct treatment under current
+           protocols on each of the below criteria and place a &ldquo;P&rdquo; to confirm the candidate has met the criteria.
+           The full criteria for each learning outcome and assessment format can be found in the First Aid
+           Assessment Guide. This must be followed for assessment purposes.</p>
+        <p class="acf-hint">Tap a cell to cycle blank &rarr; P (pass) &rarr; R (referral).</p>
+      </div>
+      <div class="acf-scroll">
+        <table class="acf-grid"><thead><tr>${head}</tr></thead>
+          <tbody><tr class="acf-initials">${initRow}</tr>${rows}</tbody></table>
+      </div>
+      <label class="acf-lbl">Assessor Feedback (please give student specific feedback and general feedback)</label>
+      <textarea class="acf-fb" rows="4" ${ro ? 'disabled' : ''}
+        oninput="acfPracField('${lpmCourse.id}','feedback',this.value)">${lpmEsc(rec.feedback || '')}</textarea>
+      <p class="acf-declare">The above candidates have met the criteria and passed the practical assessments</p>
+      <div class="acf-sign">
+        <label>Trainer/Assessor<input value="${lpmEsc(rec.assessor || '')}" ${ro ? 'disabled' : ''}
+          oninput="acfPracField('${lpmCourse.id}','assessor',this.value)"></label>
+        <label>Trainer No<input value="${lpmEsc(rec.trainerNo || '')}" ${ro ? 'disabled' : ''}
+          oninput="acfPracField('${lpmCourse.id}','trainerNo',this.value)"></label>
+        <label>Date<input type="date" value="${lpmEsc(rec.date || '')}" ${ro ? 'disabled' : ''}
+          oninput="acfPracField('${lpmCourse.id}','date',this.value)"></label>
+      </div>
+      <div class="acf-sigbox">
+        <span>Trainer/Assessor Signature</span>
+        ${rec.signature ? `<img src="${rec.signature}" alt="signature">`
+                        : `<button class="acf-sigbtn" ${ro ? 'disabled' : ''} onclick="acfSignPractical()">Sign here</button>`}
+        ${rec.signature && !ro ? `<button class="acf-clear" onclick="acfPracField('${lpmCourse.id}','signature','');acfRenderPractical()">Clear</button>` : ''}
+      </div>
+    </div>`;
+}
+
+// Self-contained signature pad, reusing the app's existing ink-trim helper.
+function acfSign(onDone) {
+  const ov = document.createElement('div');
+  ov.className = 'acf-sigov';
+  ov.innerHTML = `<div class="acf-sigcard">
+      <h4>Sign below</h4>
+      <canvas id="acfSigPad"></canvas>
+      <div class="acf-sigacts">
+        <button class="acf-btn ghost" id="acfSigCancel">Cancel</button>
+        <button class="acf-btn ghost" id="acfSigWipe">Clear</button>
+        <button class="acf-btn" id="acfSigOk">Save signature</button>
+      </div></div>`;
+  document.body.appendChild(ov);
+  const cv = ov.querySelector('#acfSigPad');
+  const ratio = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || 300, h = cv.clientHeight || 160;
+  cv.width = w * ratio; cv.height = h * ratio;
+  const ctx = cv.getContext('2d');
+  ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0A3A24';
+  let drawing = false, last = null, dirty = false;
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); drawing = true; last = pos(e); };
+  cv.onpointermove = e => {
+    if (!drawing) return;
+    const q = pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    last = q; dirty = true;
+  };
+  const end = () => { drawing = false; };
+  cv.onpointerup = end; cv.onpointercancel = end;
+  const close = () => ov.remove();
+  ov.querySelector('#acfSigCancel').onclick = close;
+  ov.querySelector('#acfSigWipe').onclick = () => { ctx.clearRect(0, 0, w, h); dirty = false; };
+  ov.querySelector('#acfSigOk').onclick = () => {
+    if (!dirty) { close(); return; }
+    const url = (typeof qsTrimSignature === 'function') ? qsTrimSignature(cv) : cv.toDataURL('image/png');
+    close(); onDone(url);
+  };
+}
+
+function acfSignPractical() {
+  acfSign(url => { acfPracField(lpmCourse.id, 'signature', url); acfRenderPractical(); });
+}
+// =====================================================================
+
+const LPM_COURSE_NAMES = ['Emergency First Aid at Work - 1 Day', 'First Aid at Work - 3 Day'];
 const LPM_LOCATIONS = LICENCE.locations.slice();
 // Course "family" — governs which tabs, skills grid and pack contents a course gets
 function lpmCourseKind(course) {
   const n = ((course || lpmCourse || {}).courseName || '').trim().toUpperCase();
+  if (n.startsWith('EMERGENCY FIRST AID') || n.startsWith('FIRST AID AT WORK')) return 'acf';
   if (n.startsWith('BLS')) return 'bls';
   if (n.startsWith('ILS')) return 'ils';
   if (n.startsWith('DENTAL') || n.startsWith('GP') || n.startsWith('HEALTH AND SAFETY')) return 'basic';   // tabs set once their documents are added
@@ -9238,6 +9513,7 @@ function lpmCourseKind(course) {
 function lpmHiddenSteps(course) {
   const kind = lpmCourseKind(course);
   if (kind === 'bls' || kind === 'basic') return ['skills', 'sessions', 'theory', 'overview'];
+  if (kind === 'acf') return ['sessions'];
   if (kind === 'ils') return ['sessions', 'theory'];
   return [];
 }
