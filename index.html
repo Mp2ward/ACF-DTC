@@ -9015,6 +9015,7 @@ function lpmOnTeam(c) {
   return lpmAllInstructors(c).some(n => (n || '').trim().toLowerCase() === me);
 }
 function lpmReadOnlyNow() {
+  if (lpmCourse && lpmCourse.isExample) return true;
   if (typeof CLOUD_ON === 'undefined' || !CLOUD_ON) return false;
   if (typeof cloudActingReviewer === 'function' && cloudActingReviewer()) return false;   // IQA, and admin while in the Admin panel, can edit anything
   if (typeof lpmLockReason === 'function' && lpmLockReason(lpmCourse)) {
@@ -9136,7 +9137,7 @@ function lpmRenderCourseList() {
   const row = (c, isExample) => `
     <div class="lpm-course-row-wrap${isExample ? ' example' : ''}${lpmIqaState(c) === 'action' ? ' action' : ''}">
       <button class="lpm-course-row" onclick="lpmOpenCourse('${c.id}')">
-        <div class="lpm-course-name">${isExample ? '<span class="lpm-pin">📌 Example</span> ' : ''}${lpmEsc(c.courseName || 'Untitled course')}</div>
+        <div class="lpm-course-name">${isExample ? '<span class="lpm-pin">📌 Worked example</span> ' : ''}${lpmEsc(c.courseName || 'Untitled course')}</div>
         ${!isExample && lpmIqaState(c) === 'action' ? `<span class="lpm-stamp">Action required</span>` : ''}
         <div class="lpm-course-meta">${fmtShort(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' – ' + fmtShort(c.endDate) : ''}${c.courseRef ? ' · ' + lpmEsc(c.courseRef) : ''}${c.location ? ' · ' + lpmEsc(c.location) : ''}${reviewer && c.ownerName ? ' · ' + lpmEsc(c.ownerName) : ''}</div>
         ${c.submission ? (() => { const r = iqaFor(c.id), act = lpmIqaState(c) === 'action';
@@ -9156,7 +9157,7 @@ function lpmRenderCourseList() {
     </div>`;
   if (!list.length) { wrap.innerHTML = filterHtml + `<div class="rn-empty">No course records yet. Start a new one above.</div>`; return; }
   // Submitted and IQA-accepted courses drop out of the working list into Previous courses
-  const isPast = c => { const st = lpmPackState(c, true); return st === 'submitted' || st === 'accepted' || !!c.submission; };
+  const isPast = c => { if (c.isExample) return false; const st = lpmPackState(c, true); return st === 'submitted' || st === 'accepted' || !!c.submission; };
   const past = rest.filter(isPast);
   rest = rest.filter(c => !isPast(c));
   const pastBlock = past.length ? `
@@ -9749,14 +9750,12 @@ async function acfRenderTheory() {
         </div>
       </div>`).join('')}</div>
     ${papers.length ? '' : '<p class="sc-p">Choose a course type to see its theory papers.</p>'}
-    <div id="acfAnnexDBox"></div>
     <div class="acf-pack-cta rn-no-print">
       <p class="sc-p">When the practical, theory and feedback are all complete, send the pack for IQA review.</p>
       <button class="rn-nav-btn primary" ${ro ? 'disabled' : ''} onclick="lpmShowStep('pack')">Go to the course pack</button>
     </div>`;
 
   papers.forEach(p => acfRenderPaper(p));
-  acfRenderAnnexD();
   if (!acfRenderTheory._pulling) {
     acfRenderTheory._pulling = true;
     acfPullSittings().then(n => { acfRenderTheory._pulling = false; if (n) papers.forEach(p => acfRenderResults(p)); });
@@ -9906,68 +9905,6 @@ function acfAutoEnclosures() {
   return auto;
 }
 
-function acfRenderAnnexD() {
-  const host = document.getElementById('acfAnnexDBox');
-  if (!host || !lpmCourse) return;
-  const d = acfAnnexD(), ro = lpmReadOnlyNow();
-  acfAutoEnclosures();
-  const out = acfOutcomes();
-  const passed = out.filter(o => o.passed).length;
-  const referred = out.filter(o => o.started && !o.passed).length;
-  d.learnersPassed = passed; d.learnersReferred = referred;
-
-  const sel = (field, opts) => `<select ${ro ? 'disabled' : ''} onchange="acfAnnexDSet('${field}',this.value)">
-    ${opts.map(o => `<option${d[field] === o ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
-  const txt = (field, ph) => `<input value="${lpmEsc(d[field] || '')}" placeholder="${ph || ''}" ${ro ? 'disabled' : ''}
-    oninput="acfAnnexDSet('${field}',this.value)">`;
-
-  host.innerHTML = `
-    <div class="acf-annexd">
-      <div class="acf-ad-h">First Aid Course Information (Annex D)</div>
-      <p class="sc-p">This is sent to the IQA with the course pack. Most of it fills itself in from the course record.</p>
-      <div class="acf-ad-grid">
-        <label>CRE number${txt('creNumber', 'e.g. 12345')}</label>
-        <label>County / Unit${txt('countyUnit')}</label>
-        <label>Course type${sel('courseType', ['EFAW', 'FAW', 'FAWR'])}</label>
-        <label>Blended learning${sel('blended', ['NO', 'VIRTUAL SESSIONS', 'DLE COURSES'])}</label>
-      </div>
-      <div class="acf-ad-tally">
-        <span><b>${passed}</b> passed</span><span><b>${referred}</b> referred</span>
-        <span><b>${out.length}</b> learners on the roll</span>
-      </div>
-      <label class="acf-ad-l">Any learner who does not wish to be contacted by the DAO
-        ${txt('noContactDAO', 'Leave blank if none')}</label>
-
-      <div class="acf-ad-h2">Documents enclosed for IQA</div>
-      <p class="sc-p" style="margin-bottom:10px">These tick themselves as the evidence appears — nothing to fill in.</p>
-      ${ACF_ENCLOSURES.map(([k, label]) => {
-        const on = !!(d.enclosures && d.enclosures[k]);
-        return `<div class="acf-ad-auto${on ? ' on' : ''}">
-          <span class="acf-ad-box">${on ? '&#10003;' : ''}</span><span>${label}</span></div>`;
-      }).join('')}
-
-      <div class="acf-ad-h2">Lead assessor</div>
-      <div class="acf-ad-grid">
-        <label>Name${txt('leadAssessor')}</label>
-        <label>Trainer No${txt('leadTrainerNo')}</label>
-        <label>Date<input type="date" value="${lpmEsc(d.leadDate || '')}" ${ro ? 'disabled' : ''}
-          oninput="acfAnnexDSet('leadDate',this.value)"></label>
-      </div>
-      <p class="acf-declare">The above candidates have met the criteria and passed the requirements for the
-        qualification in accordance with the Army Cadet First Aid Assessment Specification.</p>
-      <div class="acf-sigbox">
-        <span>Lead Assessor Signature</span>
-        ${d.leadSignature ? `<img src="${d.leadSignature}" alt="signature">`
-          : `<button class="acf-sigbtn" ${ro ? 'disabled' : ''} onclick="acfSignAnnexD()">Sign here</button>`}
-        ${d.leadSignature && !ro ? `<button class="acf-clear" onclick="acfAnnexDSet('leadSignature','');acfRenderAnnexD()">Clear</button>` : ''}
-      </div>
-      <p class="sc-p" style="margin-top:10px">All documentation must be sent within 4 weeks of the last assessment date.</p>
-    </div>`;
-}
-function acfSignAnnexD() {
-  acfSign(url => { acfAnnexDSet('leadSignature', url); acfRenderAnnexD(); });
-}
-
 // ---------- Pack pages ----------
 // Drawn into the course pack PDF: Annex E practical, theory results, Annex D.
 async function acfPackPages(pdf, helpers) {
@@ -9996,42 +9933,138 @@ async function acfPackPages(pdf, helpers) {
     return y;
   };
 
-  // ---- Nominal roll ----
-  const pn = pdf.addPage(A4);
-  let ny = header(pn, 'Nominal roll', (lpmCourse.courseName || '') + ' · '
-    + (lpmCourse.startDate ? fmtD(lpmCourse.startDate) : '') + (lpmCourse.location ? ' · ' + lpmCourse.location : ''));
-  const cols = [['Name', M], ['DOB', M + 190], ['P number', M + 280], ['Gender', M + 375], ['Email', M + 450]];
-  cols.forEach(([t, x]) => pn.drawText(t, { x, y: ny, size: 9, font: bold, color: grey }));
-  ny -= 15;
-  const reg = lpmCourse.registerEntries || [];
-  const byName = {};
-  reg.forEach(r => { byName[(r.name || '').trim().toLowerCase()] = r; });
-  (lpmCourse.learners || []).filter(l => (l.name || '').trim()).forEach(l => {
-    const r = byName[(l.name || '').trim().toLowerCase()] || {};
-    const dob = l.dob || r.dob || '';
-    const val = [
-      (l.name || '').trim(),
-      dob ? fmtD(dob) : '—',
-      l.pNumber || r.pNumber || '—',
-      l.gender || r.gender || '—',
-      (l.email || r.email || '—')
-    ];
-    val.forEach((v, i) => {
-      let t = String(v);
-      const maxW = i === 4 ? 105 : (cols[i + 1] ? cols[i + 1][1] - cols[i][1] - 8 : 100);
-      while (t.length > 3 && font.widthOfTextAtSize(t, 9) > maxW) t = t.slice(0, -2) + '…';
-      pn.drawText(t, { x: cols[i][1], y: ny, size: 9, font, color: ink });
-    });
-    ny -= 15;
-    if (ny < 70) { ny = header(pdf.addPage(A4), 'Nominal roll (continued)', ''); }
+  // ---- Annex D ----
+  const d = acfAnnexD();
+  const pa = pdf.addPage(A4);
+  let y = header(pa, 'First Aid Course Information', 'Annex D · this document MUST be attached to any course materials');
+  const row = (k, v) => { pa.drawText(k, { x: M, y, size: 9, font: bold, color: grey });
+    pa.drawText(String(v || '—'), { x: M + 180, y, size: 10, font, color: ink }); y -= 17; };
+  row('CRE number', d.creNumber);
+  row('County / Unit', d.countyUnit);
+  row('Course type', d.courseType);
+  row('Blended learning course', d.blended);
+  row('Number of learners', out.length);
+  row('Passed', d.learnersPassed);
+  row('Referred', d.learnersReferred);
+  row('Not contacted by DAO', d.noContactDAO);
+  y -= 6;
+  pa.drawText('Trainer details', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
+  const trainers = [lpmCourse.instructor1, lpmCourse.instructor2].filter(Boolean);
+  (trainers.length ? trainers : ['—']).forEach(t => {
+    pa.drawText(t, { x: M, y, size: 9.5, font, color: ink });
+    pa.drawText('Trainer No: ' + (d.leadTrainerNo || '________'), { x: M + 220, y, size: 9, font, color: grey });
+    y -= 15;
   });
-  ny -= 8;
-  pn.drawText(((lpmCourse.learners || []).length) + ' learners · ' + reg.length + ' registered by QR code',
-    { x: M, y: ny, size: 8.5, font, color: grey });
+  y -= 6;
+  pa.drawText('Training dates and duration', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
+  const ds = lpmCourse.startDate, de = lpmCourse.endDate || lpmCourse.startDate;
+  pa.drawText((ds ? fmtD(ds) : '—') + (de && de !== ds ? ' – ' + fmtD(de) : ''), { x: M, y, size: 9.5, font, color: ink });
+  y -= 24;
+  pa.drawText('Documents enclosed with this form for IQA', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
+  ACF_ENCLOSURES.forEach(([k, label]) => {
+    const on = d.enclosures && d.enclosures[k];
+    pa.drawText(on ? '[x]' : '[ ]', { x: M, y, size: 9.5, font: bold, color: on ? rgb(0.12, 0.48, 0.27) : grey });
+    y = wrap(pa, label, M + 22, y, 9, A4[0] - M * 2 - 30) - 3;
+  });
+  y -= 10;
+  y = wrap(pa, 'The above candidates have met the criteria and passed the requirements for the qualification in '
+    + 'accordance with the Army Cadet First Aid Assessment Specification.', M, y, 9, A4[0] - M * 2) - 10;
+  pa.drawText('Lead Assessor: ' + (d.leadAssessor || '____________________'), { x: M, y, size: 9.5, font, color: ink });
+  pa.drawText('Trainer No: ' + (d.leadTrainerNo || '________'), { x: M + 260, y, size: 9.5, font, color: ink });
+  pa.drawText('Date: ' + (d.leadDate ? fmtD(d.leadDate) : '__________'), { x: M + 410, y, size: 9.5, font, color: ink });
+  if (d.leadSignature) {
+    try {
+      const img = await pdf.embedPng(d.leadSignature);
+      const w = 130, h = img.height * (w / img.width);
+      pa.drawImage(img, { x: M, y: y - h - 10, width: w, height: h });
+    } catch (e) {}
+  }
+  pa.drawText('All documentation MUST be sent within 4 weeks of the last assessment date.',
+    { x: M, y: 56, size: 8.5, font, color: grey });
+}
+
+  // ---- Delegate register ----
+  // No standard ACF register exists, so this is the Digital Training Centre form:
+  // it doubles as the nominal roll Annex D asks for (name, DOB, PNumber, gender).
+  const regRows = (lpmCourse.learners || []).filter(l => (l.name || '').trim());
+  const byName = {};
+  (lpmCourse.registerEntries || []).forEach(r => { byName[(r.name || '').trim().toLowerCase()] = r; });
+  const perPage = 12;
+  for (let page = 0; page * perPage < Math.max(regRows.length, 1); page++) {
+    const pn = pdf.addPage(A4);
+    const pages = Math.max(1, Math.ceil(regRows.length / perPage));
+    let ny = header(pn, 'Delegate register and nominal roll',
+      (lpmCourse.courseName || '') + ' · ' + (lpmCourse.courseRef || '') +
+      (pages > 1 ? '  ·  page ' + (page + 1) + ' of ' + pages : ''));
+
+    // course strip
+    const strip = [
+      ['Venue', lpmCourse.location || '—'],
+      ['Dates', (lpmCourse.startDate ? fmtD(lpmCourse.startDate) : '—') +
+        (lpmCourse.endDate && lpmCourse.endDate !== lpmCourse.startDate ? ' – ' + fmtD(lpmCourse.endDate) : '')],
+      ['Times', (lpmCourse.startTime || '—') + ' to ' + (lpmCourse.finishTime || '—')],
+      ['Trainer', lpmCourse.instructor1 || '—']
+    ];
+    strip.forEach(([k, v], i2) => {
+      const x = M + (i2 % 2) * 260, yy = ny - Math.floor(i2 / 2) * 15;
+      pn.drawText(k + ':', { x, y: yy, size: 8.5, font: bold, color: grey });
+      pn.drawText(String(v), { x: x + 52, y: yy, size: 9, font, color: ink });
+    });
+    ny -= 44;
+
+    const cw = [16, 132, 62, 66, 48, 92, 92];   // #, name, DOB, P number, gender, unit, signature
+    const heads = ['#', 'Name', 'DOB', 'P number', 'Gender', 'Unit / detachment', 'Signature'];
+    let cx = M;
+    heads.forEach((h, k) => { pn.drawText(h, { x: cx + 2, y: ny, size: 8, font: bold, color: grey }); cx += cw[k]; });
+    ny -= 4;
+    pn.drawLine({ start: { x: M, y: ny }, end: { x: M + cw.reduce((a, b) => a + b, 0), y: ny },
+      thickness: 0.8, color: grey });
+    ny -= 15;
+
+    const slice = regRows.slice(page * perPage, (page + 1) * perPage);
+    for (let n = 0; n < slice.length; n++) {
+      const l = slice[n];
+      const r = byName[(l.name || '').trim().toLowerCase()] || {};
+      const cells = [String(page * perPage + n + 1), (l.name || '').trim(),
+        (l.dob || r.dob) ? fmtD(l.dob || r.dob) : '', l.pNumber || r.pNumber || '',
+        l.gender || r.gender || '', r.organisation || '', ''];
+      cx = M;
+      cells.forEach((v, k) => {
+        let t = String(v);
+        while (t.length > 2 && font.widthOfTextAtSize(t, 8.5) > cw[k] - 6) t = t.slice(0, -2) + '…';
+        pn.drawText(t, { x: cx + 2, y: ny, size: 8.5, font, color: ink });
+        cx += cw[k];
+      });
+      // the signature they gave when scanning the QR
+      if (r.signature) {
+        try {
+          const img = r.signature.indexOf('image/png') > -1 ? await pdf.embedPng(r.signature) : null;
+          if (img) {
+            const w = 78, h = Math.min(16, img.height * (w / img.width));
+            pn.drawImage(img, { x: cx - cw[6] + 4, y: ny - 3, width: w, height: h });
+          }
+        } catch (e) {}
+      }
+      pn.drawLine({ start: { x: M, y: ny - 6 }, end: { x: M + cw.reduce((a, b) => a + b, 0), y: ny - 6 },
+        thickness: 0.4, color: rgb(0.88, 0.9, 0.93) });
+      ny -= 22;
+    }
+    if (!slice.length) pn.drawText('No learners recorded.', { x: M, y: ny, size: 9.5, font, color: grey });
+
+    pn.drawText('I confirm the learners listed above attended this course on the dates shown.',
+      { x: M, y: 96, size: 8.5, font, color: grey });
+    pn.drawText('Trainer: ' + (lpmCourse.instructor1 || '____________________'),
+      { x: M, y: 76, size: 9.5, font, color: ink });
+    pn.drawText('Trainer No: ' + (lpmCourse.trainerNo1 || '________'), { x: M + 250, y: 76, size: 9.5, font, color: ink });
+    pn.drawText('Date: ' + (lpmCourse.endDate ? fmtD(lpmCourse.endDate) : '__________'),
+      { x: M + 400, y: 76, size: 9.5, font, color: ink });
+    pn.drawText(regRows.length + ' learners · ' + (lpmCourse.registerEntries || []).length + ' signed in by QR code',
+      { x: M, y: 56, size: 8, font, color: grey });
+  }
 
   // ---- Annex E: practical assessment ----
   const pe = pdf.addPage(A4);
-  let y = header(pe, spec.annexE, 'Annex E · ' + (lpmCourse.courseName || ''));
+  y = header(pe, spec.annexE, 'Annex E · ' + (lpmCourse.courseName || ''));
   y = wrap(pe, 'The Trainer/Assessor must observe each candidate carrying out the correct treatment under current '
     + 'protocols on each of the below criteria and place a "P" to confirm the candidate has met the criteria.',
     M, y, 8.5, A4[0] - M * 2) - 6;
@@ -10098,55 +10131,29 @@ async function acfPackPages(pdf, helpers) {
     if (y < 80) { y = header(pdf.addPage(A4), 'Theory assessment results (continued)', ''); }
   });
 
-  // ---- Annex D ----
-  const d = acfAnnexD();
-  const pa = pdf.addPage(A4);
-  y = header(pa, 'First Aid Course Information', 'Annex D · this document MUST be attached to any course materials');
-  const row = (k, v) => { pa.drawText(k, { x: M, y, size: 9, font: bold, color: grey });
-    pa.drawText(String(v || '—'), { x: M + 180, y, size: 10, font, color: ink }); y -= 17; };
-  row('CRE number', d.creNumber);
-  row('County / Unit', d.countyUnit);
-  row('Course type', d.courseType);
-  row('Blended learning course', d.blended);
-  row('Number of learners', out.length);
-  row('Passed', d.learnersPassed);
-  row('Referred', d.learnersReferred);
-  row('Not contacted by DAO', d.noContactDAO);
-  y -= 6;
-  pa.drawText('Trainer details', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
-  const trainers = [lpmCourse.instructor1, lpmCourse.instructor2].filter(Boolean);
-  (trainers.length ? trainers : ['—']).forEach(t => {
-    pa.drawText(t, { x: M, y, size: 9.5, font, color: ink });
-    pa.drawText('Trainer No: ' + (d.leadTrainerNo || '________'), { x: M + 220, y, size: 9, font, color: grey });
-    y -= 15;
-  });
-  y -= 6;
-  pa.drawText('Training dates and duration', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
-  const ds = lpmCourse.startDate, de = lpmCourse.endDate || lpmCourse.startDate;
-  pa.drawText((ds ? fmtD(ds) : '—') + (de && de !== ds ? ' – ' + fmtD(de) : ''), { x: M, y, size: 9.5, font, color: ink });
-  y -= 24;
-  pa.drawText('Documents enclosed with this form for IQA', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
-  ACF_ENCLOSURES.forEach(([k, label]) => {
-    const on = d.enclosures && d.enclosures[k];
-    pa.drawText(on ? '[x]' : '[ ]', { x: M, y, size: 9.5, font: bold, color: on ? rgb(0.12, 0.48, 0.27) : grey });
-    y = wrap(pa, label, M + 22, y, 9, A4[0] - M * 2 - 30) - 3;
-  });
-  y -= 10;
-  y = wrap(pa, 'The above candidates have met the criteria and passed the requirements for the qualification in '
-    + 'accordance with the Army Cadet First Aid Assessment Specification.', M, y, 9, A4[0] - M * 2) - 10;
-  pa.drawText('Lead Assessor: ' + (d.leadAssessor || '____________________'), { x: M, y, size: 9.5, font, color: ink });
-  pa.drawText('Trainer No: ' + (d.leadTrainerNo || '________'), { x: M + 260, y, size: 9.5, font, color: ink });
-  pa.drawText('Date: ' + (d.leadDate ? fmtD(d.leadDate) : '__________'), { x: M + 410, y, size: 9.5, font, color: ink });
-  if (d.leadSignature) {
-    try {
-      const img = await pdf.embedPng(d.leadSignature);
-      const w = 130, h = img.height * (w / img.width);
-      pa.drawImage(img, { x: M, y: y - h - 10, width: w, height: h });
-    } catch (e) {}
+  // ---- Annex F: reasonable adjustments ----
+  const alnLearners = (lpmCourse.learners || []).filter(l => l.aln && (
+    (l.aln.needs || []).length || (l.aln.adjustments || []).length || (l.aln.notes || '')));
+  const pf = pdf.addPage(A4);
+  let fy = header(pf, 'Reasonable Adjustment and Special Considerations',
+    'Annex F · ' + (lpmCourse.courseName || ''));
+  if (!alnLearners.length) {
+    pf.drawText('No reasonable adjustments were requested or applied on this course.',
+      { x: M, y: fy, size: 10, font, color: ink });
+  } else {
+    alnLearners.forEach(l => {
+      pf.drawText(l.name || '', { x: M, y: fy, size: 11, font: bold, color: ink }); fy -= 16;
+      const a = l.aln || {};
+      if ((a.needs || []).length) { fy = wrap(pf, 'Needs: ' + a.needs.join(', '), M + 12, fy, 9.5, A4[0] - M * 2 - 20) - 3; }
+      if ((a.adjustments || []).length) { fy = wrap(pf, 'Adjustments: ' + a.adjustments.join(', '), M + 12, fy, 9.5, A4[0] - M * 2 - 20) - 3; }
+      if (a.notes) { fy = wrap(pf, 'Notes: ' + a.notes, M + 12, fy, 9.5, A4[0] - M * 2 - 20) - 3; }
+      const by = [a.agreedBy ? 'Agreed by ' + a.agreedBy : '', a.date ? fmtD(a.date) : ''].filter(Boolean).join(' · ');
+      if (by) { pf.drawText(by, { x: M + 12, y: fy, size: 8.5, font, color: grey }); fy -= 14; }
+      fy -= 10;
+      if (fy < 90) { fy = header(pdf.addPage(A4), 'Reasonable Adjustments (continued)', ''); }
+    });
   }
-  pa.drawText('All documentation MUST be sent within 4 weeks of the last assessment date.',
-    { x: M, y: 56, size: 8.5, font, color: grey });
-}
+
 // =====================================================================
 
 // ============== ARMY CADETS — COURSE JOURNEY TILES ==============
@@ -10160,7 +10167,7 @@ const ACF_JOURNEY = [
   { key:'skills',   title:'Practical assessment', sub:'Annex E criteria', ic:'check' },
   { key:'theory',   title:'Theory exams',   sub:'Sat by QR, auto-marked', ic:'paper' },
   { key:'feedback', title:'Feedback',       sub:'Course evaluation',      ic:'star' },
-  { key:'pack',     title:'Course pack',    sub:'Annex D and submit',     ic:'send' }
+  { key:'pack',     title:'Course pack',    sub:'Build and send for IQA',  ic:'send' }
 ];
 
 const ACF_JIC = {
@@ -10247,7 +10254,28 @@ const ACF_J_COLOUR = {
   pack:     { accent:'#0F6E56', soft:'#DDEFE6' }
 };
 
+// Annex D is never shown as a form: it is built from the course record
+// whenever anything changes, and printed into the pack at the end.
+function acfAnnexDSync() {
+  if (!lpmCourse || !acfCourse(lpmCourse)) return;
+  const d = acfAnnexD();
+  const out = acfOutcomes();
+  d.learnersPassed = out.filter(o => o.passed).length;
+  d.learnersReferred = out.filter(o => o.started && !o.passed).length;
+  d.courseType = (acfCourse(lpmCourse) || {}).short || d.courseType;
+  d.countyUnit = d.countyUnit || LICENCE.name || '';
+  if (!d.creNumber && LICENCE.centreNo) d.creNumber = LICENCE.centreNo;
+  const t = acfCourseTrainers()[0];
+  if (t) { d.leadAssessor = d.leadAssessor || t.name; d.leadTrainerNo = d.leadTrainerNo || t.no; }
+  if (!d.leadDate) d.leadDate = lpmCourse.endDate || lpmCourse.startDate || '';
+  const prac = acfPracFor(lpmCourse.id);
+  if (!d.leadSignature && prac.signature) d.leadSignature = prac.signature;
+  acfAutoEnclosures();
+  lpmPersist();
+}
+
 function acfRenderJourney() {
+  acfAnnexDSync();
   const host = document.getElementById('acfJourney');
   if (!host || !lpmCourse) return;
   const hidden = lpmHiddenSteps(lpmCourse);
@@ -12332,11 +12360,15 @@ async function lpmBuildPack(action) {
     if (kind === 'acf') {
       const spec = acfCourse(lpmCourse);
       contentLines.length = 0;
-      contentLines.push('Nominal roll (' + ((lpmCourse.registerEntries || []).length) + ' registered by QR)',
-        'Practical assessment paper — Annex E (' + (spec ? spec.criteria.length : 0) + ' criteria)',
-        'Theory assessment results (' + acfPapersFor(lpmCourse).map(p => p.unit).join(', ') + ')',
-        'First Aid Course Information — Annex D',
-        'Learner feedback forms (' + ((lpmCourse.feedback || []).length + counts('feedback')) + ')');
+      const alnN = (lpmCourse.learners || []).filter(l => l.aln && ((l.aln.needs || []).length
+        || (l.aln.adjustments || []).length || (l.aln.notes || ''))).length;
+      contentLines.push(
+        '1. First Aid Course Information — Annex D (cover sheet)',
+        '2. Delegate register / nominal roll (' + ((lpmCourse.registerEntries || []).length) + ' signed by QR)',
+        '3. Practical assessment — Annex E ' + (spec ? '(' + spec.short + ', ' + spec.criteria.length + ' criteria)' : ''),
+        '4. Theory assessment papers (' + acfPapersFor(lpmCourse).map(p => p.unit).join(', ') + ')',
+        '5. Reasonable Adjustment and Special Considerations — Annex F (' + alnN + ')',
+        '6. Learner feedback forms (' + ((lpmCourse.feedback || []).length + counts('feedback')) + ')');
     }
     contentLines.forEach(t => line('• ' + t, font, 11));
     if (kind === 'acf') {
@@ -14983,43 +15015,153 @@ async function alnPackPages(pdf, font, bold, ink, grey, A4) {
 </script>
 
 <script>
-// ====== Example course removed ======
-// No example course is planted for Army Cadets. This also clears any example
-// left behind by an earlier version of the app (local, cloud and pack files).
+// ====== Worked example: a completed First Aid at Work course ======
+// Every instructor sees the same locked example so they can see what a
+// finished course looks like end to end. It is read-only and never
+// counts towards CPD, course totals or IQA figures.
 (function () {
-  const KEY = 'dtc_example_v1';
-  async function purgeExample() {
-    try {
-      if (typeof lpmLoadCourses !== 'function') return setTimeout(purgeExample, 400);
-      const courses = lpmLoadCourses();
-      const stale = courses.filter(c => c.isExample || /^EXAMPLE-/.test(c.id || ''));
-      if (stale.length) {
-        lpmSaveCoursesRaw(courses.filter(c => !(c.isExample || /^EXAMPLE-/.test(c.id || ''))));
-        // skills ticks
-        try {
-          const sk = skLoadAll(); let touched = false;
-          stale.forEach(c => { if (sk[c.id]) { delete sk[c.id]; touched = true; } });
-          if (touched) skSaveAllRaw(sk);
-        } catch (e) {}
-        // pack photos held in IndexedDB
-        for (const c of stale) {
-          try {
-            const files = await packList(c.id);
-            for (const f of files) { try { await packDelete(f.id); } catch (e) {} }
-          } catch (e) {}
-        }
-        // and the copy in Supabase, if one was ever synced
-        if (typeof CLOUD_ON !== 'undefined' && CLOUD_ON && cloud.session) {
-          for (const c of stale) {
-            try { await cloudRest('courses?id=eq.' + encodeURIComponent(c.id), 'DELETE', null, 'return=minimal'); } catch (e) {}
-          }
-        }
-        try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
-      }
-      localStorage.removeItem(KEY);
-    } catch (e) { console.log('example purge', e); }
+  const KEY = 'acf_example_v3';
+  const ID = 'EXAMPLE-FAW';
+
+  const LEARNERS = [
+    ['L1', 'Jordan Ashworth',  '2008-04-12', '30451201', 'Female'],
+    ['L2', 'Priya Raidurgam',  '2007-11-03', '30451202', 'Female'],
+    ['L3', 'Callum Fairweather','1989-02-25', '30451203', 'Male'],
+    ['L4', 'Nia Okonjo-Bell',  '2008-09-30', '30451204', 'Female'],
+    ['L5', 'Rowan Tavistock',  '2007-06-18', '30451205', 'Male'],
+    ['L6', 'Devon Marchetti',  '1994-12-07', '30451206', 'Male']
+  ];
+  // Module 1 out of 15 (pass 12), Module 2 out of 25 (pass 20)
+  const SCORES = { L1:[14,23], L2:[13,21], L3:[15,24], L4:[12,20], L5:[14,22], L6:[13,21] };
+
+  const SIG = 'data:image/svg+xml;base64,' + btoa(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60">' +
+    '<path d="M8 44c18-26 30 6 44-10s22 14 38-6 26 10 42-8 24 12 40-4" ' +
+    'fill="none" stroke="#0A3A24" stroke-width="2.4" stroke-linecap="round"/></svg>');
+
+  function buildCourse() {
+    const learners = LEARNERS.map(([id, name, dob, pno, gender]) => {
+      const l = { id, name, dob, pNumber: pno, gender, email: '' };
+      if (id === 'L4') l.aln = {
+        needs: ['Dyslexia'],
+        adjustments: ['Extra time (25%)', 'Coloured overlay or paper'],
+        notes: 'Coloured overlay used for both theory papers; extra time agreed before the course and given.',
+        agreedBy: 'Capt Eleanor Whitcombe', date: '2026-05-11' };
+      return l;
+    });
+
+    const sittings = [];
+    LEARNERS.forEach(([id, name]) => {
+      [['EFAWJAN26', 15, 12, 0, '2026-05-11T12:40:00Z'],
+       ['FAWJAN26',  25, 20, 1, '2026-05-13T14:10:00Z']].forEach(([paper, total, pass, idx, at]) => {
+        const score = SCORES[id][idx];
+        sittings.push({ id: 'EX-' + id + '-' + paper, paper, name, status: 'marked',
+                        score, passed: score >= pass, at, sig: SIG });
+      });
+    });
+
+    const register = LEARNERS.map(([id, name, dob, pno, gender], i) => ({
+      id: 'EXREG-' + id, name, position: i < 4 ? 'Cadet' : 'Adult volunteer',
+      organisation: 'B Company, Ferndale Detachment',
+      dob, pNumber: pno, gender, email: '', consentDAO: i !== 2,
+      signature: SIG, signedAt: '2026-05-11T09:05:00Z'
+    }));
+
+    return {
+      id: ID, isExample: true, locked: true,
+      courseName: 'First Aid at Work - 3 Day',
+      courseRef: 'ACF/FAW/2026/014',
+      location: 'Ferndale Cadet Training Centre, Hut 3',
+      startDate: '2026-05-11', endDate: '2026-05-13',
+      startTime: '09:00', finishTime: '16:30',
+      instructor1: 'Capt Eleanor Whitcombe', instructor2: 'SSI Marcus Delaney',
+      trainerNo1: 'T-40118', trainerNo2: 'T-40233',
+      extraInstructors: [], taught: [1, 2, 3],
+      instructorDays: { 'Capt Eleanor Whitcombe': [1, 2, 3], 'SSI Marcus Delaney': [2, 3] },
+      learners, registerEntries: register, examSittings: sittings,
+      records: [], linkedSessionIds: [],
+      stepDone: { details: true, learners: true, skills: true, theory: true, feedback: true, pack: true },
+      feedback: [
+        { id: 'EXFB1', source: 'qr', savedAt: '2026-05-13T15:40:00Z',
+          ratings: { delivery:'Excellent', visual:'Very Good', body:'Excellent', participation:'Excellent',
+                     knowledge:'Excellent', techniques:'Very Good', pace:'About right', covered:'Yes',
+                     confident:'Yes', comfortable:'Yes', skills:'Yes' },
+          rateTrainer: '9', comments: 'Clear teaching and plenty of hands-on practice. The catastrophic bleeding station was the most useful part.',
+          name: 'Jordan Ashworth' },
+        { id: 'EXFB2', source: 'qr', savedAt: '2026-05-13T15:44:00Z',
+          ratings: { delivery:'Excellent', visual:'Excellent', body:'Very Good', participation:'Excellent',
+                     knowledge:'Excellent', techniques:'Excellent', pace:'About right', covered:'Yes',
+                     confident:'Yes', comfortable:'Yes', skills:'Yes' },
+          rateTrainer: '10', comments: 'I feel confident doing CPR and using an AED now.', name: '' },
+        { id: 'EXFB3', source: 'qr', savedAt: '2026-05-13T15:51:00Z',
+          ratings: { delivery:'Very Good', visual:'Good', body:'Very Good', participation:'Very Good',
+                     knowledge:'Excellent', techniques:'Very Good', pace:'About right', covered:'Mostly',
+                     confident:'Yes', comfortable:'Somewhat', skills:'Yes' },
+          rateTrainer: '8', comments: 'Improvements: a little longer on the secondary survey would help.', name: 'Devon Marchetti' }
+      ],
+      annexD: {
+        creNumber: 'CRE-2291', countyUnit: LICENCE.name || 'Army Cadet Force',
+        courseType: 'FAW', blended: 'NO',
+        learnersPassed: 6, learnersReferred: 0,
+        noContactDAO: 'Callum Fairweather',
+        trainers: [], dates: [], enclosures: {},
+        leadAssessor: 'Capt Eleanor Whitcombe', leadTrainerNo: 'T-40118',
+        leadSignature: SIG, leadDate: '2026-05-13'
+      },
+      completed: { at: '2026-05-13T17:00:00Z' },
+      submission: { at: '2026-05-14T09:20:00Z', by: 'Capt Eleanor Whitcombe' },
+      signature: SIG, signatureAt: '2026-05-13T16:55:00Z',
+      createdAt: '2026-05-11T08:00:00Z'
+    };
   }
-  window.addEventListener('load', () => setTimeout(purgeExample, 600));
+
+  function plantPractical() {
+    const all = (() => { try { return JSON.parse(localStorage.getItem('acf_practical_v1') || '{}'); } catch (e) { return {}; } })();
+    if (all[ID]) return;
+    const marks = {}, initials = {};
+    // 6 learners × 9 FAW criteria, all passed
+    for (let i = 0; i < 6; i++) {
+      initials[i] = (LEARNERS[i][1].split(/\s+/).map(w => w[0]).join('')).toUpperCase();
+      for (let c = 0; c < 9; c++) marks[i + ':' + c] = 'P';
+    }
+    all[ID] = { marks, initials,
+      feedback: 'A strong group throughout. Jordan and Nia led the CPR station confidently and rotated compressions '
+        + 'without prompting. Callum needed a second attempt at the catastrophic bleeding station and passed on the '
+        + 'repeat. Whole group gave clear, structured handovers by day three.',
+      assessor: 'Capt Eleanor Whitcombe', trainerNo: 'T-40118',
+      signature: SIG, date: '2026-05-13' };
+    try { localStorage.setItem('acf_practical_v1', JSON.stringify(all)); } catch (e) {}
+  }
+
+  function plantReview() {
+    try {
+      const m = JSON.parse(localStorage.getItem(REVIEWS_KEY) || '{}');
+      if (m[ID]) return;
+      m[ID] = { course_id: ID, iqa_name: 'Maj Rosalind Petersen', review_date: '2026-05-19',
+                outcome: 'Accepted',
+                notes: 'Paperwork complete and legible. Annex D matches the nominal roll and theory results. '
+                     + 'Reasonable adjustment for one learner recorded correctly on Annex F. No actions.',
+                updated_at: '2026-05-19T11:15:00Z' };
+      localStorage.setItem(REVIEWS_KEY, JSON.stringify(m));
+    } catch (e) {}
+  }
+
+  async function plant() {
+    try {
+      if (typeof lpmLoadCourses !== 'function' || typeof REVIEWS_KEY === 'undefined') return setTimeout(plant, 400);
+      const courses = lpmLoadCourses();
+      const already = courses.some(c => c.id === ID);
+      if (already && localStorage.getItem(KEY)) return;
+      const clean = courses.filter(c => c.id !== ID && !(c.isExample && /^EXAMPLE-/.test(c.id || '')));
+      clean.unshift(buildCourse());
+      lpmSaveCoursesRaw(clean);
+      plantPractical();
+      plantReview();
+      localStorage.setItem(KEY, '1');
+      try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
+    } catch (e) { console.log('example', e); }
+  }
+  window.addEventListener('load', () => setTimeout(plant, 600));
 })();
 
 // ============ LOCKED COURSES AND REQUESTS TO EDIT ============
