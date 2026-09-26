@@ -86,6 +86,13 @@ function fmtD(v) {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
+    /* Army Cadets brand tokens — used by the practical grid, journey tiles and Annex D */
+    --brand-dark: #0A3A24;
+    --brand-accent: #1E7A46;
+    --brand-tint: #E9F4EC;
+    --brand-sub: #9CC3A8;
+    --brand-onDark: #D3E5D9;
+    --brand-hi: #F0C75E;
     --bg: #FFFFFF;
     --surface: #FFFFFF;
     --panel: #F7F9FC;
@@ -1513,7 +1520,7 @@ function fmtD(v) {
 .acf-cell{width:42px;height:34px;border:1px solid #CBD5DF;border-radius:7px;background:#fff!important;
   font-weight:800;font-size:.85rem;color:#c3ccd4!important;cursor:pointer;transition:transform .08s}
 .acf-cell:active{transform:scale(.92)}
-.acf-cell.ok{background:var(--brand-accent)!important;border-color:var(--brand-accent)!important;color:#fff!important}
+.acf-cell.ok{background:#1E7A46!important;border-color:#1E7A46!important;color:#fff!important;box-shadow:0 1px 3px rgba(30,122,70,.35)}
 .acf-cell.ref{background:#C0563C!important;border-color:#C0563C!important;color:#fff!important}
 .acf-cell:disabled{opacity:.7;cursor:default}
 .acf-lbl{display:block;font-size:.78rem;font-weight:700;color:var(--brand-dark);margin-bottom:5px}
@@ -1588,6 +1595,10 @@ function fmtD(v) {
 .acf-j-tiles{margin-top:0}
 .acf-j-tile{width:100%;height:100%;position:relative}
 .acf-j-tile.done{background:var(--soft)!important}
+/* the step you are on is outlined in its own colour — no size change */
+.acf-j-tile[data-active="1"]{border-color:var(--accent)!important;
+  box-shadow:0 0 0 2px var(--accent) inset!important;transform:none!important}
+.acf-j-tile[data-active="1"] .hub-title{color:var(--accent)!important}
 /* the studio tiles are vertical, so the tick sits in the corner */
 .acf-j-tile .acf-j-tick{position:absolute;top:18px;right:18px;margin:0}
 .acf-j-note{display:block;font-size:.8rem;color:var(--brand-accent)!important;font-weight:700;margin-top:8px}
@@ -1612,6 +1623,29 @@ function fmtD(v) {
 .lpm-past-h svg{margin-left:auto;color:#8a97a2;transition:transform .18s}
 .lpm-past-c{background:var(--brand-tint);color:var(--brand-accent);border-radius:999px;
   padding:2px 9px;font-size:.72rem;font-weight:800}
+
+/* sign-off row: every field the same height */
+.acf-sign label{flex:1 1 160px;font-size:.72rem;color:#54616b;font-weight:600;display:flex;flex-direction:column}
+.acf-sign input,.acf-sign select,.acf-sign .acf-sig-pad,.acf-sign .acf-sig-filled{
+  width:100%;margin-top:3px;height:42px;border:1px solid #CBD5DF;border-radius:8px;
+  padding:0 9px;font:inherit;font-size:.84rem;background:#fff;color:#25323b;box-sizing:border-box}
+.acf-sign .acf-sig-pad{border-style:dashed;border-color:var(--brand-accent);background:var(--brand-tint);
+  color:var(--brand-accent);font-weight:700;cursor:pointer}
+.acf-sign .acf-sig-filled{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 6px}
+.acf-sign .acf-sig-filled img{max-height:36px;max-width:82%}
+.acf-sig-x{border:0;background:none;color:#8a97a2;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 4px}
+.acf-sign-sig{flex:1 1 180px}
+
+/* QR enlarge in place */
+.acf-qr,.fb-qr-card{position:relative}
+.qr-zoom{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:9px;
+  border:1px solid #D8DEE8;background:#fff;color:#54616b;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;z-index:2}
+.qr-zoom.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+.qr-big{flex:1 1 100%!important}
+.qr-big .fb-qr-img,.qr-big [id^=acfQrImg]{margin:0 auto}
+.qr-big .fb-qr-img canvas,.qr-big .fb-qr-img img,
+.qr-big [id^=acfQrImg] canvas,.qr-big [id^=acfQrImg] img{max-width:100%;height:auto}
 </style>
 
 <style id="studioTheme">
@@ -9463,6 +9497,12 @@ function acfPracFor(courseId) {
   const all = acfPracLoad();
   return all[courseId] || (all[courseId] = { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' });
 }
+// Initials worked out from the learner's name, e.g. "Cdt J. Harper" -> JH
+function acfInitialsOf(name) {
+  const words = String(name || '').trim().split(/\s+/)
+    .filter(w => !/^(cdt|si|ssi|lcpl|cpl|sgt|ssgt|wo2|wo1|capt|lt|maj|mr|mrs|ms|miss|dr)\.?$/i.test(w));
+  return words.map(w => (w.replace(/[^A-Za-z]/g, '')[0] || '')).join('').slice(0, 3).toUpperCase();
+}
 function acfPracSet(courseId, fn) {
   const all = acfPracLoad();
   const rec = all[courseId] || { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' };
@@ -9501,7 +9541,10 @@ function acfRenderPractical() {
 
   let initRow = '<td class="acf-crit acf-initrow">The learner is to initial this column under their name to confirm this is their own work</td>';
   for (let i = 0; i < cols; i++) {
-    initRow += `<td><input class="acf-init" maxlength="4" value="${lpmEsc(rec.initials[i] || '')}" ${ro ? 'disabled' : ''}
+    const auto = learners[i] ? acfInitialsOf(learners[i].name || learners[i]) : '';
+    const val = rec.initials[i] != null && rec.initials[i] !== '' ? rec.initials[i] : auto;
+    initRow += `<td><input class="acf-init" maxlength="4" value="${lpmEsc(val)}" ${ro ? 'disabled' : ''}
+      title="Taken from the learner's name — the learner can change it"
       oninput="acfPracSet('${lpmCourse.id}', r => r.initials[${i}] = this.value.toUpperCase())"></td>`;
   }
 
@@ -9511,8 +9554,10 @@ function acfRenderPractical() {
     for (let i = 0; i < cols; i++) {
       const v = rec.marks[i + ':' + ci] || '';
       const cls = v === 'P' ? 'ok' : (v === 'R' ? 'ref' : '');
+      const face = v === 'P' ? '&#10003;' : (v === 'R' ? 'R' : '&middot;');
       tds += `<td><button class="acf-cell ${cls}" ${ro ? 'disabled' : ''}
-        onclick="acfPracCycle('${lpmCourse.id}',${i},${ci})">${v || '&middot;'}</button></td>`;
+        title="${v === 'P' ? 'Pass' : v === 'R' ? 'Referral' : 'Not assessed'}"
+        onclick="acfPracCycle('${lpmCourse.id}',${i},${ci})">${face}</button></td>`;
     }
     rows += `<tr>${tds}</tr>`;
   });
@@ -9536,18 +9581,21 @@ function acfRenderPractical() {
         oninput="acfPracField('${lpmCourse.id}','feedback',this.value)">${lpmEsc(rec.feedback || '')}</textarea>
       <p class="acf-declare">The above candidates have met the criteria and passed the practical assessments</p>
       <div class="acf-sign">
-        <label>Trainer/Assessor<input value="${lpmEsc(rec.assessor || '')}" ${ro ? 'disabled' : ''}
-          oninput="acfPracField('${lpmCourse.id}','assessor',this.value)"></label>
+        <label>Trainer/Assessor
+          <select ${ro ? 'disabled' : ''} onchange="acfPracPickAssessor(this.value)">
+            <option value="">Choose…</option>
+            ${acfCourseTrainers().map(t => `<option value="${lpmEsc(t.name)}"${(rec.assessor || '') === t.name ? ' selected' : ''}>${lpmEsc(t.name)}</option>`).join('')}
+          </select></label>
         <label>Trainer No<input value="${lpmEsc(rec.trainerNo || '')}" ${ro ? 'disabled' : ''}
           oninput="acfPracField('${lpmCourse.id}','trainerNo',this.value)"></label>
         <label>Date<input type="date" value="${lpmEsc(rec.date || '')}" ${ro ? 'disabled' : ''}
           oninput="acfPracField('${lpmCourse.id}','date',this.value)"></label>
-      </div>
-      <div class="acf-sigbox">
-        <span>Trainer/Assessor Signature</span>
-        ${rec.signature ? `<img src="${rec.signature}" alt="signature">`
-                        : `<button class="acf-sigbtn" ${ro ? 'disabled' : ''} onclick="acfSignPractical()">Sign here</button>`}
-        ${rec.signature && !ro ? `<button class="acf-clear" onclick="acfPracField('${lpmCourse.id}','signature','');acfRenderPractical()">Clear</button>` : ''}
+        <label class="acf-sign-sig">Trainer/Assessor Signature
+          ${rec.signature
+            ? `<span class="acf-sig-filled"><img src="${rec.signature}" alt="signature">
+                 ${ro ? '' : `<button class="acf-sig-x" title="Clear" onclick="acfPracField('${lpmCourse.id}','signature','');acfRenderPractical()">&times;</button>`}</span>`
+            : `<button class="acf-sig-pad" ${ro ? 'disabled' : ''} onclick="acfSignPractical()">Sign here</button>`}
+        </label>
       </div>
     </div>`;
 }
@@ -9591,6 +9639,21 @@ function acfSign(onDone) {
     const url = (typeof qsTrimSignature === 'function') ? qsTrimSignature(cv) : cv.toDataURL('image/png');
     close(); onDone(url);
   };
+}
+
+// Instructors named on the course details, with their trainer numbers
+function acfCourseTrainers() {
+  const c = lpmCourse || {};
+  const list = [];
+  if (c.instructor1) list.push({ name: c.instructor1, no: c.trainerNo1 || acfMyTrainerNo() || '' });
+  if (c.instructor2) list.push({ name: c.instructor2, no: c.trainerNo2 || '' });
+  (c.extraInstructors || []).filter(Boolean).forEach(n => list.push({ name: n, no: '' }));
+  return list;
+}
+function acfPracPickAssessor(name) {
+  const t = acfCourseTrainers().find(x => x.name === name);
+  acfPracSet(lpmCourse.id, r => { r.assessor = name; if (t && t.no) r.trainerNo = t.no; });
+  acfRenderPractical();
 }
 
 function acfSignPractical() {
@@ -9714,7 +9777,7 @@ async function acfRenderPaper(p) {
     box.innerHTML = `<div class="fb-qr-title">Scan to sit ${lpmEsc(p.label.split('—')[0].trim())}</div>
       <div id="acfQrImg-${p.paper}" class="fb-qr-img"></div>
       <div class="fb-qr-sub">${lpmEsc(url)}</div>
-      <button class="rn-nav-btn" onclick="acfExamFullScreen('${p.paper}')">Show full screen</button>`;
+      `;
     await fbDrawQr(document.getElementById('acfQrImg-' + p.paper), url, 190);
   } catch (e) {
     const raw = String(e.message || e);
@@ -10210,7 +10273,7 @@ function acfRenderJourney() {
         <div class="acf-j-cellwrap">
           <button class="hub-tile acf-j-tile${st.done ? ' done' : ''}"
             style="--accent:${(ACF_J_COLOUR[s.key]||{}).accent || '#0A3A24'};--soft:${(ACF_J_COLOUR[s.key]||{}).soft || '#E8EDF3'};"
-            onclick="lpmShowStep('${s.key}')">
+            onclick="lpmShowStep('${s.key}')"${LPM_STEPS[lpmStepIdx] === s.key ? ' data-active="1"' : ''}>
             <span class="hub-ic">${acfJIcon(s.ic)}</span>
             <span class="hub-text">
               <span class="hub-title">${lpmEsc(s.title)}</span>
@@ -10281,6 +10344,17 @@ function lpmTyped(sel, label, cur) {
 }
 const LPM_COURSE_LENGTH_DAYS = { 'Emergency First Aid at Work - 1 Day': 1, 'First Aid at Work - 3 Day': 3 };
 const LPM_HOURS_PER_DAY = 8;
+// Hours per day, per course, for the CPD log. FAW is 18 hours across 3 days:
+// day 1 is a short day (4 hours), the rest spread over days 2 and 3.
+const LPM_DAY_HOURS = {
+  'Emergency First Aid at Work - 1 Day': [6],
+  'First Aid at Work - 3 Day': [4, 7, 7]
+};
+function lpmHoursForDays(courseName, days) {
+  const map = LPM_DAY_HOURS[courseName];
+  if (!map) return days.length * LPM_HOURS_PER_DAY;
+  return days.reduce((t, d) => t + (map[d - 1] != null ? map[d - 1] : LPM_HOURS_PER_DAY), 0);
+}
 
 function lpmOpt(list, current) {
   return '<option value="">Select…</option>' + list.map(v =>
@@ -10305,8 +10379,8 @@ function lpmRenderDetails() {
       </div>
       <div class="lpm-field">
         <label>Training location</label>
-        <select onchange="{ const v = lpmTyped(this, 'Type the training location', ${lpmEsc(JSON.stringify(c.location || ''))}); if (v !== null) { lpmSetDetail('location', v); lpmRenderDetails(); } }">${lpmOptType(LPM_LOCATIONS.concat(['Client location']), c.location, 'Other — type a location…')}</select>
-        ${c.location === 'Client location' ? `<textarea rows="3" style="margin-top:8px;" placeholder="Client name and full address, including postcode" oninput="lpmSetDetail('clientAddress', this.value)">${lpmEsc(c.clientAddress || '')}</textarea>` : ''}
+        <input type="text" value="${lpmEsc(c.location || '')}" placeholder="Where the course is being run"
+          oninput="lpmSetDetail('location', this.value)">
       </div>
     </div>
     <div class="lpm-field-row">
@@ -10356,7 +10430,7 @@ function lpmRenderDetails() {
       </div>
       <div class="lpm-field">
         <label>Trainer number &mdash; instructor 2</label>
-        <input type="text" value="${lpmEsc(c.trainerNo2 || '')}" placeholder="Optional"
+        <input type="text" value="${lpmEsc(c.trainerNo2 || '')}" placeholder="Trainer number"
           oninput="lpmSetDetail('trainerNo2', this.value)">
       </div>
     </div>
@@ -10382,7 +10456,11 @@ function lpmInstructorDaysHTML(c) {
   const team = lpmAllInstructors(c);
   if (!team.length) return '';
   const n = lpmCourseDays(c);
-  return `<div class="lpm-field"><label>Days taught (each day adds ${LPM_HOURS_PER_DAY} hours to that instructor's CPD log)</label>
+  const dayMap = LPM_DAY_HOURS[c.courseName];
+  const hoursNote = dayMap
+    ? 'Day ' + dayMap.map((h, i) => (i + 1) + ' = ' + h + 'h').join(', day ') + ' — ' + dayMap.reduce((a, b) => a + b, 0) + ' hours in total'
+    : 'each day adds ' + LPM_HOURS_PER_DAY + ' hours to that instructor\'s CPD log';
+  return `<div class="lpm-field"><label>Days taught (${hoursNote})</label>
     <div class="lpm-days">${team.map(name => {
       const on = lpmDaysFor(c, name);
       return `<div class="lpm-days-row"><span class="lpm-days-name">${lpmEsc(name)}</span>
@@ -12712,7 +12790,7 @@ function cpdAuto(who) {
     const taught = lpmDaysFor(c, who);
     if (!taught.length) return;
     const learners = (c.learners || []).filter(l => (l.name || '').trim()).length;
-    out.push({ auto:true, date: c.startDate || '', type:'Teaching / delivery', hours: taught.length * LPM_HOURS_PER_DAY,
+    out.push({ auto:true, date: c.startDate || '', type:'Teaching / delivery', hours: lpmHoursForDays(c.courseName, taught),
       title: (c.courseName || 'Course') + (c.location ? ' — ' + c.location : ''),
       detail: (taught.length === days ? 'Full course' : 'Day' + (taught.length > 1 ? 's ' : ' ') + taught.join(', ')) + ' · ' + learners + ' learner' + (learners === 1 ? '' : 's') + (team.length > 1 ? ', co-delivered with ' + team.filter(t => t !== who).join(', ') : '') });
     const assessed = (c.records || []).length + ((c.linkedSessionIds || []).length);
@@ -13973,8 +14051,26 @@ async function fbEnsureLink() {
   return lpmCourse.feedbackLink;
 }
 
+
+// ---- QR enlarge: grows the code in place, not full screen ----
+function acfQrZoom(btn) {
+  const card = btn.closest('.fb-qr-card, .acf-qr, .rn-panel, .lpm-field') || btn.parentElement;
+  const box = card.querySelector('.fb-qr-img, [id^=acfQrImg], [id$=QrImg]');
+  if (!box) return;
+  const on = !card.classList.contains('qr-big');
+  card.classList.toggle('qr-big', on);
+  btn.setAttribute('aria-label', on ? 'Show smaller' : 'Show bigger');
+  btn.classList.toggle('on', on);
+  const url = box.dataset.qrUrl;
+  if (url) fbDrawQr(box, url, on ? Math.min(window.innerWidth * 0.8, 460) : 190).then(() => { box.dataset.qrUrl = url; });
+}
+const ACF_QR_BTN = `<button class="qr-zoom" title="Show bigger" aria-label="Show bigger" onclick="acfQrZoom(this)">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-8 8M10 20H4v-6M4 20l8-8"/></svg></button>`;
+
 async function fbDrawQr(el, text, size) {
   el.innerHTML = '';
+  el.dataset.qrUrl = text;
   if (await fbLoadQrLib()) {
     new QRCode(el, { text, width: size, height: size, colorDark:'#0A3A24', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M });
   } else {
@@ -13986,8 +14082,7 @@ async function fbRenderQrCard() {
   const box = document.getElementById('fbQrCard');
   if (!box) return;
   if (lpmCourse && lpmCourse.isExample) {
-    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="fbFullScreen()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+    box.innerHTML = `${ACF_QR_BTN}
       <div class="fb-qr-title">Scan to give feedback</div>
       <div id="fbQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub"><b>Example only</b> — this code isn't live. On your own courses the code opens the feedback form and answers appear here automatically.</div>`;
@@ -14002,8 +14097,7 @@ async function fbRenderQrCard() {
   try {
     const link = await fbEnsureLink();
     const url = fbLinkUrl(link.token);
-    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="fbFullScreen()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+    box.innerHTML = `${ACF_QR_BTN}
       <div class="fb-qr-title">Scan to give feedback</div>
       <div id="fbQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub">Answers appear here automatically</div>`;
@@ -14136,8 +14230,7 @@ async function rgRenderQrCard() {
   const box = document.getElementById('rgQrCard');
   if (!box) return;
   if (lpmCourse && lpmCourse.isExample) {
-    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="rgFullScreen()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+    box.innerHTML = `${ACF_QR_BTN}
       <div class="fb-qr-title">Scan to sign the register</div>
       <div id="rgQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub"><b>Example only</b> — this code isn't live. On your own courses the code opens the register and sign-ins appear here automatically.</div>`;
@@ -14151,8 +14244,7 @@ async function rgRenderQrCard() {
   try {
     const link = await rgEnsureLink();
     const url = rgLinkUrl(link.token);
-    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="rgFullScreen()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+    box.innerHTML = `${ACF_QR_BTN}
       <div class="fb-qr-title">Scan to sign the register</div>
       <div id="rgQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub">${rgList().length} signed in so far — display full screen for the room</div>`;
