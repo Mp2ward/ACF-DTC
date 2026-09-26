@@ -82,6 +82,31 @@ function fmtD(v) {
     });
   }
 </script>
+<script>
+// Shows any start-up error on screen instead of failing silently.
+(function () {
+  function show(msg, src, line) {
+    try {
+      if (document.getElementById('bootErr')) return;
+      var d = document.createElement('div');
+      d.id = 'bootErr';
+      d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#C0563C;color:#fff;'
+        + 'font:600 13px/1.45 system-ui,sans-serif;padding:12px 44px 12px 14px;white-space:pre-wrap;';
+      d.textContent = 'App error: ' + msg + (src ? '\n' + String(src).split('/').pop() + ' line ' + line : '');
+      var x = document.createElement('button');
+      x.textContent = '\u00d7';
+      x.style.cssText = 'position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:22px;cursor:pointer';
+      x.onclick = function () { d.remove(); };
+      d.appendChild(x);
+      (document.body || document.documentElement).appendChild(d);
+    } catch (e) {}
+  }
+  window.addEventListener('error', function (e) { show(e.message, e.filename, e.lineno); });
+  window.addEventListener('unhandledrejection', function (e) {
+    show((e.reason && (e.reason.message || e.reason)) || 'promise rejected');
+  });
+})();
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15148,7 +15173,9 @@ async function alnPackPages(pdf, font, bold, ink, grey, A4) {
 
   async function plant() {
     try {
-      if (typeof lpmLoadCourses !== 'function' || typeof REVIEWS_KEY === 'undefined') return setTimeout(plant, 400);
+      let reviewsKeyReady = false;
+      try { reviewsKeyReady = typeof REVIEWS_KEY === 'string'; } catch (e) { reviewsKeyReady = false; }
+      if (typeof lpmLoadCourses !== 'function' || !reviewsKeyReady) return setTimeout(plant, 400);
       const courses = lpmLoadCourses();
       const already = courses.some(c => c.id === ID);
       if (already && localStorage.getItem(KEY)) return;
@@ -15161,7 +15188,7 @@ async function alnPackPages(pdf, font, bold, ink, grey, A4) {
       try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
     } catch (e) { console.log('example', e); }
   }
-  window.addEventListener('load', () => setTimeout(plant, 600));
+  window.addEventListener('load', () => setTimeout(() => { try { plant(); } catch (e) { console.log('example', e); } }, 900));
 })();
 
 // ============ LOCKED COURSES AND REQUESTS TO EDIT ============
@@ -16005,8 +16032,8 @@ function licApply() {
   try { MENU_ITEMS.forEach(g => { g.items = g.items.filter(x => !featOff(x.go)); }); } catch (e) {}
 }
 document.addEventListener('DOMContentLoaded', licApply);
-function stBuildRail() {
-  licApply();
+function stBuildRailInner() {
+  try { licApply(); } catch (e) { console.log('licApply', e); }
   if (document.getElementById('stRail')) return;
   const nav = document.createElement('nav'); nav.id = 'stRail'; nav.className = 'st-rail'; nav.setAttribute('aria-label', 'Main');
   let html = `<button class="st-logo" onclick="showView('hub')" aria-label="Home"><img src="${S3_LOGO}" alt="${lpmEsc(LICENCE.short)}" onerror="this.onerror=null;this.src=licBadge()"></button>
@@ -16033,6 +16060,13 @@ function stRoleApply() {
   const wasLearner = document.body.classList.contains('role-learner');
   document.body.classList.toggle('role-learner', role === 'learner');
   if (role === 'learner' && !wasLearner) { try { lmsOpen(); } catch (e) {} }
+}
+function stBuildRail() {
+  try { stBuildRailInner(); }
+  catch (e) {
+    console.log('rail', e);
+    try { document.body.classList.remove('has-rail'); } catch (x) {}
+  }
 }
 function stSyncRail() {
   try { stRoleApply(); } catch (e) {}
