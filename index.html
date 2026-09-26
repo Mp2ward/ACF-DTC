@@ -31,9 +31,18 @@ const LICENCE = {
   // Learner LMS tiles, in order (ids: frec3 frec4 aap firstaid gases mso aet induction safeguarding manual conflict)
   lms: ['firstaid', 'mso', 'aet'],
   features: {
-    courseAdmin: true, instructorAdmin: true, jobs: false, equipment: true, lmsOverview: true, learnerLms: true, marking: true,
+    courseAdmin: true, instructorAdmin: true, marking: true,
     courseMatrix: true, scenarios: true, runScenario: true, soundboard: true, knowledgeCentre: true,
-    mySchedule: false, myPay: false, myCpd: true, payDetails: false, tiqaForm: false,
+    myCpd: true,
+    // Off for this licence: these need database tables that have not been built.
+    // Turning any of them on without its schema gives "schema" / "does not exist" errors.
+    jobs: false,          // supabase_jobs.sql — does not exist
+    equipment: false,     // assets / asset_events tables — do not exist
+    lmsOverview: false,   // lms_workbooks / lms_marks — do not exist
+    learnerLms: false,    // as above
+    mySchedule: false,    // reads the jobs table
+    myPay: false, payDetails: false,   // pay_details table — does not exist
+    tiqaForm: false,
   },
 };
 const FEAT = k => (LICENCE.features || {})[k] !== false;
@@ -15879,18 +15888,34 @@ async function pfSave() {
     if (!/^\d{2}-?\d{2}-?\d{2}$/.test(data.sortCode.replace(/\s/g, ''))) { msg.style.color = '#C74444'; msg.textContent = 'Sort code should be 6 digits, like 12-34-56.'; return; }
     if (!/^\d{8}$/.test(data.accountNumber.replace(/\s/g, ''))) { msg.style.color = '#C74444'; msg.textContent = 'Account number should be 8 digits.'; return; }
   }
-  const newName = g('pfName'); let nameNote = '';
-  try {
-    await cloudRest('pay_details?on_conflict=owner', 'POST', [{ owner: cloudMe(), data, updated_at: new Date().toISOString() }], 'resolution=merge-duplicates,return=minimal');
-    pf.extra = data; if (typeof jb !== 'undefined') jb.myPay = data;
-  } catch (e) { msg.style.color = '#C74444'; msg.textContent = 'Could not save: ' + (e.message || e); return; }
+  const newName = g('pfName'); let nameNote = '', payNote = '';
+  // Save the name FIRST, so an optional extra (pay details) can never block it
   if (newName && newName !== (cloud.profile.full_name || '')) {
-    try {
-      const r = await cloudRest('profiles?id=eq.' + cloudMe(), 'PATCH', { full_name: newName }, 'return=representation');
-      if (r && r.length) { cloud.profile.full_name = newName; try { cloudRenderBadge && cloudRenderBadge(); } catch (e) {} try { hubRender(); } catch (e) {} }
-      else nameNote = ' Your name could not be changed — ask your admin to update it.';
-    } catch (e) { nameNote = ' Your name could not be changed — ask your admin to update it.'; }
+    const parts = newName.trim().split(/\s+/);
+    const r = await cloudSaveMyName(parts[0] || '', parts.slice(1).join(' '));
+    if (r && r.saved) {
+      cloud.profile.full_name = newName;
+      try { cloudRenderBadge && cloudRenderBadge(); } catch (e) {}
+      try { hubRender(); } catch (e) {}
+    } else {
+      nameNote = ' Your name could not be changed: ' + ((r && r.why) || 'unknown error') + '.';
+    }
   }
+  // Pay details only exist where that feature is switched on and its table is present
+  if (FEAT('payDetails') && has('pfAccName')) {
+    try {
+      await cloudRest('pay_details?on_conflict=owner', 'POST', [{ owner: cloudMe(), data, updated_at: new Date().toISOString() }], 'resolution=merge-duplicates,return=minimal');
+      pf.extra = data; if (typeof jb !== 'undefined') jb.myPay = data;
+    } catch (e) {
+      const raw = String(e.message || e);
+      payNote = /relation .* does not exist|PGRST20|42P01|schema/i.test(raw)
+        ? ' Payment details are not set up on this licence, so they were not saved.'
+        : ' Payment details could not be saved: ' + raw;
+    }
+  } else {
+    pf.extra = data; if (typeof jb !== 'undefined') jb.myPay = data;
+  }
+  nameNote += payNote;
   msg.style.color = nameNote ? '#8A5200' : '#0F6E56'; msg.textContent = 'Saved.' + nameNote;
   if (!nameNote) setTimeout(pfRender, 900);
 }
