@@ -121,9 +121,19 @@ function start() {
         <li>One correct answer per question. Answer all ${INFO.questions}.</li>
         <li>Work on your own, unaided, with no notes or phones for reference.</li>
       </ul>
-      <label class="fl" for="nm">Your full name</label>
-      <input id="nm" autocomplete="name" placeholder="First and last name">
-      <div class="hint" style="margin-top:4px">This goes on your answer sheet, so use the name your instructor has.</div>
+      <label class="fl" for="pick">Your name</label>
+      ${(INFO.learners || []).length ? `
+      <select id="pick" onchange="document.getElementById('nmWrap').style.display = this.value === '__other' ? '' : 'none'"
+        style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;font:inherit;font-size:1rem;background:#fff">
+        <option value="">Choose your name…</option>
+        ${INFO.learners.map(n => { const done = (INFO.done || []).some(d => String(d).trim().toLowerCase() === String(n).trim().toLowerCase());
+          return `<option value="${esc(n)}" ${done ? 'disabled' : ''}>${esc(n)}${done ? ' (already submitted)' : ''}</option>`; }).join('')}
+        <option value="__other">My name isn't listed</option>
+      </select>` : ''}
+      <div id="nmWrap" style="${(INFO.learners || []).length ? 'display:none;margin-top:8px' : ''}">
+        <input id="nm" autocomplete="name" placeholder="First and last name">
+        <div class="hint" style="margin-top:4px">This goes on your answer sheet, so use the name your instructor has.</div>
+      </div>
       <label class="fl" for="rc">Room code</label>
       <input id="rc" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000000">
       <div class="hint" style="margin-top:4px">The 6 digits on your instructor's screen. It changes every minute.</div>
@@ -134,11 +144,13 @@ function start() {
 }
 
 async function begin() {
-  const nm = (document.getElementById('nm').value || '').trim();
+  const pk = document.getElementById('pick');
+  const nm = (pk && pk.value && pk.value !== '__other' ? pk.value : (document.getElementById('nm').value || '')).trim();
   const rcEl = document.getElementById('rc');
   const rc = (rcEl.value || '').replace(/\D/g, '');
   const msg = document.getElementById('msg'), go = document.getElementById('go');
   msg.style.color = 'var(--bad)';
+  if (pk && !pk.value) { msg.textContent = 'Choose your name from the list.'; return; }
   if (!/\S+\s+\S+/.test(nm)) { msg.textContent = 'Enter your first and last name.'; return; }
   if (rc.length !== 6) { msg.textContent = 'Enter the 6-digit room code from the screen.'; rcEl.focus(); return; }
   go.disabled = true; msg.style.color = 'var(--mut)'; msg.textContent = 'Preparing your paper…';
