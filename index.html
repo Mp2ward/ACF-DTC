@@ -1558,6 +1558,22 @@ function fmtD(v) {
 .acf-tag.ok{background:var(--brand-tint);color:var(--brand-accent)}
 .acf-tag.ref{background:#FBEDE9;color:#C0563C}
 .acf-pack-cta{border:1px dashed #CBD5DF;border-radius:12px;padding:14px;margin-top:18px;text-align:center}
+
+/* ---- Annex D form ---- */
+.acf-annexd{border:1px solid #D8DEE8;border-radius:12px;padding:16px;margin-top:18px;background:#fff}
+.acf-ad-h{font-size:.95rem;font-weight:800;color:var(--brand-dark);margin-bottom:4px}
+.acf-ad-h2{font-size:.82rem;font-weight:800;color:var(--brand-dark);margin:18px 0 8px}
+.acf-ad-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.acf-ad-grid label{flex:1 1 150px;font-size:.72rem;font-weight:600;color:#54616b}
+.acf-ad-grid input,.acf-ad-grid select{width:100%;margin-top:3px;border:1px solid #CBD5DF;border-radius:8px;
+  padding:8px;font:inherit;font-size:.84rem;background:#fff}
+.acf-ad-l{display:block;font-size:.72rem;font-weight:600;color:#54616b;margin-top:12px}
+.acf-ad-l input{width:100%;margin-top:3px;border:1px solid #CBD5DF;border-radius:8px;padding:8px;font:inherit;font-size:.84rem}
+.acf-ad-tally{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;
+  background:var(--brand-tint);border-radius:9px;font-size:.78rem;color:#54616b}
+.acf-ad-tally b{color:var(--brand-dark);font-size:1rem}
+.acf-ad-chk{display:flex;gap:9px;align-items:flex-start;font-size:.79rem;color:#54616b;margin-bottom:8px}
+.acf-ad-chk input{width:17px;height:17px;flex:0 0 auto;margin-top:2px;accent-color:var(--brand-accent)}
 </style>
 
 <style id="studioTheme">
@@ -9609,12 +9625,14 @@ async function acfRenderTheory() {
         </div>
       </div>`).join('')}</div>
     ${papers.length ? '' : '<p class="sc-p">Choose a course type to see its theory papers.</p>'}
+    <div id="acfAnnexDBox"></div>
     <div class="acf-pack-cta rn-no-print">
       <p class="sc-p">When the practical, theory and feedback are all complete, send the pack for IQA review.</p>
       <button class="rn-nav-btn primary" ${ro ? 'disabled' : ''} onclick="lpmShowStep('pack')">Go to the course pack</button>
     </div>`;
 
   papers.forEach(p => acfRenderPaper(p));
+  acfRenderAnnexD();
   if (!acfRenderTheory._pulling) {
     acfRenderTheory._pulling = true;
     acfPullSittings().then(n => { acfRenderTheory._pulling = false; if (n) papers.forEach(p => acfRenderResults(p)); });
@@ -9697,6 +9715,294 @@ async function acfExamFullScreen(paper) {
   await fbDrawQr(document.getElementById('acfFullQr'), acfExamUrl(link.token), Math.min(window.innerWidth, window.innerHeight) * 0.62);
 }
 // ====================================================================
+
+// ============== ARMY CADETS — ANNEX D COURSE INFORMATION ==============
+// Gathered in the app, printed into the course pack, signed by the lead assessor.
+
+function acfAnnexD() {
+  if (!lpmCourse.annexD) lpmCourse.annexD = acfAnnexDBlank();
+  const d = lpmCourse.annexD;
+  if (!d.countyUnit) d.countyUnit = LICENCE.name || '';
+  if (!d.creNumber && LICENCE.centreNo) d.creNumber = LICENCE.centreNo;
+  const spec = acfCourse(lpmCourse);
+  if (!d.courseType && spec) d.courseType = spec.short;
+  return d;
+}
+function acfAnnexDSet(field, val) {
+  const d = acfAnnexD(); d[field] = val; lpmPersist();
+}
+function acfAnnexDEncl(key, on) {
+  const d = acfAnnexD(); d.enclosures = d.enclosures || {}; d.enclosures[key] = !!on; lpmPersist();
+}
+
+// Passed / referred are worked out from the theory results and the practical grid
+function acfOutcomes() {
+  const spec = acfCourse(lpmCourse);
+  const learners = (lpmCourse.learners || []).filter(l => (l.name || '').trim()).slice(0, ACF_MAX_LEARNERS);
+  const prac = acfPracFor(lpmCourse.id);
+  const papers = acfPapersFor(lpmCourse);
+  return learners.map((l, idx) => {
+    const name = (l.name || '').trim();
+    const theory = papers.map(p => {
+      const s = (lpmCourse.examSittings || [])
+        .filter(x => x.paper === p.paper && (x.name || '').trim().toLowerCase() === name.toLowerCase())
+        .sort((a, b) => (b.at || '').localeCompare(a.at || ''))[0];
+      return { paper: p, sitting: s || null };
+    });
+    let pracDone = 0, pracRef = 0;
+    (spec ? spec.criteria : []).forEach((c, ci) => {
+      const v = prac.marks[idx + ':' + ci];
+      if (v === 'P') pracDone++; else if (v === 'R') pracRef++;
+    });
+    const pracAll = spec ? spec.criteria.length : 0;
+    const theoryOk = theory.every(t => t.sitting && t.sitting.passed);
+    const pracOk = pracAll > 0 && pracDone === pracAll;
+    return { learner: l, name, idx, theory, pracDone, pracRef, pracAll,
+             passed: theoryOk && pracOk, started: !!(pracDone || pracRef || theory.some(t => t.sitting)) };
+  });
+}
+
+function acfRenderAnnexD() {
+  const host = document.getElementById('acfAnnexDBox');
+  if (!host || !lpmCourse) return;
+  const d = acfAnnexD(), ro = lpmReadOnlyNow();
+  const out = acfOutcomes();
+  const passed = out.filter(o => o.passed).length;
+  const referred = out.filter(o => o.started && !o.passed).length;
+  d.learnersPassed = passed; d.learnersReferred = referred;
+
+  const sel = (field, opts) => `<select ${ro ? 'disabled' : ''} onchange="acfAnnexDSet('${field}',this.value)">
+    ${opts.map(o => `<option${d[field] === o ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
+  const txt = (field, ph) => `<input value="${lpmEsc(d[field] || '')}" placeholder="${ph || ''}" ${ro ? 'disabled' : ''}
+    oninput="acfAnnexDSet('${field}',this.value)">`;
+
+  host.innerHTML = `
+    <div class="acf-annexd">
+      <div class="acf-ad-h">First Aid Course Information (Annex D)</div>
+      <p class="sc-p">This is sent to the IQA with the course pack. Most of it fills itself in from the course record.</p>
+      <div class="acf-ad-grid">
+        <label>CRE number${txt('creNumber', 'e.g. 12345')}</label>
+        <label>County / Unit${txt('countyUnit')}</label>
+        <label>Course type${sel('courseType', ['EFAW', 'FAW', 'FAWR'])}</label>
+        <label>Blended learning${sel('blended', ['NO', 'VIRTUAL SESSIONS', 'DLE COURSES'])}</label>
+      </div>
+      <div class="acf-ad-tally">
+        <span><b>${passed}</b> passed</span><span><b>${referred}</b> referred</span>
+        <span><b>${out.length}</b> learners on the roll</span>
+      </div>
+      <label class="acf-ad-l">Any learner who does not wish to be contacted by the DAO
+        ${txt('noContactDAO', 'Leave blank if none')}</label>
+
+      <div class="acf-ad-h2">Documents enclosed for IQA</div>
+      ${ACF_ENCLOSURES.map(([k, label]) => `
+        <label class="acf-ad-chk">
+          <input type="checkbox" ${d.enclosures && d.enclosures[k] ? 'checked' : ''} ${ro ? 'disabled' : ''}
+            onchange="acfAnnexDEncl('${k}',this.checked)">
+          <span>${label}</span>
+        </label>`).join('')}
+
+      <div class="acf-ad-h2">Lead assessor</div>
+      <div class="acf-ad-grid">
+        <label>Name${txt('leadAssessor')}</label>
+        <label>Trainer No${txt('leadTrainerNo')}</label>
+        <label>Date<input type="date" value="${lpmEsc(d.leadDate || '')}" ${ro ? 'disabled' : ''}
+          oninput="acfAnnexDSet('leadDate',this.value)"></label>
+      </div>
+      <p class="acf-declare">The above candidates have met the criteria and passed the requirements for the
+        qualification in accordance with the Army Cadet First Aid Assessment Specification.</p>
+      <div class="acf-sigbox">
+        <span>Lead Assessor Signature</span>
+        ${d.leadSignature ? `<img src="${d.leadSignature}" alt="signature">`
+          : `<button class="acf-sigbtn" ${ro ? 'disabled' : ''} onclick="acfSignAnnexD()">Sign here</button>`}
+        ${d.leadSignature && !ro ? `<button class="acf-clear" onclick="acfAnnexDSet('leadSignature','');acfRenderAnnexD()">Clear</button>` : ''}
+      </div>
+      <p class="sc-p" style="margin-top:10px">All documentation must be sent within 4 weeks of the last assessment date.</p>
+    </div>`;
+}
+function acfSignAnnexD() {
+  acfSign(url => { acfAnnexDSet('leadSignature', url); acfRenderAnnexD(); });
+}
+
+// ---------- Pack pages ----------
+// Drawn into the course pack PDF: Annex E practical, theory results, Annex D.
+async function acfPackPages(pdf, helpers) {
+  const { font, bold, ink, grey, A4, rgb } = helpers;
+  const spec = acfCourse(lpmCourse);
+  if (!spec) return;
+  const out = acfOutcomes();
+  const prac = acfPracFor(lpmCourse.id);
+  const M = 38;
+
+  const header = (page, title, sub) => {
+    page.drawText(title, { x: M, y: A4[1] - 46, size: 14, font: bold, color: ink });
+    if (sub) page.drawText(sub, { x: M, y: A4[1] - 62, size: 9.5, font, color: grey });
+    return A4[1] - 88;
+  };
+  const wrap = (page, text, x, y, size, maxW, f) => {
+    const words = String(text).split(/\s+/); let ln = '';
+    (f || font);
+    words.forEach(w => {
+      const t = ln ? ln + ' ' + w : w;
+      if ((f || font).widthOfTextAtSize(t, size) > maxW) {
+        page.drawText(ln, { x, y, size, font: f || font, color: ink }); y -= size + 3; ln = w;
+      } else ln = t;
+    });
+    if (ln) { page.drawText(ln, { x, y, size, font: f || font, color: ink }); y -= size + 3; }
+    return y;
+  };
+
+  // ---- Nominal roll ----
+  const pn = pdf.addPage(A4);
+  let ny = header(pn, 'Nominal roll', (lpmCourse.courseName || '') + ' · '
+    + (lpmCourse.startDate ? fmtD(lpmCourse.startDate) : '') + (lpmCourse.location ? ' · ' + lpmCourse.location : ''));
+  const cols = [['Name', M], ['DOB', M + 190], ['P number', M + 280], ['Gender', M + 375], ['Email', M + 450]];
+  cols.forEach(([t, x]) => pn.drawText(t, { x, y: ny, size: 9, font: bold, color: grey }));
+  ny -= 15;
+  const reg = lpmCourse.registerEntries || [];
+  const byName = {};
+  reg.forEach(r => { byName[(r.name || '').trim().toLowerCase()] = r; });
+  (lpmCourse.learners || []).filter(l => (l.name || '').trim()).forEach(l => {
+    const r = byName[(l.name || '').trim().toLowerCase()] || {};
+    const dob = l.dob || r.dob || '';
+    const val = [
+      (l.name || '').trim(),
+      dob ? fmtD(dob) : '—',
+      l.pNumber || r.pNumber || '—',
+      l.gender || r.gender || '—',
+      (l.email || r.email || '—')
+    ];
+    val.forEach((v, i) => {
+      let t = String(v);
+      const maxW = i === 4 ? 105 : (cols[i + 1] ? cols[i + 1][1] - cols[i][1] - 8 : 100);
+      while (t.length > 3 && font.widthOfTextAtSize(t, 9) > maxW) t = t.slice(0, -2) + '…';
+      pn.drawText(t, { x: cols[i][1], y: ny, size: 9, font, color: ink });
+    });
+    ny -= 15;
+    if (ny < 70) { ny = header(pdf.addPage(A4), 'Nominal roll (continued)', ''); }
+  });
+  ny -= 8;
+  pn.drawText(((lpmCourse.learners || []).length) + ' learners · ' + reg.length + ' registered by QR code',
+    { x: M, y: ny, size: 8.5, font, color: grey });
+
+  // ---- Annex E: practical assessment ----
+  const pe = pdf.addPage(A4);
+  let y = header(pe, spec.annexE, 'Annex E · ' + (lpmCourse.courseName || ''));
+  y = wrap(pe, 'The Trainer/Assessor must observe each candidate carrying out the correct treatment under current '
+    + 'protocols on each of the below criteria and place a "P" to confirm the candidate has met the criteria.',
+    M, y, 8.5, A4[0] - M * 2) - 6;
+
+  const learners = out.slice(0, ACF_MAX_LEARNERS);
+  const colW = Math.min(30, (A4[0] - M * 2 - 190) / Math.max(learners.length, 1));
+  const x0 = M + 190;
+  learners.forEach((o, i) => {
+    const nm = o.name.length > 14 ? o.name.slice(0, 13) + '…' : o.name;
+    pe.drawText(String(i + 1), { x: x0 + i * colW + colW / 2 - 3, y, size: 8, font: bold, color: grey });
+    pe.drawText(nm, { x: x0 + i * colW + colW / 2 + 3, y: y - 2, size: 6, font, color: grey, rotate: { type:'degrees', angle: 60 } });
+  });
+  y -= 46;
+  pe.drawText('Learner initials', { x: M, y, size: 8, font, color: grey });
+  learners.forEach((o, i) => {
+    pe.drawText(prac.initials[o.idx] || '', { x: x0 + i * colW + 6, y, size: 8.5, font: bold, color: ink });
+  });
+  y -= 14;
+  spec.criteria.forEach((c, ci) => {
+    pe.drawText(c, { x: M, y, size: 8.5, font, color: ink });
+    learners.forEach((o, i) => {
+      const v = prac.marks[o.idx + ':' + ci] || '';
+      pe.drawText(v, { x: x0 + i * colW + 9, y, size: 9, font: bold,
+        color: v === 'P' ? rgb(0.12, 0.48, 0.27) : v === 'R' ? rgb(0.75, 0.34, 0.24) : grey });
+    });
+    y -= 16;
+  });
+  y -= 8;
+  pe.drawText('Assessor feedback', { x: M, y, size: 9, font: bold, color: ink }); y -= 13;
+  y = wrap(pe, prac.feedback || '—', M, y, 9, A4[0] - M * 2) - 12;
+  pe.drawText('The above candidates have met the criteria and passed the practical assessments',
+    { x: M, y, size: 8.5, font, color: grey }); y -= 22;
+  pe.drawText('Trainer/Assessor: ' + (prac.assessor || '____________________'), { x: M, y, size: 9.5, font, color: ink });
+  pe.drawText('Trainer No: ' + (prac.trainerNo || '________'), { x: M + 250, y, size: 9.5, font, color: ink });
+  pe.drawText('Date: ' + (prac.date ? fmtD(prac.date) : '__________'), { x: M + 400, y, size: 9.5, font, color: ink });
+  if (prac.signature) {
+    try {
+      const img = await pdf.embedPng(prac.signature);
+      const w = 130, h = img.height * (w / img.width);
+      pe.drawImage(img, { x: M, y: y - h - 10, width: w, height: h });
+    } catch (e) {}
+  }
+
+  // ---- Theory results ----
+  const pt = pdf.addPage(A4);
+  y = header(pt, 'Theory assessment results', 'Marked automatically from the learners\' phones');
+  const papers = acfPapersFor(lpmCourse);
+  pt.drawText('Learner', { x: M, y, size: 9, font: bold, color: grey });
+  papers.forEach((p, i) => pt.drawText(p.unit + ' (pass ' + p.pass + '/' + p.questions + ')',
+    { x: M + 220 + i * 150, y, size: 8.5, font: bold, color: grey }));
+  y -= 15;
+  out.forEach(o => {
+    pt.drawText(o.name, { x: M, y, size: 10, font, color: ink });
+    o.theory.forEach((t, i) => {
+      const s = t.sitting;
+      const label = s && s.status === 'marked'
+        ? s.score + '/' + t.paper.questions + '  ' + (s.passed ? 'PASS' : 'REFER')
+        : (s ? 'in progress' : 'not sat');
+      pt.drawText(label, { x: M + 220 + i * 150, y, size: 9.5, font,
+        color: s && s.status === 'marked'
+          ? (s.passed ? rgb(0.12, 0.48, 0.27) : rgb(0.75, 0.34, 0.24)) : grey });
+    });
+    y -= 16;
+    if (y < 80) { y = header(pdf.addPage(A4), 'Theory assessment results (continued)', ''); }
+  });
+
+  // ---- Annex D ----
+  const d = acfAnnexD();
+  const pa = pdf.addPage(A4);
+  y = header(pa, 'First Aid Course Information', 'Annex D · this document MUST be attached to any course materials');
+  const row = (k, v) => { pa.drawText(k, { x: M, y, size: 9, font: bold, color: grey });
+    pa.drawText(String(v || '—'), { x: M + 180, y, size: 10, font, color: ink }); y -= 17; };
+  row('CRE number', d.creNumber);
+  row('County / Unit', d.countyUnit);
+  row('Course type', d.courseType);
+  row('Blended learning course', d.blended);
+  row('Number of learners', out.length);
+  row('Passed', d.learnersPassed);
+  row('Referred', d.learnersReferred);
+  row('Not contacted by DAO', d.noContactDAO);
+  y -= 6;
+  pa.drawText('Trainer details', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
+  const trainers = [lpmCourse.instructor1, lpmCourse.instructor2].filter(Boolean);
+  (trainers.length ? trainers : ['—']).forEach(t => {
+    pa.drawText(t, { x: M, y, size: 9.5, font, color: ink });
+    pa.drawText('Trainer No: ' + (d.leadTrainerNo || '________'), { x: M + 220, y, size: 9, font, color: grey });
+    y -= 15;
+  });
+  y -= 6;
+  pa.drawText('Training dates and duration', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
+  const ds = lpmCourse.startDate, de = lpmCourse.endDate || lpmCourse.startDate;
+  pa.drawText((ds ? fmtD(ds) : '—') + (de && de !== ds ? ' – ' + fmtD(de) : ''), { x: M, y, size: 9.5, font, color: ink });
+  y -= 24;
+  pa.drawText('Documents enclosed with this form for IQA', { x: M, y, size: 10, font: bold, color: ink }); y -= 15;
+  ACF_ENCLOSURES.forEach(([k, label]) => {
+    const on = d.enclosures && d.enclosures[k];
+    pa.drawText(on ? '[x]' : '[ ]', { x: M, y, size: 9.5, font: bold, color: on ? rgb(0.12, 0.48, 0.27) : grey });
+    y = wrap(pa, label, M + 22, y, 9, A4[0] - M * 2 - 30) - 3;
+  });
+  y -= 10;
+  y = wrap(pa, 'The above candidates have met the criteria and passed the requirements for the qualification in '
+    + 'accordance with the Army Cadet First Aid Assessment Specification.', M, y, 9, A4[0] - M * 2) - 10;
+  pa.drawText('Lead Assessor: ' + (d.leadAssessor || '____________________'), { x: M, y, size: 9.5, font, color: ink });
+  pa.drawText('Trainer No: ' + (d.leadTrainerNo || '________'), { x: M + 260, y, size: 9.5, font, color: ink });
+  pa.drawText('Date: ' + (d.leadDate ? fmtD(d.leadDate) : '__________'), { x: M + 410, y, size: 9.5, font, color: ink });
+  if (d.leadSignature) {
+    try {
+      const img = await pdf.embedPng(d.leadSignature);
+      const w = 130, h = img.height * (w / img.width);
+      pa.drawImage(img, { x: M, y: y - h - 10, width: w, height: h });
+    } catch (e) {}
+  }
+  pa.drawText('All documentation MUST be sent within 4 weeks of the last assessment date.',
+    { x: M, y: 56, size: 8.5, font, color: grey });
+}
+// =====================================================================
 
 const LPM_COURSE_NAMES = ['Emergency First Aid at Work - 1 Day', 'First Aid at Work - 3 Day'];
 const LPM_LOCATIONS = LICENCE.locations.slice();
@@ -11680,7 +11986,20 @@ async function lpmBuildPack(action) {
       contentLines.push('Practical assessment record (from the practical matrix)');
     }
     contentLines.push('Learner feedback forms (' + ((lpmCourse.feedback || []).length + counts('feedback')) + ')');
+    if (kind === 'acf') {
+      const spec = acfCourse(lpmCourse);
+      contentLines.length = 0;
+      contentLines.push('Nominal roll (' + ((lpmCourse.registerEntries || []).length) + ' registered by QR)',
+        'Practical assessment paper — Annex E (' + (spec ? spec.criteria.length : 0) + ' criteria)',
+        'Theory assessment results (' + acfPapersFor(lpmCourse).map(p => p.unit).join(', ') + ')',
+        'First Aid Course Information — Annex D',
+        'Learner feedback forms (' + ((lpmCourse.feedback || []).length + counts('feedback')) + ')');
+    }
     contentLines.forEach(t => line('• ' + t, font, 11));
+    if (kind === 'acf') {
+      try { await acfPackPages(pdf, { font, bold, ink, grey, A4, rgb }); }
+      catch (e) { console.log('acf pack pages', e); }
+    }
 
     // 2. Delegate register photos
     const drawPhoto = async (f, label) => {
@@ -13476,8 +13795,30 @@ async function fbPullResponses() {
       const id = 'QR-' + r.id;
       if (have.has(id)) return;
       const d = r.data || {};
-      fbList().push({ id, learnerId:'', source:'qr', savedAt: r.created_at, ratings: d.ratings || {}, rateTrainer: d.rateTrainer || '', rateCentre: d.rateCentre || '',
-        leaflet: d.leaflet || '', comments: d.comments || '', title: d.title || '', name: d.name || '', phone: d.phone || '', email: d.email || '' });
+      // The Army Cadets evaluation form posts a different shape; fold it into the
+      // same record so the feedback tab and the course pack can show either.
+      const isAcf = !!(d.trainer || d.after);
+      const acfRatings = {};
+      if (isAcf) {
+        const words = { 1:'Poor', 2:'Fair', 3:'Good', 4:'Very Good', 5:'Excellent' };
+        Object.entries(d.trainer || {}).forEach(([k, v]) => { if (v) acfRatings[k] = words[v] || String(v); });
+        if (d.course && d.course.pace) acfRatings.pace = d.course.pace;
+        if (d.course && d.course.covered) acfRatings.covered = d.course.covered;
+        Object.entries(d.after || {}).forEach(([k, v]) => { if (v) acfRatings[k] = v; });
+      }
+      const avg = isAcf ? (() => {
+        const n = Object.values(d.trainer || {}).filter(Boolean);
+        return n.length ? String(Math.round(n.reduce((a, b) => a + b, 0) / n.length * 2)) : '';
+      })() : (d.rateTrainer || '');
+      const notes = isAcf
+        ? [d.course && d.course.improve ? 'Improvements: ' + d.course.improve : '', d.comments || '']
+            .filter(Boolean).join('\n\n')
+        : (d.comments || '');
+      fbList().push({ id, learnerId:'', source:'qr', savedAt: r.created_at,
+        ratings: isAcf ? acfRatings : (d.ratings || {}), acf: isAcf ? d : null,
+        rateTrainer: avg, rateCentre: d.rateCentre || '',
+        leaflet: d.leaflet || '', comments: notes, title: d.title || '',
+        name: d.name || '', phone: d.phone || '', email: d.email || '' });
       added++;
     });
     if (added && (!lpmCourse.owner || lpmCourse.owner === cloudMe())) lpmPersist();
@@ -13596,13 +13937,16 @@ function rgUpdateCounts() {
 async function rgPullResponses() {
   if (!CLOUD_ON || !cloud.session || !navigator.onLine || !lpmCourse) return 0;
   try {
-    const rows = await cloudRest('register_responses?select=id,name,position,organisation,signature,created_at&course_id=eq.' + encodeURIComponent(lpmCourse.id) + '&order=created_at') || [];
+    const rows = await cloudRest('register_responses?select=id,name,position,organisation,signature,created_at,dob,p_number,email,gender,upload_url,consent_dao&course_id=eq.' + encodeURIComponent(lpmCourse.id) + '&order=created_at') || [];
     const have = new Set(rgList().map(r => r.id));
     let added = 0;
     rows.forEach(r => {
       const id = 'QR-' + r.id;
       if (have.has(id)) return;
-      rgList().push({ id, name: r.name || '', position: r.position || '', organisation: r.organisation || '', signature: r.signature || '', signedAt: r.created_at });
+      rgList().push({ id, name: r.name || '', position: r.position || '', organisation: r.organisation || '',
+        signature: r.signature || '', signedAt: r.created_at,
+        dob: r.dob || '', pNumber: r.p_number || '', email: r.email || '', gender: r.gender || '',
+        upload: r.upload_url || '', consentDAO: r.consent_dao !== false });
       added++;
     });
     // anyone who signs the register goes straight onto the learner list
@@ -13612,7 +13956,9 @@ async function rgPullResponses() {
       rgList().forEach(r => {
         const key = (r.name || '').trim().toLowerCase();
         if (!key || existing.has(key)) return;
-        (lpmCourse.learners = lpmCourse.learners || []).push({ id: 'L' + Date.now() + Math.random().toString(36).slice(2, 6), name: r.name.trim() });
+        (lpmCourse.learners = lpmCourse.learners || []).push({
+          id: 'L' + Date.now() + Math.random().toString(36).slice(2, 6), name: r.name.trim(),
+          dob: r.dob || '', pNumber: r.pNumber || '', email: r.email || '', gender: r.gender || '' });
         existing.add(key); learnersAdded++;
       });
     }

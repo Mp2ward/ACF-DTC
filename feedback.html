@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A3A24">
+<title>Course Evaluation | Army Cadets Digital Training Centre</title>
+<link rel="icon" href="acf-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#0A3A24;--accent:#1E7A46;--tint:#E9F4EC;--ink:#25323b;--mut:#54616b;
+  --line:#D8DEE8;--bg:#F5F8F6;--card:#fff;--bad:#C0563C;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Public Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{background:var(--dark);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+header img{height:34px;width:34px;border-radius:5px;background:#fff;object-fit:contain;padding:2px}
+header b{font-size:.78rem;letter-spacing:.07em;display:block}
+header span{font-size:.66rem;opacity:.78}
+main{max-width:540px;margin:0 auto;padding:16px 14px 50px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h1{font-size:1.3rem;color:var(--dark);margin-bottom:4px}
+h2{font-size:.86rem;color:var(--dark);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.meta{font-size:.79rem;color:var(--mut)}
+.meta b{color:var(--ink)}
+.rate{margin-bottom:14px}
+.rate>span{display:block;font-size:.82rem;font-weight:600;margin-bottom:6px}
+.scale{display:flex;gap:6px}
+.scale label{flex:1;position:relative}
+.scale input{position:absolute;opacity:0;width:0;height:0}
+.scale i{display:block;text-align:center;border:1px solid var(--line);border-radius:9px;padding:10px 0;
+  font-style:normal;font-weight:700;font-size:.92rem;color:var(--mut);background:#fff;cursor:pointer}
+.scale input:checked + i{background:var(--accent);border-color:var(--accent);color:#fff}
+.scale input:focus-visible + i{outline:2px solid var(--accent);outline-offset:2px}
+.ends{display:flex;justify-content:space-between;font-size:.68rem;color:var(--mut);margin-top:3px}
+label.q{display:block;font-size:.82rem;font-weight:600;margin:14px 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips label{flex:1 1 auto}
+.chips input{position:absolute;opacity:0;width:0;height:0}
+.chips i{display:block;text-align:center;border:1px solid var(--line);border-radius:999px;padding:8px 14px;
+  font-style:normal;font-size:.8rem;font-weight:600;color:var(--mut);background:#fff;cursor:pointer}
+.chips input:checked + i{background:var(--accent);border-color:var(--accent);color:#fff}
+textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;
+  font:inherit;font-size:.95rem;background:#fff;color:var(--ink);resize:vertical}
+textarea:focus,input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{width:100%;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:14px;
+  font:inherit;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px}
+.btn:disabled{opacity:.55}
+.msg{font-size:.8rem;margin-top:10px;color:var(--bad)}
+.done{text-align:center;padding:28px 16px}
+.done .tick{width:56px;height:56px;border-radius:50%;background:var(--tint);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.7rem;font-weight:800}
+.done h2{border:0;font-size:1.15rem;margin-bottom:6px}
+.load{text-align:center;color:var(--mut);font-size:.85rem;padding:40px 0}
+footer{text-align:center;font-size:.68rem;color:var(--mut);padding:0 14px 26px}
+</style></head>
+<body>
+<header>
+  <img src="acf-logo.png" alt="" onerror="this.style.display='none'">
+  <div><b>ARMY CADETS</b><span>Digital Training Centre</span></div>
+</header>
+<main id="main"><div class="load">Loading…</div></main>
+<footer>Your feedback is anonymous unless you add your name.</footer>
+
+<script>
+const SB = { url:'https://nyawiqngmlpklxqkuhbm.supabase.co', key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55YXdpcW5nbWxwa2x4cWt1aGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNzAwNDgsImV4cCI6MjEwNTg0NjA0OH0.lCaVp0v3ZeXE82X97H_PJXs7TMzFIbwP9PmxGZXEaYU' };
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const TRAINER = [
+  ['delivery','Delivery'], ['visual','Visual aids'], ['body','Body language'],
+  ['participation','Audience participation'], ['knowledge','Subject knowledge'], ['techniques','Range of techniques']
+];
+const AFTER = [
+  ['confident','Do you feel more confident carrying out your role following this course?'],
+  ['comfortable','Do you feel more comfortable with the subject matter?'],
+  ['skills','Have your skills improved during the course?']
+];
+
+async function rpc(fn, body) {
+  const r = await fetch(SB.url + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', apikey:SB.key, Authorization:'Bearer ' + SB.key },
+    body: JSON.stringify(body)
+  });
+  const txt = await r.text();
+  let d = null; try { d = txt ? JSON.parse(txt) : null; } catch (e) { d = txt; }
+  if (!r.ok) throw new Error((d && (d.message || d.hint)) || txt || ('HTTP ' + r.status));
+  return d;
+}
+const fmtDate = d => { if (!d) return ''; const x = new Date(d);
+  return isNaN(x) ? d : x.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); };
+
+async function boot() {
+  const main = document.getElementById('main');
+  if (!TOKEN) { main.innerHTML = '<div class="card"><h1>Link not valid</h1><p class="meta">This page needs the QR code from your instructor.</p></div>'; return; }
+  let info;
+  try { info = await rpc('feedback_link_info', { p_token: TOKEN }); }
+  catch (e) { main.innerHTML = `<div class="card"><h1>Couldn't open the form</h1><p class="meta">${esc(e.message)}</p></div>`; return; }
+  if (!info) { main.innerHTML = '<div class="card"><h1>This link has expired</h1><p class="meta">Ask your instructor for a new QR code.</p></div>'; return; }
+  render(info);
+}
+
+function scale(key, label) {
+  return `<div class="rate"><span>${label}</span>
+    <div class="scale">${[1,2,3,4,5].map(n => `
+      <label><input type="radio" name="${key}" value="${n}"><i>${n}</i></label>`).join('')}</div>
+    <div class="ends"><span>Poor</span><span>Excellent</span></div></div>`;
+}
+function chips(key, opts) {
+  return `<div class="chips">${opts.map(o => `
+    <label><input type="radio" name="${key}" value="${esc(o)}"><i>${esc(o)}</i></label>`).join('')}</div>`;
+}
+
+function render(info) {
+  document.getElementById('main').innerHTML = `
+    <div class="card">
+      <h1>Course evaluation</h1>
+      <p class="meta"><b>${esc(info.course || 'First Aid course')}</b><br>
+        ${esc(fmtDate(info.date))}${info.venue ? ' &middot; ' + esc(info.venue) : ''}<br>
+        ${info.trainer ? 'Trainer: ' + esc(info.trainer) : ''}</p>
+    </div>
+
+    <div class="card">
+      <h2>Your trainer</h2>
+      <p class="meta" style="margin-bottom:14px">On a scale of 1 (poor) to 5 (excellent), please rate your trainer.</p>
+      ${TRAINER.map(([k, l]) => scale(k, l)).join('')}
+    </div>
+
+    <div class="card">
+      <h2>The course</h2>
+      <label class="q">How would you describe the pace of the course?</label>
+      ${chips('pace', ['Too slow', 'About right', 'Too fast'])}
+      <label class="q">Did the course cover everything you expected it to?</label>
+      ${chips('covered', ['Yes', 'Mostly', 'No'])}
+      <label class="q" for="improve">Are there any ways of improving the course?</label>
+      <textarea id="improve" rows="3" placeholder="Optional"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Following your course</h2>
+      ${AFTER.map(([k, l]) => `<label class="q">${l}</label>${chips(k, ['Yes', 'Somewhat', 'No'])}`).join('')}
+    </div>
+
+    <div class="card">
+      <h2>Anything else</h2>
+      <label class="q" for="comments">Any other comments</label>
+      <textarea id="comments" rows="4" placeholder="Optional"></textarea>
+      <label class="q" for="name">Your name <span style="font-weight:500;color:var(--mut)">(optional)</span></label>
+      <input type="text" id="name" autocomplete="name" placeholder="Leave blank to stay anonymous">
+      <button class="btn" id="go" onclick="send()">Send my feedback</button>
+      <div class="msg" id="msg"></div>
+    </div>`;
+}
+
+const picked = n => { const el = document.querySelector('input[name="' + n + '"]:checked'); return el ? el.value : ''; };
+
+async function send() {
+  const msg = document.getElementById('msg'), go = document.getElementById('go');
+  const missing = TRAINER.filter(([k]) => !picked(k));
+  if (missing.length) {
+    msg.style.color = 'var(--bad)';
+    msg.textContent = 'Please rate your trainer on: ' + missing.map(m => m[1].toLowerCase()).join(', ') + '.';
+    return;
+  }
+  const data = { trainer:{}, course:{}, after:{} };
+  TRAINER.forEach(([k]) => data.trainer[k] = Number(picked(k)) || null);
+  data.course.pace = picked('pace');
+  data.course.covered = picked('covered');
+  data.course.improve = document.getElementById('improve').value.trim();
+  AFTER.forEach(([k]) => data.after[k] = picked(k));
+  data.comments = document.getElementById('comments').value.trim();
+  data.name = document.getElementById('name').value.trim();
+  data.submittedAt = new Date().toISOString();
+
+  msg.style.color = 'var(--mut)'; msg.textContent = 'Sending…'; go.disabled = true;
+  try {
+    await rpc('submit_feedback', { p_token: TOKEN, p_data: data });
+    document.getElementById('main').innerHTML = `
+      <div class="card done"><div class="tick">✓</div>
+        <h2>Thank you</h2>
+        <p class="meta">Your feedback has gone to your instructor and goes into the course pack.
+          You can close this page.</p></div>`;
+    window.scrollTo(0, 0);
+  } catch (e) {
+    msg.style.color = 'var(--bad)'; msg.textContent = e.message || 'Could not send your feedback.';
+    go.disabled = false;
+  }
+}
+boot();
+</script>
+</body></html>

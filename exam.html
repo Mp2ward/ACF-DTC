@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A3A24">
+<title>Theory Assessment | Army Cadets Digital Training Centre</title>
+<link rel="icon" href="acf-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#0A3A24;--accent:#1E7A46;--tint:#E9F4EC;--ink:#25323b;--mut:#54616b;
+  --line:#D8DEE8;--bg:#F5F8F6;--card:#fff;--bad:#C0563C;--warn:#B06A00;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Public Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{background:var(--dark);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header img{height:32px;width:32px;border-radius:5px;background:#fff;object-fit:contain;padding:2px}
+header b{font-size:.76rem;letter-spacing:.07em;display:block}
+header span{font-size:.64rem;opacity:.78}
+#clock{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800;font-size:.9rem;
+  background:rgba(255,255,255,.14);padding:5px 10px;border-radius:8px}
+#clock.low{background:var(--bad)}
+main{max-width:560px;margin:0 auto;padding:16px 14px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h1{font-size:1.25rem;color:var(--dark);margin-bottom:6px}
+.meta{font-size:.8rem;color:var(--mut)}
+.meta b{color:var(--ink)}
+ul.rules{margin:12px 0 0;padding-left:18px;font-size:.8rem;color:var(--mut)}
+ul.rules li{margin-bottom:4px}
+label.fl{display:block;font-size:.76rem;font-weight:700;color:var(--dark);margin:14px 0 4px}
+input{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;font:inherit;font-size:1rem;background:#fff}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{width:100%;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:14px;
+  font:inherit;font-size:1rem;font-weight:700;cursor:pointer;margin-top:16px}
+.btn:disabled{opacity:.55}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--mut)}
+.msg{font-size:.8rem;margin-top:10px;color:var(--bad)}
+.prog{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:4;background:var(--bg);
+  padding:8px 0 10px;font-size:.74rem;color:var(--mut);font-weight:600}
+.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:11px}
+.q.unanswered.flag{border-color:var(--bad)}
+.qn{font-size:.7rem;font-weight:800;color:var(--accent);letter-spacing:.06em}
+.qt{font-size:.94rem;font-weight:600;margin:4px 0 10px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;
+  padding:10px 11px;margin-bottom:7px;cursor:pointer;background:#fff}
+.opt:last-child{margin-bottom:0}
+.opt input{width:19px;height:19px;flex:0 0 auto;margin-top:1px;accent-color:var(--accent)}
+.opt.on{border-color:var(--accent);background:var(--tint)}
+.opt span{font-size:.88rem}
+.opt .k{font-weight:800;color:var(--accent);margin-right:2px}
+#pad{width:100%;height:140px;border:1px dashed var(--line);border-radius:10px;touch-action:none;background:#fff}
+.padrow{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;padding:0}
+.hint{font-size:.72rem;color:var(--mut)}
+.result{text-align:center;padding:26px 16px}
+.score{font-size:2.6rem;font-weight:800;color:var(--dark);line-height:1}
+.score small{font-size:1rem;color:var(--mut);font-weight:600}
+.badge{display:inline-block;padding:6px 16px;border-radius:999px;font-weight:800;font-size:.84rem;margin:12px 0 8px}
+.badge.pass{background:var(--tint);color:var(--accent)}
+.badge.refer{background:#FBEDE9;color:var(--bad)}
+.load{text-align:center;color:var(--mut);font-size:.85rem;padding:40px 0}
+</style></head>
+<body>
+<header>
+  <img src="acf-logo.png" alt="" onerror="this.style.display='none'">
+  <div><b>ARMY CADETS</b><span>Theory assessment</span></div>
+  <div id="clock" style="display:none">--:--</div>
+</header>
+<main id="main"><div class="load">Loading…</div></main>
+
+<script>
+const SB = { url:'https://nyawiqngmlpklxqkuhbm.supabase.co', key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55YXdpcW5nbWxwa2x4cWt1aGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNzAwNDgsImV4cCI6MjEwNTg0NjA0OH0.lCaVp0v3ZeXE82X97H_PJXs7TMzFIbwP9PmxGZXEaYU' };
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'acf_exam_' + TOKEN;
+
+let INFO = null, SITTING = '', QS = [], ANS = {}, endAt = 0, timer = null;
+
+async function rpc(fn, body) {
+  const r = await fetch(SB.url + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', apikey:SB.key, Authorization:'Bearer ' + SB.key },
+    body: JSON.stringify(body)
+  });
+  const txt = await r.text();
+  let d = null; try { d = txt ? JSON.parse(txt) : null; } catch (e) { d = txt; }
+  if (!r.ok) throw new Error((d && (d.message || d.hint)) || txt || ('HTTP ' + r.status));
+  return d;
+}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ SITTING, QS, ANS, endAt })); } catch (e) {} };
+const restore = () => { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } };
+
+async function boot() {
+  const main = document.getElementById('main');
+  if (!TOKEN) { main.innerHTML = card('Link not valid', 'This page needs the QR code from your instructor.'); return; }
+  try { INFO = await rpc('exam_link_info', { p_token: TOKEN }); }
+  catch (e) { main.innerHTML = card("Couldn't open the paper", e.message); return; }
+  if (!INFO) { main.innerHTML = card('This link has expired', 'Ask your instructor for a new QR code.'); return; }
+
+  const kept = restore();
+  if (kept && kept.SITTING && kept.endAt > Date.now()) {
+    SITTING = kept.SITTING; QS = kept.QS; ANS = kept.ANS || {}; endAt = kept.endAt;
+    paper(); return;
+  }
+  start();
+}
+const card = (h, p) => `<div class="card"><h1>${esc(h)}</h1><p class="meta">${esc(p)}</p></div>`;
+
+function start() {
+  document.getElementById('main').innerHTML = `
+    <div class="card">
+      <h1>${esc(INFO.title || 'Theory assessment')}</h1>
+      <p class="meta"><b>${esc(INFO.course || '')}</b>${INFO.venue ? ' &middot; ' + esc(INFO.venue) : ''}<br>
+        Paper ${esc(INFO.paper)} &middot; ${esc(INFO.unit || '')}</p>
+      <ul class="rules">
+        <li>The pass mark is <b>${INFO.pass}/${INFO.questions}</b>.</li>
+        <li>You have <b>${INFO.minutes} minutes</b> once you begin.</li>
+        <li>One correct answer per question. Answer all ${INFO.questions}.</li>
+        <li>Work on your own, unaided, with no notes or phones for reference.</li>
+      </ul>
+      <label class="fl" for="nm">Your full name</label>
+      <input id="nm" autocomplete="name" placeholder="First and last name">
+      <div class="hint" style="margin-top:4px">This goes on your answer sheet, so use the name your instructor has.</div>
+      <button class="btn" id="go" onclick="begin()">Start the paper</button>
+      <div class="msg" id="msg"></div>
+    </div>`;
+}
+
+async function begin() {
+  const nm = (document.getElementById('nm').value || '').trim();
+  const msg = document.getElementById('msg'), go = document.getElementById('go');
+  if (!/\S+\s+\S+/.test(nm)) { msg.textContent = 'Enter your first and last name.'; return; }
+  go.disabled = true; msg.style.color = 'var(--mut)'; msg.textContent = 'Preparing your paper…';
+  try {
+    const r = await rpc('start_exam', { p_token: TOKEN, p_name: nm });
+    SITTING = r.sitting; QS = r.questions || [];
+    endAt = Date.now() + (INFO.minutes * 60000);
+    ANS = {}; save(); paper();
+  } catch (e) {
+    msg.style.color = 'var(--bad)'; msg.textContent = e.message; go.disabled = false;
+  }
+}
+
+function paper() {
+  document.getElementById('main').innerHTML = `
+    <div class="prog" id="prog"></div>
+    <div id="qs">${QS.map(q => `
+      <div class="q" id="q${q.n}">
+        <div class="qn">QUESTION ${q.n} OF ${QS.length}</div>
+        <div class="qt">${esc(q.q)}</div>
+        ${['a','b','c','d'].map(k => `
+          <label class="opt" id="o${q.n}${k}">
+            <input type="radio" name="q${q.n}" value="${k.toUpperCase()}" onchange="pick(${q.n},'${k.toUpperCase()}')">
+            <span><span class="k">${k.toUpperCase()}</span> ${esc(q[k])}</span>
+          </label>`).join('')}
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <label class="fl">Signature</label>
+      <canvas id="pad"></canvas>
+      <div class="padrow">
+        <span class="hint">Sign to confirm this is your own work.</span>
+        <button class="link" type="button" onclick="wipe()">Clear</button>
+      </div>
+      <button class="btn" id="submit" onclick="finish(false)">Submit my answers</button>
+      <div class="msg" id="msg"></div>
+    </div>`;
+  Object.entries(ANS).forEach(([n, v]) => {
+    const el = document.getElementById('o' + n + v.toLowerCase());
+    if (el) { el.classList.add('on'); el.querySelector('input').checked = true; }
+  });
+  initPad(); tick(); timer = setInterval(tick, 1000);
+  document.getElementById('clock').style.display = '';
+}
+
+function pick(n, v) {
+  ANS[n] = v; save();
+  ['A','B','C','D'].forEach(k => {
+    const el = document.getElementById('o' + n + k.toLowerCase());
+    if (el) el.classList.toggle('on', k === v);
+  });
+  document.getElementById('q' + n).classList.remove('flag');
+  tick();
+}
+
+function tick() {
+  const left = Math.max(0, endAt - Date.now());
+  const m = Math.floor(left / 60000), s = Math.floor(left % 60000 / 1000);
+  const c = document.getElementById('clock');
+  if (c) { c.textContent = m + ':' + String(s).padStart(2, '0'); c.classList.toggle('low', left < 5 * 60000); }
+  const done = Object.keys(ANS).length;
+  const p = document.getElementById('prog');
+  if (p) p.innerHTML = `${done} of ${QS.length} answered<div class="bar"><i style="width:${QS.length ? done / QS.length * 100 : 0}%"></i></div>`;
+  if (left <= 0 && timer) { clearInterval(timer); timer = null; finish(true); }
+}
+
+let ctx, drawing = false, last = null, inked = false;
+function initPad() {
+  const cv = document.getElementById('pad');
+  const ratio = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * ratio; cv.height = h * ratio;
+  ctx = cv.getContext('2d'); ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0A3A24';
+  const at = e => { const b = cv.getBoundingClientRect(); return { x:e.clientX - b.left, y:e.clientY - b.top }; };
+  cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); drawing = true; last = at(e); };
+  cv.onpointermove = e => { if (!drawing) return; const p = at(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; inked = true; };
+  cv.onpointerup = cv.onpointercancel = () => { drawing = false; };
+}
+function wipe() { const cv = document.getElementById('pad'); ctx.clearRect(0, 0, cv.width, cv.height); inked = false; }
+
+async function finish(auto) {
+  const msg = document.getElementById('msg'), btn = document.getElementById('submit');
+  const missing = QS.filter(q => !ANS[q.n]);
+  if (!auto && missing.length) {
+    missing.forEach(q => document.getElementById('q' + q.n).classList.add('flag'));
+    msg.style.color = 'var(--bad)';
+    msg.textContent = missing.length + ' question' + (missing.length > 1 ? 's are' : ' is') + ' unanswered.';
+    document.getElementById('q' + missing[0].n).scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  if (!auto && !inked) { msg.style.color = 'var(--bad)'; msg.textContent = 'Please sign in the box above.'; return; }
+  if (btn) btn.disabled = true;
+  if (msg) { msg.style.color = 'var(--mut)'; msg.textContent = auto ? 'Time is up — sending your answers…' : 'Marking…'; }
+  if (timer) { clearInterval(timer); timer = null; }
+  try {
+    const sig = inked ? document.getElementById('pad').toDataURL('image/png') : null;
+    const r = await rpc('submit_exam', { p_sitting: SITTING, p_answers: ANS, p_signature: sig });
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    result(r, auto);
+  } catch (e) {
+    if (msg) { msg.style.color = 'var(--bad)'; msg.textContent = e.message; }
+    if (btn) btn.disabled = false;
+  }
+}
+
+function result(r, auto) {
+  document.getElementById('clock').style.display = 'none';
+  document.getElementById('main').innerHTML = `
+    <div class="card result">
+      <div class="score">${r.score}<small>/${r.total}</small></div>
+      <div class="badge ${r.passed ? 'pass' : 'refer'}">${r.passed ? 'PASS' : 'REFERRED'}</div>
+      <p class="meta">${r.passed
+        ? 'Well done — that is at or above the pass mark of ' + r.pass_mark + '.'
+        : 'The pass mark is ' + r.pass_mark + '. Your instructor will arrange revision and a re-sit.'}</p>
+      ${auto ? '<p class="meta" style="margin-top:8px;color:var(--warn)">Your time ran out, so the answers you had were submitted.</p>' : ''}
+      <p class="meta" style="margin-top:14px">Your result has gone to your instructor. You can close this page.</p>
+    </div>`;
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener('beforeunload', e => {
+  if (SITTING && Object.keys(ANS).length && document.getElementById('submit')) { e.preventDefault(); e.returnValue = ''; }
+});
+boot();
+</script>
+</body></html>
