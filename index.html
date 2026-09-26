@@ -34,15 +34,9 @@ const LICENCE = {
     courseAdmin: true, instructorAdmin: true, marking: true,
     courseMatrix: true, scenarios: true, runScenario: true, soundboard: true, knowledgeCentre: true,
     myCpd: true,
-    // Off for this licence: these need database tables that have not been built.
-    // Turning any of them on without its schema gives "schema" / "does not exist" errors.
-    jobs: false,          // supabase_jobs.sql — does not exist
-    equipment: false,     // assets / asset_events tables — do not exist
-    lmsOverview: false,   // lms_workbooks / lms_marks — do not exist
-    learnerLms: false,    // as above
-    mySchedule: false,    // reads the jobs table
-    myPay: false, payDetails: false,   // pay_details table — does not exist
-    tiqaForm: false,
+    // Off: these need database tables that do not exist on this licence.
+    jobs: false, equipment: false, lmsOverview: false, learnerLms: false,
+    mySchedule: false, myPay: false, payDetails: false, tiqaForm: false,
   },
 };
 const FEAT = k => (LICENCE.features || {})[k] !== false;
@@ -82,42 +76,13 @@ function fmtD(v) {
     });
   }
 </script>
-<script>
-// Shows any start-up error on screen instead of failing silently.
-(function () {
-  function show(msg, src, line) {
-    try {
-      if (document.getElementById('bootErr')) return;
-      var d = document.createElement('div');
-      d.id = 'bootErr';
-      d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#C0563C;color:#fff;'
-        + 'font:600 13px/1.45 system-ui,sans-serif;padding:12px 44px 12px 14px;white-space:pre-wrap;';
-      d.textContent = 'App error: ' + msg + (src ? '\n' + String(src).split('/').pop() + ' line ' + line : '');
-      var x = document.createElement('button');
-      x.textContent = '\u00d7';
-      x.style.cssText = 'position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:22px;cursor:pointer';
-      x.onclick = function () { d.remove(); };
-      d.appendChild(x);
-      (document.body || document.documentElement).appendChild(d);
-    } catch (e) {}
-  }
-  window.addEventListener('error', function (e) { show(e.message, e.filename, e.lineno); });
-  window.addEventListener('unhandledrejection', function (e) {
-    show((e.reason && (e.reason.message || e.reason)) || 'promise rejected');
-  });
-})();
-</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    /* Army Cadets brand tokens — used by the practical grid, journey tiles and Annex D */
     --brand-dark: #0A3A24;
     --brand-accent: #1E7A46;
     --brand-tint: #E9F4EC;
-    --brand-sub: #9CC3A8;
-    --brand-onDark: #D3E5D9;
-    --brand-hi: #F0C75E;
     --bg: #FFFFFF;
     --surface: #FFFFFF;
     --panel: #F7F9FC;
@@ -1321,8 +1286,19 @@ function fmtD(v) {
   .cpd-table tr:nth-child(even) td { background:#F7F9FC; }
   .cpd-detail { font-size:0.75rem; color:#6B7A94; margin-top:2px; }
   .cpd-src { font-size:0.72rem; color:#6B7A94; white-space:nowrap; }
-  /* CPD tiles use the dashboard's .hub-tile — only the layout wrapper is local */
   .cpd-tiles { display:flex; flex-direction:column; gap:12px; margin:18px 0; max-width:640px; }
+  .cpd-tile { display:flex; align-items:center; gap:16px; padding:18px 20px; border:1px solid #D8DEE8; border-radius:8px; background:#fff; cursor:pointer; font:inherit; text-align:left; border-left:4px solid #0F6E56; }
+  .cpd-tile.learn { border-left-color:#6B3FA0; }
+  .cpd-tile-emoji { font-size:1.8rem; }
+  .cpd-tile-body { flex:1; min-width:0; }
+  .cpd-tile-title { font-family:'Public Sans',sans-serif; font-weight:700; font-size:1.05rem; color:#0D1B4C; }
+  .cpd-tile-sub { font-size:0.82rem; color:#6B7A94; margin-top:3px; }
+  .cpd-learn-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; max-width:620px; margin:0 auto; }
+  .cpd-learn-card { border:1px solid #E6E0F0; border-radius:10px; padding:16px 12px; background:#FBF9FE; opacity:0; transform:translateY(8px); animation:cpdRise .5s ease-out forwards; }
+  @keyframes cpdRise { to { opacity:1; transform:translateY(0); } }
+  .cpd-learn-emoji { font-size:1.5rem; }
+  .cpd-learn-title { font-family:'Public Sans',sans-serif; font-weight:700; font-size:0.9rem; color:#0D1B4C; margin-top:6px; }
+  .cpd-learn-sub { font-size:0.75rem; color:#6B7A94; margin-top:3px; }
   .cpd-cards { width:100%; box-sizing:border-box; display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:16px 0; }
   .cpd-card { border:1px solid #D8DEE8; border-left:4px solid #B8C2D0; border-radius:10px; padding:14px; background:#fff; }
   .cpd-card.ok { border-left-color:#0F6E56; background:#F4FAF7; }
@@ -1525,7 +1501,6 @@ function fmtD(v) {
   .lpm-ov-legend { display:flex; gap:16px; flex-wrap:wrap; margin:14px 0 18px; font-size:0.78rem; color:#6B7A94; }
   .lpm-ov-legend span { display:inline-flex; align-items:center; gap:6px; }
   .lpm-ov-swatch { width:16px; height:16px; display:inline-block; border:1px solid #D8DEE8; }
-
 
 /* ---- Army Cadets practical assessment (Annex E) ---- */
 .acf-prac{padding:4px 2px 30px}
@@ -9040,7 +9015,6 @@ function lpmOnTeam(c) {
   return lpmAllInstructors(c).some(n => (n || '').trim().toLowerCase() === me);
 }
 function lpmReadOnlyNow() {
-  if (lpmCourse && lpmCourse.isExample) return true;
   if (typeof CLOUD_ON === 'undefined' || !CLOUD_ON) return false;
   if (typeof cloudActingReviewer === 'function' && cloudActingReviewer()) return false;   // IQA, and admin while in the Admin panel, can edit anything
   if (typeof lpmLockReason === 'function' && lpmLockReason(lpmCourse)) {
@@ -9162,7 +9136,7 @@ function lpmRenderCourseList() {
   const row = (c, isExample) => `
     <div class="lpm-course-row-wrap${isExample ? ' example' : ''}${lpmIqaState(c) === 'action' ? ' action' : ''}">
       <button class="lpm-course-row" onclick="lpmOpenCourse('${c.id}')">
-        <div class="lpm-course-name">${isExample ? '<span class="lpm-pin">📌 Worked example</span> ' : ''}${lpmEsc(c.courseName || 'Untitled course')}</div>
+        <div class="lpm-course-name">${isExample ? '<span class="lpm-pin">📌 Example</span> ' : ''}${lpmEsc(c.courseName || 'Untitled course')}</div>
         ${!isExample && lpmIqaState(c) === 'action' ? `<span class="lpm-stamp">Action required</span>` : ''}
         <div class="lpm-course-meta">${fmtShort(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' – ' + fmtShort(c.endDate) : ''}${c.courseRef ? ' · ' + lpmEsc(c.courseRef) : ''}${c.location ? ' · ' + lpmEsc(c.location) : ''}${reviewer && c.ownerName ? ' · ' + lpmEsc(c.ownerName) : ''}</div>
         ${c.submission ? (() => { const r = iqaFor(c.id), act = lpmIqaState(c) === 'action';
@@ -9181,18 +9155,15 @@ function lpmRenderCourseList() {
         </svg></span>`}
     </div>`;
   if (!list.length) { wrap.innerHTML = filterHtml + `<div class="rn-empty">No course records yet. Start a new one above.</div>`; return; }
-  // Submitted and IQA-accepted courses drop out of the working list into Previous courses
   const isPast = c => { if (c.isExample) return false; const st = lpmPackState(c, true); return st === 'submitted' || st === 'accepted' || !!c.submission; };
   const past = rest.filter(isPast);
   rest = rest.filter(c => !isPast(c));
   const pastBlock = past.length ? `
     <div class="lpm-past">
       <button class="lpm-past-h" onclick="lpmTogglePast()" aria-expanded="${lpmPastOpen ? 'true' : 'false'}">
-        <span class="lpm-past-c">${past.length}</span>
-        <span>Previous courses</span>
+        <span class="lpm-past-c">${past.length}</span><span>Previous courses</span>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
-          stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${lpmPastOpen ? 180 : 0}deg)">
-          <path d="M6 9l6 6 6-6"/></svg>
+          stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${lpmPastOpen ? 180 : 0}deg)"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       ${lpmPastOpen ? past.map(c => row(c, false)).join('') : ''}
     </div>` : '';
@@ -9397,7 +9368,7 @@ function lpmShowStep(key) {
   const jr = document.getElementById('acfJourney'), tb = document.getElementById('lpmSteps');
   if (jr) jr.style.display = isAcf ? '' : 'none';
   if (tb) tb.style.display = isAcf ? 'none' : '';
-  if (isAcf) setTimeout(acfRenderJourney, 0);
+  if (isAcf) setTimeout(() => { try { acfRenderJourney(); } catch (e) {} }, 0);
   document.querySelectorAll('#lpmSteps .rn-step').forEach((t, i) => {
     if (LPM_STEPS[i] === 'iqa') { t.classList.add('lpm-iqa-tab'); t.style.display = isRev ? '' : 'none'; return; }
     t.style.display = hidden.includes(LPM_STEPS[i]) ? 'none' : '';
@@ -10349,6 +10320,7 @@ function acfRenderJourney() {
 }
 // =====================================================================
 
+
 const LPM_COURSE_NAMES = ['Emergency First Aid at Work - 1 Day', 'First Aid at Work - 3 Day'];
 const LPM_LOCATIONS = LICENCE.locations.slice();
 // Course "family" — governs which tabs, skills grid and pack contents a course gets
@@ -10397,8 +10369,7 @@ function lpmTyped(sel, label, cur) {
 }
 const LPM_COURSE_LENGTH_DAYS = { 'Emergency First Aid at Work - 1 Day': 1, 'First Aid at Work - 3 Day': 3 };
 const LPM_HOURS_PER_DAY = 8;
-// Hours per day, per course, for the CPD log. FAW is 18 hours across 3 days:
-// day 1 is a short day (4 hours), the rest spread over days 2 and 3.
+// FAW is 18 hours across 3 days: a short first day, then two full days.
 const LPM_DAY_HOURS = {
   'Emergency First Aid at Work - 1 Day': [6],
   'First Aid at Work - 3 Day': [4, 7, 7]
@@ -10491,7 +10462,6 @@ function lpmRenderDetails() {
   `;
 }
 
-// Trainer number from My Profile, used as the default on new courses
 function acfMyTrainerNo() {
   try { return (JSON.parse(localStorage.getItem('dtc_trainer_no') || '""') || ''); } catch (e) { return ''; }
 }
@@ -10509,11 +10479,7 @@ function lpmInstructorDaysHTML(c) {
   const team = lpmAllInstructors(c);
   if (!team.length) return '';
   const n = lpmCourseDays(c);
-  const dayMap = LPM_DAY_HOURS[c.courseName];
-  const hoursNote = dayMap
-    ? 'Day ' + dayMap.map((h, i) => (i + 1) + ' = ' + h + 'h').join(', day ') + ' — ' + dayMap.reduce((a, b) => a + b, 0) + ' hours in total'
-    : 'each day adds ' + LPM_HOURS_PER_DAY + ' hours to that instructor\'s CPD log';
-  return `<div class="lpm-field"><label>Days taught (${hoursNote})</label>
+  return `<div class="lpm-field"><label>Days taught (each day adds ${LPM_HOURS_PER_DAY} hours to that instructor's CPD log)</label>
     <div class="lpm-days">${team.map(name => {
       const on = lpmDaysFor(c, name);
       return `<div class="lpm-days-row"><span class="lpm-days-name">${lpmEsc(name)}</span>
@@ -12384,9 +12350,9 @@ async function lpmBuildPack(action) {
     contentLines.push('Learner feedback forms (' + ((lpmCourse.feedback || []).length + counts('feedback')) + ')');
     if (kind === 'acf') {
       const spec = acfCourse(lpmCourse);
-      contentLines.length = 0;
       const alnN = (lpmCourse.learners || []).filter(l => l.aln && ((l.aln.needs || []).length
         || (l.aln.adjustments || []).length || (l.aln.notes || ''))).length;
+      contentLines.length = 0;
       contentLines.push(
         '1. First Aid Course Information — Annex D (cover sheet)',
         '2. Delegate register / nominal roll (' + ((lpmCourse.registerEntries || []).length) + ' signed by QR)',
@@ -12883,21 +12849,21 @@ function cpdHome() {
     <div class="hub-h" style="margin-bottom:6px;">My CPD</div>
     <p class="sc-p">Your record of teaching, assessing and learning — ready for external quality assurance.</p>
     <div class="cpd-tiles">
-      <button class="hub-tile" style="--accent:#1F8A5B;--soft:#DDEFE6;" onclick="cpdRender()">
-        <span class="hub-ic" style="font-size:1.35rem;">📘</span>
-        <span class="hub-text">
-          <span class="hub-title">My CPD</span>
-          <span class="hub-sub">${hrs} hours recorded over the last 3 years · ${all.length} activities</span>
-        </span>
+      <button class="cpd-tile" onclick="cpdRender()">
+        <span class="cpd-tile-emoji">📘</span>
+        <div class="cpd-tile-body">
+          <div class="cpd-tile-title">My CPD</div>
+          <div class="cpd-tile-sub">${hrs} hours recorded over the last 3 years · ${all.length} activities</div>
+        </div>
         <span class="hub-chev">&rsaquo;</span>
       </button>
-      <button class="hub-tile" style="--accent:#6B3FA0;--soft:#E8E3FA;" onclick="cpdLearning()">
-        <span class="hub-ic" style="font-size:1.35rem;">🎓</span>
-        <span class="hub-text">
-          <span class="hub-title">CPD Learning <span class="kc-badge">Coming soon</span></span>
-          <span class="hub-sub">Study sessions, videos, resources and quizzes — logged automatically</span>
+      <button class="cpd-tile learn" onclick="cpdLearning()">
+        <span class="cpd-tile-emoji">🎓</span>
+        <div class="cpd-tile-body">
+          <div class="cpd-tile-title">CPD Learning <span class="kc-badge">Coming soon</span></div>
+          <div class="cpd-tile-sub">Study sessions, videos, resources and quizzes — logged automatically</div>
           <div class="kc-bar"><div class="kc-bar-fill"></div></div>
-        </span>
+        </div>
         <span class="hub-chev">&rsaquo;</span>
       </button>
     </div>`;
@@ -13453,24 +13419,14 @@ function cloudShowSetPassword(type) {
 async function cloudSaveMyName(first, last) {
   const full = (first + ' ' + last).trim();
   let saved = false, why = '';
-  // 1) the RPC, if the database has it
   try { await cloudRest('rpc/set_my_name', 'POST', { p_first: first, p_last: last }); saved = true; }
   catch (e) { why = e.message || String(e); }
-  // 2) otherwise write the profile row directly
   if (!saved) {
     try {
       const rows = await cloudRest('profiles?id=eq.' + cloudMe(), 'PATCH', { full_name: full }, 'return=representation');
       saved = Array.isArray(rows) ? rows.length > 0 : !!rows;
       if (!saved) why = 'the database did not accept the change (row level security)';
     } catch (x) { why = x.message || String(x); }
-  }
-  // 3) confirm it really landed, so the prompt cannot loop silently
-  if (saved) {
-    try {
-      const back = await cloudRest('profiles?select=full_name&id=eq.' + cloudMe());
-      const got = (back && back[0] && back[0].full_name || '').trim();
-      if (got !== full) { saved = false; why = 'the name did not save to your profile'; }
-    } catch (x) {}
   }
   if (cloud.profile) cloud.profile.full_name = full;
   lpmRefreshStaffNames();
@@ -13496,9 +13452,7 @@ async function cloudNameSave(btn) {
   const r = await cloudSaveMyName(f, l);
   if (!r.saved) {
     btn.disabled = false;
-    document.getElementById('nmMsg').textContent =
-      'Could not save your name: ' + (r.why || 'unknown error') +
-      '. Ask your administrator to run the set_my_name fix in Supabase.';
+    document.getElementById('nmMsg').textContent = 'Could not save your name: ' + (r.why || 'unknown error');
     return;
   }
   document.getElementById('clNameOv').remove(); try { cloudRenderBadge(); hubRender(); } catch (e) {}
@@ -14108,28 +14062,10 @@ async function fbEnsureLink() {
   return lpmCourse.feedbackLink;
 }
 
-
-// ---- QR enlarge: grows the code in place, not full screen ----
-function acfQrZoom(btn) {
-  const card = btn.closest('.fb-qr-card, .acf-qr, .rn-panel, .lpm-field') || btn.parentElement;
-  const box = card.querySelector('.fb-qr-img, [id^=acfQrImg], [id$=QrImg]');
-  if (!box) return;
-  const on = !card.classList.contains('qr-big');
-  card.classList.toggle('qr-big', on);
-  btn.setAttribute('aria-label', on ? 'Show smaller' : 'Show bigger');
-  btn.classList.toggle('on', on);
-  const url = box.dataset.qrUrl;
-  if (url) fbDrawQr(box, url, on ? Math.min(window.innerWidth * 0.8, 460) : 190).then(() => { box.dataset.qrUrl = url; });
-}
-const ACF_QR_BTN = `<button class="qr-zoom" title="Show bigger" aria-label="Show bigger" onclick="acfQrZoom(this)">
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
-    stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-8 8M10 20H4v-6M4 20l8-8"/></svg></button>`;
-
 async function fbDrawQr(el, text, size) {
   el.innerHTML = '';
-  el.dataset.qrUrl = text;
   if (await fbLoadQrLib()) {
-    new QRCode(el, { text, width: size, height: size, colorDark:'#0A3A24', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(el, { text, width: size, height: size, colorDark:'#0D1B4C', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M });
   } else {
     el.innerHTML = `<div class="fb-qr-fail">QR code unavailable offline.<br>Learners can open:<br><b>${lpmEsc(text)}</b></div>`;
   }
@@ -14139,7 +14075,8 @@ async function fbRenderQrCard() {
   const box = document.getElementById('fbQrCard');
   if (!box) return;
   if (lpmCourse && lpmCourse.isExample) {
-    box.innerHTML = `${ACF_QR_BTN}
+    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="fbFullScreen()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
       <div class="fb-qr-title">Scan to give feedback</div>
       <div id="fbQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub"><b>Example only</b> — this code isn't live. On your own courses the code opens the feedback form and answers appear here automatically.</div>`;
@@ -14154,7 +14091,8 @@ async function fbRenderQrCard() {
   try {
     const link = await fbEnsureLink();
     const url = fbLinkUrl(link.token);
-    box.innerHTML = `${ACF_QR_BTN}
+    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="fbFullScreen()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
       <div class="fb-qr-title">Scan to give feedback</div>
       <div id="fbQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub">Answers appear here automatically</div>`;
@@ -14211,8 +14149,6 @@ async function fbPullResponses() {
       const id = 'QR-' + r.id;
       if (have.has(id)) return;
       const d = r.data || {};
-      // The Army Cadets evaluation form posts a different shape; fold it into the
-      // same record so the feedback tab and the course pack can show either.
       const isAcf = !!(d.trainer || d.after);
       const acfRatings = {};
       if (isAcf) {
@@ -14222,19 +14158,13 @@ async function fbPullResponses() {
         if (d.course && d.course.covered) acfRatings.covered = d.course.covered;
         Object.entries(d.after || {}).forEach(([k, v]) => { if (v) acfRatings[k] = v; });
       }
-      const avg = isAcf ? (() => {
-        const n = Object.values(d.trainer || {}).filter(Boolean);
-        return n.length ? String(Math.round(n.reduce((a, b) => a + b, 0) / n.length * 2)) : '';
-      })() : (d.rateTrainer || '');
-      const notes = isAcf
-        ? [d.course && d.course.improve ? 'Improvements: ' + d.course.improve : '', d.comments || '']
-            .filter(Boolean).join('\n\n')
-        : (d.comments || '');
+      const avg = isAcf ? (() => { const n = Object.values(d.trainer || {}).filter(Boolean);
+        return n.length ? String(Math.round(n.reduce((a, b) => a + b, 0) / n.length * 2)) : ''; })() : (d.rateTrainer || '');
+      const notes = isAcf ? [d.course && d.course.improve ? 'Improvements: ' + d.course.improve : '', d.comments || ''].filter(Boolean).join('\n\n') : (d.comments || '');
       fbList().push({ id, learnerId:'', source:'qr', savedAt: r.created_at,
-        ratings: isAcf ? acfRatings : (d.ratings || {}), acf: isAcf ? d : null,
-        rateTrainer: avg, rateCentre: d.rateCentre || '',
-        leaflet: d.leaflet || '', comments: notes, title: d.title || '',
-        name: d.name || '', phone: d.phone || '', email: d.email || '' });
+        ratings: isAcf ? acfRatings : (d.ratings || {}), rateTrainer: avg, rateCentre: d.rateCentre || '',
+        leaflet: d.leaflet || '', comments: notes, title: d.title || '', name: d.name || '',
+        phone: d.phone || '', email: d.email || '' });
       added++;
     });
     if (added && (!lpmCourse.owner || lpmCourse.owner === cloudMe())) lpmPersist();
@@ -14287,7 +14217,8 @@ async function rgRenderQrCard() {
   const box = document.getElementById('rgQrCard');
   if (!box) return;
   if (lpmCourse && lpmCourse.isExample) {
-    box.innerHTML = `${ACF_QR_BTN}
+    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="rgFullScreen()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
       <div class="fb-qr-title">Scan to sign the register</div>
       <div id="rgQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub"><b>Example only</b> — this code isn't live. On your own courses the code opens the register and sign-ins appear here automatically.</div>`;
@@ -14301,7 +14232,8 @@ async function rgRenderQrCard() {
   try {
     const link = await rgEnsureLink();
     const url = rgLinkUrl(link.token);
-    box.innerHTML = `${ACF_QR_BTN}
+    box.innerHTML = `<button class="fb-enlarge" title="Show full screen" aria-label="Show full screen" onclick="rgFullScreen()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
       <div class="fb-qr-title">Scan to sign the register</div>
       <div id="rgQrImg" class="fb-qr-img"></div>
       <div class="fb-qr-sub">${rgList().length} signed in so far — display full screen for the room</div>`;
@@ -14358,9 +14290,8 @@ async function rgPullResponses() {
       const id = 'QR-' + r.id;
       if (have.has(id)) return;
       rgList().push({ id, name: r.name || '', position: r.position || '', organisation: r.organisation || '',
-        signature: r.signature || '', signedAt: r.created_at,
-        dob: r.dob || '', pNumber: r.p_number || '', email: r.email || '', gender: r.gender || '',
-        upload: r.upload_url || '', consentDAO: r.consent_dao !== false });
+        signature: r.signature || '', signedAt: r.created_at, dob: r.dob || '', pNumber: r.p_number || '',
+        email: r.email || '', gender: r.gender || '', upload: r.upload_url || '', consentDAO: r.consent_dao !== false });
       added++;
     });
     // anyone who signs the register goes straight onto the learner list
@@ -15040,155 +14971,39 @@ async function alnPackPages(pdf, font, bold, ink, grey, A4) {
 </script>
 
 <script>
-// ====== Worked example: a completed First Aid at Work course ======
-// Every instructor sees the same locked example so they can see what a
-// finished course looks like end to end. It is read-only and never
-// counts towards CPD, course totals or IQA figures.
+// ====== Built-in example course: every instructor sees the same locked template ======
 (function () {
-  const KEY = 'acf_example_v3';
-  const ID = 'EXAMPLE-FAW';
-
-  const LEARNERS = [
-    ['L1', 'Jordan Ashworth',  '2008-04-12', '30451201', 'Female'],
-    ['L2', 'Priya Raidurgam',  '2007-11-03', '30451202', 'Female'],
-    ['L3', 'Callum Fairweather','1989-02-25', '30451203', 'Male'],
-    ['L4', 'Nia Okonjo-Bell',  '2008-09-30', '30451204', 'Female'],
-    ['L5', 'Rowan Tavistock',  '2007-06-18', '30451205', 'Male'],
-    ['L6', 'Devon Marchetti',  '1994-12-07', '30451206', 'Male']
-  ];
-  // Module 1 out of 15 (pass 12), Module 2 out of 25 (pass 20)
-  const SCORES = { L1:[14,23], L2:[13,21], L3:[15,24], L4:[12,20], L5:[14,22], L6:[13,21] };
-
-  const SIG = 'data:image/svg+xml;base64,' + btoa(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60">' +
-    '<path d="M8 44c18-26 30 6 44-10s22 14 38-6 26 10 42-8 24 12 40-4" ' +
-    'fill="none" stroke="#0A3A24" stroke-width="2.4" stroke-linecap="round"/></svg>');
-
-  function buildCourse() {
-    const learners = LEARNERS.map(([id, name, dob, pno, gender]) => {
-      const l = { id, name, dob, pNumber: pno, gender, email: '' };
-      if (id === 'L4') l.aln = {
-        needs: ['Dyslexia'],
-        adjustments: ['Extra time (25%)', 'Coloured overlay or paper'],
-        notes: 'Coloured overlay used for both theory papers; extra time agreed before the course and given.',
-        agreedBy: 'Capt Eleanor Whitcombe', date: '2026-05-11' };
-      return l;
-    });
-
-    const sittings = [];
-    LEARNERS.forEach(([id, name]) => {
-      [['EFAWJAN26', 15, 12, 0, '2026-05-11T12:40:00Z'],
-       ['FAWJAN26',  25, 20, 1, '2026-05-13T14:10:00Z']].forEach(([paper, total, pass, idx, at]) => {
-        const score = SCORES[id][idx];
-        sittings.push({ id: 'EX-' + id + '-' + paper, paper, name, status: 'marked',
-                        score, passed: score >= pass, at, sig: SIG });
-      });
-    });
-
-    const register = LEARNERS.map(([id, name, dob, pno, gender], i) => ({
-      id: 'EXREG-' + id, name, position: i < 4 ? 'Cadet' : 'Adult volunteer',
-      organisation: 'B Company, Ferndale Detachment',
-      dob, pNumber: pno, gender, email: '', consentDAO: i !== 2,
-      signature: SIG, signedAt: '2026-05-11T09:05:00Z'
-    }));
-
-    return {
-      id: ID, isExample: true, locked: true,
-      courseName: 'First Aid at Work - 3 Day',
-      courseRef: 'ACF/FAW/2026/014',
-      location: 'Ferndale Cadet Training Centre, Hut 3',
-      startDate: '2026-05-11', endDate: '2026-05-13',
-      startTime: '09:00', finishTime: '16:30',
-      instructor1: 'Capt Eleanor Whitcombe', instructor2: 'SSI Marcus Delaney',
-      trainerNo1: 'T-40118', trainerNo2: 'T-40233',
-      extraInstructors: [], taught: [1, 2, 3],
-      instructorDays: { 'Capt Eleanor Whitcombe': [1, 2, 3], 'SSI Marcus Delaney': [2, 3] },
-      learners, registerEntries: register, examSittings: sittings,
-      records: [], linkedSessionIds: [],
-      stepDone: { details: true, learners: true, skills: true, theory: true, feedback: true, pack: true },
-      feedback: [
-        { id: 'EXFB1', source: 'qr', savedAt: '2026-05-13T15:40:00Z',
-          ratings: { delivery:'Excellent', visual:'Very Good', body:'Excellent', participation:'Excellent',
-                     knowledge:'Excellent', techniques:'Very Good', pace:'About right', covered:'Yes',
-                     confident:'Yes', comfortable:'Yes', skills:'Yes' },
-          rateTrainer: '9', comments: 'Clear teaching and plenty of hands-on practice. The catastrophic bleeding station was the most useful part.',
-          name: 'Jordan Ashworth' },
-        { id: 'EXFB2', source: 'qr', savedAt: '2026-05-13T15:44:00Z',
-          ratings: { delivery:'Excellent', visual:'Excellent', body:'Very Good', participation:'Excellent',
-                     knowledge:'Excellent', techniques:'Excellent', pace:'About right', covered:'Yes',
-                     confident:'Yes', comfortable:'Yes', skills:'Yes' },
-          rateTrainer: '10', comments: 'I feel confident doing CPR and using an AED now.', name: '' },
-        { id: 'EXFB3', source: 'qr', savedAt: '2026-05-13T15:51:00Z',
-          ratings: { delivery:'Very Good', visual:'Good', body:'Very Good', participation:'Very Good',
-                     knowledge:'Excellent', techniques:'Very Good', pace:'About right', covered:'Mostly',
-                     confident:'Yes', comfortable:'Somewhat', skills:'Yes' },
-          rateTrainer: '8', comments: 'Improvements: a little longer on the secondary survey would help.', name: 'Devon Marchetti' }
-      ],
-      annexD: {
-        creNumber: 'CRE-2291', countyUnit: LICENCE.name || 'Army Cadet Force',
-        courseType: 'FAW', blended: 'NO',
-        learnersPassed: 6, learnersReferred: 0,
-        noContactDAO: 'Callum Fairweather',
-        trainers: [], dates: [], enclosures: {},
-        leadAssessor: 'Capt Eleanor Whitcombe', leadTrainerNo: 'T-40118',
-        leadSignature: SIG, leadDate: '2026-05-13'
-      },
-      completed: { at: '2026-05-13T17:00:00Z' },
-      submission: { at: '2026-05-14T09:20:00Z', by: 'Capt Eleanor Whitcombe' },
-      signature: SIG, signatureAt: '2026-05-13T16:55:00Z',
-      createdAt: '2026-05-11T08:00:00Z'
-    };
-  }
-
-  function plantPractical() {
-    const all = (() => { try { return JSON.parse(localStorage.getItem('acf_practical_v1') || '{}'); } catch (e) { return {}; } })();
-    if (all[ID]) return;
-    const marks = {}, initials = {};
-    // 6 learners × 9 FAW criteria, all passed
-    for (let i = 0; i < 6; i++) {
-      initials[i] = (LEARNERS[i][1].split(/\s+/).map(w => w[0]).join('')).toUpperCase();
-      for (let c = 0; c < 9; c++) marks[i + ':' + c] = 'P';
-    }
-    all[ID] = { marks, initials,
-      feedback: 'A strong group throughout. Jordan and Nia led the CPR station confidently and rotated compressions '
-        + 'without prompting. Callum needed a second attempt at the catastrophic bleeding station and passed on the '
-        + 'repeat. Whole group gave clear, structured handovers by day three.',
-      assessor: 'Capt Eleanor Whitcombe', trainerNo: 'T-40118',
-      signature: SIG, date: '2026-05-13' };
-    try { localStorage.setItem('acf_practical_v1', JSON.stringify(all)); } catch (e) {}
-  }
-
-  function plantReview() {
-    try {
-      const m = JSON.parse(localStorage.getItem(REVIEWS_KEY) || '{}');
-      if (m[ID]) return;
-      m[ID] = { course_id: ID, iqa_name: 'Maj Rosalind Petersen', review_date: '2026-05-19',
-                outcome: 'Accepted',
-                notes: 'Paperwork complete and legible. Annex D matches the nominal roll and theory results. '
-                     + 'Reasonable adjustment for one learner recorded correctly on Annex F. No actions.',
-                updated_at: '2026-05-19T11:15:00Z' };
-      localStorage.setItem(REVIEWS_KEY, JSON.stringify(m));
-    } catch (e) {}
-  }
-
+  const EXAMPLE = {"course": {"id": "EXAMPLE-FREC", "courseName": "FREC 3 - 5 Day", "courseRef": "EXAMPLE / S3G-FREC-014", "location": "Park Royal", "startDate": "2026-10-05", "endDate": "2026-10-09", "instructor1": "John Smith", "instructor2": "Jane Smith", "extraInstructors": [], "taught": [1, 2, 3, 4, 5], "learners": [{"id": "L1", "name": "Daniel Price"}, {"id": "L2", "name": "Sophie Nolan"}, {"id": "L3", "name": "Marcus Webb"}, {"id": "L4", "name": "Alice Kerr", "aln": {"needs": ["Dyslexia"], "adjustments": ["Extra time (25%)", "Coloured overlay or paper"], "notes": "Coloured overlay used for the theory papers; extra time agreed and given.", "agreedBy": "John Smith", "date": "2026-10-05"}}], "records": [], "linkedSessionIds": [], "qa": {}, "feedback": [{"id": "FBD1", "learnerId": "", "source": "form", "savedAt": "2026-10-09T15:10:00Z", "ratings": {"venue": "Excellent", "classroom": "Excellent", "handouts": "Very Good", "equipment": "Excellent", "content": "Excellent", "knowledge": "Excellent", "interest": "Excellent", "methods": "Excellent", "support": "Excellent", "appearance": "Excellent", "confidence": "Excellent", "pace": "Excellent", "howconfident": "Extremely"}, "rateTrainer": "10", "rateCentre": "9", "leaflet": "Yes", "comments": "Best first aid course I have been on. The scenarios felt real and the feedback afterwards was clear and useful.", "name": "Daniel Price", "email": "daniel.price@example.com", "title": "", "phone": ""}], "examScores": {"L1": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}, "L2": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}, "L3": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}, "L4": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}}, "mcPassMark": 28, "paperNumbers": {"L1": "ASY8201", "L2": "ASY8202", "L3": "ASY8203", "L4": "ASY8204"}, "signature": "data:image/png;base64,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", "isExample": true}, "files": [{"kind": "register", "title": "Delegate register", "url": "register.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "other", "title": "Practical assessment record sheet", "url": "practical.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Daniel Price", "learnerId": "L1", "page": 1, "paperNo": "ASX7101", "url": "anat-1.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Daniel Price", "learnerId": "L1", "page": 2, "paperNo": "ASX7101", "url": "anat-2.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Daniel Price", "learnerId": "L1", "page": 1, "paperNo": "ASY8201", "url": "mcq-1.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Daniel Price", "learnerId": "L1", "page": 2, "paperNo": "ASY8201", "url": "mcq-2.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 1, "paperNo": "ASX7102", "url": "anat-3.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 2, "paperNo": "ASX7102", "url": "anat-4.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 1, "paperNo": "ASY8202", "url": "mcq-3.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 2, "paperNo": "ASY8202", "url": "mcq-4.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 1, "paperNo": "ASX7103", "url": "anat-5.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 2, "paperNo": "ASX7103", "url": "anat-6.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 1, "paperNo": "ASY8203", "url": "mcq-5.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 2, "paperNo": "ASY8203", "url": "mcq-6.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 1, "paperNo": "ASX7104", "url": "anat-7.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 2, "paperNo": "ASX7104", "url": "anat-8.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 1, "paperNo": "ASY8204", "url": "mcq-7.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 2, "paperNo": "ASY8204", "url": "mcq-8.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "feedback", "title": "Learner feedback form", "url": "fb-1.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "feedback", "title": "Learner feedback form", "url": "fb-2.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "feedback", "title": "Learner feedback form", "url": "fb-3.jpg", "courseId": "EXAMPLE-FREC"}]};
+  const KEY = 'dtc_example_v1';
+  function put(db, rec) { return new Promise((ok, no) => { const t = db.transaction('files','readwrite'); t.objectStore('files').put(rec); t.oncomplete = ok; t.onerror = no; }); }
   async function plant() {
     try {
-      let reviewsKeyReady = false;
-      try { reviewsKeyReady = typeof REVIEWS_KEY === 'string'; } catch (e) { reviewsKeyReady = false; }
-      if (typeof lpmLoadCourses !== 'function' || !reviewsKeyReady) return setTimeout(plant, 400);
+      if (typeof lpmLoadCourses !== 'function') return setTimeout(plant, 400);
       const courses = lpmLoadCourses();
-      const already = courses.some(c => c.id === ID);
+      const already = courses.some(c => c.isExample);
       if (already && localStorage.getItem(KEY)) return;
-      const clean = courses.filter(c => c.id !== ID && !(c.isExample && /^EXAMPLE-/.test(c.id || '')));
-      clean.unshift(buildCourse());
-      lpmSaveCoursesRaw(clean);
-      plantPractical();
-      plantReview();
+      if (!already) { courses.unshift(EXAMPLE.course); lpmSaveCoursesRaw(courses); }
+      const sk = skLoadAll();
+      if (!sk['EXAMPLE-FREC']) {
+        const refs = SK_ASSESSMENTS.flatMap(a => a.groups.flatMap(g => g[1].map(i => i[0])));
+        const marks = {};
+        refs.forEach(r => { marks[r] = {}; EXAMPLE.course.learners.forEach(l => { marks[r][l.id] = { v:'C', at:'2026-10-08T10:00:00Z' }; }); });
+        ['5.26','5.27'].forEach(r => { if (marks[r]) marks[r]['L3'] = { v:'R', at:'2026-10-08T10:00:00Z' }; });
+        sk['EXAMPLE-FREC'] = { marks, overrides:{}, signoff:{ centre:CENTRE_NAME, centreNo:CENTRE_NO, date:'2026-10-09', trainer:'Miles Ward' } };
+        skSaveAllRaw(sk);
+      }
+      const db = await packOpen();
+      const have = await packList('EXAMPLE-FREC');
+      if (!have.length) {
+        for (let i = 0; i < EXAMPLE.files.length; i++) {
+          await put(db, Object.assign({ id: 'EX' + i, addedAt: '2026-10-09T12:00:00Z' }, EXAMPLE.files[i]));
+        }
+      }
       localStorage.setItem(KEY, '1');
       try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
     } catch (e) { console.log('example', e); }
   }
-  window.addEventListener('load', () => setTimeout(() => { try { plant(); } catch (e) { console.log('example', e); } }, 900));
+  window.addEventListener('load', () => setTimeout(plant, 600));
 })();
 
 // ============ LOCKED COURSES AND REQUESTS TO EDIT ============
@@ -16032,8 +15847,8 @@ function licApply() {
   try { MENU_ITEMS.forEach(g => { g.items = g.items.filter(x => !featOff(x.go)); }); } catch (e) {}
 }
 document.addEventListener('DOMContentLoaded', licApply);
-function stBuildRailInner() {
-  try { licApply(); } catch (e) { console.log('licApply', e); }
+function stBuildRail() {
+  licApply();
   if (document.getElementById('stRail')) return;
   const nav = document.createElement('nav'); nav.id = 'stRail'; nav.className = 'st-rail'; nav.setAttribute('aria-label', 'Main');
   let html = `<button class="st-logo" onclick="showView('hub')" aria-label="Home"><img src="${S3_LOGO}" alt="${lpmEsc(LICENCE.short)}" onerror="this.onerror=null;this.src=licBadge()"></button>
@@ -16060,13 +15875,6 @@ function stRoleApply() {
   const wasLearner = document.body.classList.contains('role-learner');
   document.body.classList.toggle('role-learner', role === 'learner');
   if (role === 'learner' && !wasLearner) { try { lmsOpen(); } catch (e) {} }
-}
-function stBuildRail() {
-  try { stBuildRailInner(); }
-  catch (e) {
-    console.log('rail', e);
-    try { document.body.classList.remove('has-rail'); } catch (x) {}
-  }
 }
 function stSyncRail() {
   try { stRoleApply(); } catch (e) {}
@@ -16206,7 +16014,6 @@ async function pfSave() {
   }
   if (has('pfTrainerNo')) acfSetMyTrainerNo(g('pfTrainerNo'));
   const newName = g('pfName'); let nameNote = '', payNote = '';
-  // Save the name FIRST, so an optional extra (pay details) can never block it
   if (newName && newName !== (cloud.profile.full_name || '')) {
     const parts = newName.trim().split(/\s+/);
     const r = await cloudSaveMyName(parts[0] || '', parts.slice(1).join(' '));
@@ -16214,24 +16021,16 @@ async function pfSave() {
       cloud.profile.full_name = newName;
       try { cloudRenderBadge && cloudRenderBadge(); } catch (e) {}
       try { hubRender(); } catch (e) {}
-    } else {
-      nameNote = ' Your name could not be changed: ' + ((r && r.why) || 'unknown error') + '.';
-    }
+    } else nameNote = ' Your name could not be changed: ' + ((r && r.why) || 'unknown error') + '.';
   }
-  // Pay details only exist where that feature is switched on and its table is present
   if (FEAT('payDetails') && has('pfAccName')) {
     try {
       await cloudRest('pay_details?on_conflict=owner', 'POST', [{ owner: cloudMe(), data, updated_at: new Date().toISOString() }], 'resolution=merge-duplicates,return=minimal');
       pf.extra = data; if (typeof jb !== 'undefined') jb.myPay = data;
     } catch (e) {
-      const raw = String(e.message || e);
-      payNote = /relation .* does not exist|PGRST20|42P01|schema/i.test(raw)
-        ? ' Payment details are not set up on this licence, so they were not saved.'
-        : ' Payment details could not be saved: ' + raw;
+      payNote = ' Payment details are not set up on this licence, so they were not saved.';
     }
-  } else {
-    pf.extra = data; if (typeof jb !== 'undefined') jb.myPay = data;
-  }
+  } else { pf.extra = data; if (typeof jb !== 'undefined') jb.myPay = data; }
   nameNote += payNote;
   msg.style.color = nameNote ? '#8A5200' : '#0F6E56'; msg.textContent = 'Saved.' + nameNote;
   if (!nameNote) setTimeout(pfRender, 900);
@@ -16430,8 +16229,8 @@ const CT_IC = {
 };
 const CT_GROUPS = [
   { prov:LICENCE.short, logo:true, items:[
-    { name:'Emergency First Aid at Work - 1 Day', label:'EFAW', sub:'Emergency First Aid at Work · 1 Day', c:'#1E7A46', ic:'heart' },
-    { name:'First Aid at Work - 3 Day', label:'FAW', sub:'First Aid at Work · 3 Day', c:'#0A3A24', ic:'shield' } ] },
+    { name:'Emergency First Aid at Work - 1 Day', label:'EFAW', sub:'Emergency First Aid at Work \u00b7 1 Day', c:'#1E7A46', ic:'heart' },
+    { name:'First Aid at Work - 3 Day', label:'FAW', sub:'First Aid at Work \u00b7 3 Day', c:'#0A3A24', ic:'shield' } ] },
 ];
 function ctIcon(k) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CT_IC[k]}</svg>`; }
 function ctClose() { const o = document.getElementById('ctOv'); if (o) o.remove(); }
