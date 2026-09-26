@@ -1651,6 +1651,40 @@ function fmtD(v) {
 .qr-big .fb-qr-img,.qr-big [id^=acfQrImg]{margin:0 auto}
 .qr-big .fb-qr-img canvas,.qr-big .fb-qr-img img,
 .qr-big [id^=acfQrImg] canvas,.qr-big [id^=acfQrImg] img{max-width:100%;height:auto}
+/* ---- Course journey tiles (built on the app's hub tiles) ---- */
+.acf-journey{margin:4px 0 20px}
+.acf-j-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px}
+.acf-j-h{font-family:'Fraunces','Public Sans',serif;font-size:1.15rem;font-weight:600;color:var(--brand-dark)}
+.acf-j-ring{--p:0;width:54px;height:54px;border-radius:50%;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;
+  background:conic-gradient(var(--brand-accent) calc(var(--p)*1%), #E2E8EE 0)}
+.acf-j-ring span{width:42px;height:42px;border-radius:50%;background:#fff;display:flex;
+  align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:var(--brand-dark)}
+.acf-j-cellwrap{position:relative;display:flex;flex-direction:column}
+.acf-j-tiles{margin-top:0}
+.acf-j-tile{width:100%;height:100%;position:relative}
+.acf-j-tile.done{background:var(--soft)!important}
+/* the step you are on is outlined in its own colour — no size change */
+.acf-j-tile[data-active="1"]{border-color:var(--accent)!important;
+  box-shadow:0 0 0 2px var(--accent) inset!important;transform:none!important}
+.acf-j-tile[data-active="1"] .hub-title{color:var(--accent)!important}
+/* the studio tiles are vertical, so the tick sits in the corner */
+.acf-j-tile .acf-j-tick{position:absolute;top:18px;right:18px;margin:0}
+.acf-j-note{display:block;font-size:.8rem;color:var(--brand-accent)!important;font-weight:700;margin-top:8px}
+.acf-j-tick{margin-left:auto;align-self:center;width:26px;height:26px;border-radius:50%;
+  background:var(--brand-accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.acf-j-tick svg{width:15px;height:15px}
+.acf-j-mark{margin-top:7px;border:1px solid #CBD5DF;background:#fff;color:#54616b;border-radius:9px;
+  padding:7px;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
+.acf-j-mark.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+.acf-j-arrow{position:absolute;right:-14px;top:38px;width:18px;height:18px;color:#C3D2C9;z-index:2}
+.acf-j-arrow svg{width:100%;height:100%}
+@media (max-width:760px){ .acf-j-arrow{display:none} }
+.acf-ad-auto{display:flex;gap:9px;align-items:flex-start;font-size:.79rem;color:#8a97a2;margin-bottom:8px}
+.acf-ad-auto.on{color:#25323b}
+.acf-ad-box{width:17px;height:17px;flex:0 0 auto;border:1px solid #CBD5DF;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;background:#fff}
+.acf-ad-auto.on .acf-ad-box{background:var(--brand-accent);border-color:var(--brand-accent)}
 </style>
 
 <style id="studioTheme">
@@ -2544,6 +2578,7 @@ window.addEventListener('load', function () {
         <div class="rn-head-sub" id="lpmCourseSub"></div>
       </div>
 
+      <div id="acfJourney" class="acf-journey rn-no-print"></div>
       <div class="rn-steps rn-no-print" id="lpmSteps">
         <button class="rn-step" onclick="lpmShowStep('details')">Course details</button>
         <button class="rn-step" onclick="lpmShowStep('learners')">Learners</button>
@@ -9354,6 +9389,11 @@ function lpmShowInfo(html) {
 function lpmShowStep(key) {
   const isRev = typeof cloudActingReviewer === 'function' && cloudActingReviewer();
   const hidden = lpmHiddenSteps(lpmCourse);
+  const isAcf = lpmCourseKind(lpmCourse) === 'acf';
+  const jr = document.getElementById('acfJourney'), tb = document.getElementById('lpmSteps');
+  if (jr) jr.style.display = isAcf ? '' : 'none';
+  if (tb) tb.style.display = isAcf ? 'none' : '';
+  if (isAcf) setTimeout(() => { try { acfRenderJourney(); } catch (e) { console.log('journey', e); } }, 0);
   document.querySelectorAll('#lpmSteps .rn-step').forEach((t, i) => {
     if (LPM_STEPS[i] === 'iqa') { t.classList.add('lpm-iqa-tab'); t.style.display = isRev ? '' : 'none'; return; }
     t.style.display = hidden.includes(LPM_STEPS[i]) ? 'none' : '';
@@ -9872,6 +9912,156 @@ function acfPaintCode(paper) {
   });
 }
 // ====================================================================
+
+
+// ============== ARMY CADETS — COURSE JOURNEY TILES ==============
+// The course steps as tiles, in the order a course is actually run,
+// with an arrow between each. A tile shades green with a tick once
+// its step is done. Every tile stays clickable at any time.
+
+const ACF_JOURNEY = [
+  { key:'details',  title:'Course details', sub:'Dates, venue, trainers', ic:'clip' },
+  { key:'learners', title:'Learners',       sub:'Register by QR code',    ic:'people' },
+  { key:'skills',   title:'Practical assessment', sub:'Annex E criteria', ic:'check' },
+  { key:'theory',   title:'Theory exams',   sub:'Sat by QR, auto-marked', ic:'paper' },
+  { key:'feedback', title:'Feedback',       sub:'Course evaluation',      ic:'star' },
+  { key:'pack',     title:'Course pack',    sub:'Build and send for IQA',  ic:'send' }
+];
+
+const ACF_JIC = {
+  clip:'<path d="M9 3h6v4H9z"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 12h8M8 16h5"/>',
+  people:'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 6a3 3 0 0 1 0 6"/><path d="M18 20a5 5 0 0 0-3-4.6"/>',
+  check:'<path d="M4 7h10M4 12h10M4 17h6"/><path d="M16 15l2 2 4-4"/>',
+  paper:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  star:'<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/>',
+  shield:'<path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  send:'<path d="M4 12l16-7-7 16-2-6z"/>'
+};
+const acfJIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ACF_JIC[k] || ''}</svg>`;
+
+// Manual "done" ticks, kept alongside the automatic checks
+function acfDoneMap() {
+  lpmCourse.stepDone = lpmCourse.stepDone || {};
+  return lpmCourse.stepDone;
+}
+function acfToggleDone(key) {
+  if (lpmReadOnlyNow()) return;
+  const m = acfDoneMap();
+  m[key] = !m[key];
+  lpmPersist();
+  acfRenderJourney();
+}
+
+// What the app can work out for itself
+function acfStepState(key) {
+  const spec = acfCourse(lpmCourse);
+  const learners = (lpmCourse.learners || []).filter(l => (l.name || '').trim());
+  const manual = !!acfDoneMap()[key];
+  let auto = false, note = '';
+  switch (key) {
+    case 'details':
+      auto = !!(lpmCourse.courseName && lpmCourse.startDate && lpmCourse.location && lpmCourse.instructor1);
+      note = lpmCourse.startDate ? fmtD(lpmCourse.startDate) : 'Not set';
+      break;
+    case 'learners':
+      auto = learners.length > 0;
+      note = learners.length ? learners.length + ' on the roll' : 'None yet';
+      break;
+    case 'skills': {
+      const prac = acfPracFor(lpmCourse.id);
+      const total = learners.slice(0, ACF_MAX_LEARNERS).length * (spec ? spec.criteria.length : 0);
+      const done = Object.values(prac.marks).filter(v => v === 'P' || v === 'R').length;
+      auto = total > 0 && done >= total;
+      note = total ? done + ' of ' + total + ' assessed' : 'Add learners first';
+      break;
+    }
+    case 'theory': {
+      const papers = acfPapersFor(lpmCourse);
+      const need = learners.length * papers.length;
+      const sat = (lpmCourse.examSittings || []).filter(s => s.status === 'marked').length;
+      auto = need > 0 && sat >= need;
+      note = need ? sat + ' of ' + need + ' papers sat' : 'Add learners first';
+      break;
+    }
+    case 'feedback': {
+      const n = (lpmCourse.feedback || []).length;
+      auto = n > 0;
+      note = n ? n + ' response' + (n === 1 ? '' : 's') : 'None yet';
+      break;
+    }
+    case 'pack': {
+      const st = lpmPackState(lpmCourse, true);
+      auto = st === 'submitted' || st === 'accepted';
+      note = st === 'submitted' ? 'Sent for IQA review'
+           : st === 'accepted' ? 'Accepted by IQA'
+           : st === 'completed' ? 'Ready to submit' : 'Not started';
+      break;
+    }
+  }
+  return { done: auto || manual, auto, manual, note };
+}
+
+// Same accent + soft pairs the dashboard tiles use
+const ACF_J_COLOUR = {
+  details:  { accent:'#1F8A5B', soft:'#DDEFE6' },
+  learners: { accent:'#2446B8', soft:'#E3E8FA' },
+  skills:   { accent:'#C2185B', soft:'#FDE4EE' },
+  theory:   { accent:'#C2621A', soft:'#FDE8D8' },
+  feedback: { accent:'#6B3FA0', soft:'#E8E3FA' },
+  pack:     { accent:'#0F6E56', soft:'#DDEFE6' }
+};
+
+function acfRenderJourney() {
+  try { if (typeof acfAnnexDSync === 'function') acfAnnexDSync(); } catch (e) {}
+  const host = document.getElementById('acfJourney');
+  if (!host || !lpmCourse) return;
+  const hidden = lpmHiddenSteps(lpmCourse);
+  const steps = ACF_JOURNEY.filter(s => !hidden.includes(s.key));
+  const states = steps.map(s => acfStepState(s.key));
+  const doneCount = states.filter(s => s.done).length;
+  const ro = lpmReadOnlyNow();
+
+  host.innerHTML = `
+    <div class="acf-j-head">
+      <div>
+        <div class="hub-eyebrow">Course progress</div>
+        <div class="acf-j-h">${doneCount} of ${steps.length} steps complete</div>
+      </div>
+      <div class="acf-j-ring" style="--p:${steps.length ? doneCount / steps.length * 100 : 0}">
+        <span>${steps.length ? Math.round(doneCount / steps.length * 100) : 0}%</span>
+      </div>
+    </div>
+    <div class="hub-tiles acf-j-tiles">
+      ${steps.map((s, i) => {
+        const st = states[i];
+        return `
+        <div class="acf-j-cellwrap">
+          <button class="hub-tile acf-j-tile${st.done ? ' done' : ''}"
+            style="--accent:${(ACF_J_COLOUR[s.key]||{}).accent || '#0A3A24'};--soft:${(ACF_J_COLOUR[s.key]||{}).soft || '#E8EDF3'};"
+            onclick="lpmShowStep('${s.key}')"${LPM_STEPS[lpmStepIdx] === s.key ? ' data-active="1"' : ''}>
+            <span class="hub-ic">${acfJIcon(s.ic)}</span>
+            <span class="hub-text">
+              <span class="hub-title">${lpmEsc(s.title)}</span>
+              <span class="hub-sub">${lpmEsc(s.sub)}</span>
+              <span class="acf-j-note">${lpmEsc(st.note)}</span>
+            </span>
+            ${st.done
+              ? '<span class="acf-j-tick" aria-label="Complete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg></span>'
+              : '<span class="hub-chev">&rsaquo;</span>'}
+          </button>
+          ${st.auto || ro || st.done ? '' : `
+            <button class="acf-j-mark${st.manual ? ' on' : ''}"
+              onclick="event.stopPropagation();acfToggleDone('${s.key}')">Mark complete</button>`}
+          ${i < steps.length - 1 ? `<div class="acf-j-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+// =====================================================================
+
 
 
 const LPM_COURSE_NAMES = ['Emergency First Aid at Work - 1 Day', 'First Aid at Work - 3 Day'];
