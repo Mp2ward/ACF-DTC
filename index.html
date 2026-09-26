@@ -12771,27 +12771,20 @@ function cpdHome() {
   if (!root) return;
   const all = cpdEntries(cpdWho), y3 = cpdWindow(all, 3);
   const hrs = y3.reduce((t, e) => t + (Number(e.hours) || 0), 0);
-  root.innerHTML = `<div class="hub-eyebrow">Digital Training Centre</div>
+  root.innerHTML = `${kcBack("showView('hub')")}
+    <div class="hub-eyebrow" style="margin-top:14px;">My Account</div>
     <div class="hub-h" style="margin-bottom:6px;">My CPD</div>
     <p class="sc-p">Your record of teaching, assessing and learning — ready for external quality assurance.</p>
-    <div class="cpd-tiles">
-      <button class="cpd-tile" onclick="cpdRender()">
-        <span class="cpd-tile-emoji">📘</span>
-        <div class="cpd-tile-body">
-          <div class="cpd-tile-title">My CPD</div>
-          <div class="cpd-tile-sub">${hrs} hours recorded over the last 3 years · ${all.length} activities</div>
-        </div>
-        <span class="hub-chev">&rsaquo;</span>
-      </button>
-      <button class="cpd-tile learn" onclick="cpdLearning()">
-        <span class="cpd-tile-emoji">🎓</span>
-        <div class="cpd-tile-body">
-          <div class="cpd-tile-title">CPD Learning <span class="kc-badge">Coming soon</span></div>
-          <div class="cpd-tile-sub">Study sessions, videos, resources and quizzes — logged automatically</div>
-          <div class="kc-bar"><div class="kc-bar-fill"></div></div>
-        </div>
-        <span class="hub-chev">&rsaquo;</span>
-      </button>
+    <div class="hub-tiles" style="margin-top:22px;">
+      <button class="hub-tile" style="--soft:#E3E8FA;" onclick="cpdRender()">
+        <span class="hub-ic">${kcIcon('<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h6M8 11h6"/>')}</span>
+        <span class="hub-text"><span class="hub-title">My CPD</span><span class="hub-sub">${hrs} hours over the last 3 years · ${all.length} activities</span></span></button>
+      <button class="hub-tile" style="--soft:#DDEFE6;" onclick="cpdLearning()">
+        <span class="hub-ic">${kcIcon('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M22 9v6"/>')}</span>
+        <span class="hub-text"><span class="hub-title">CPD Learning <span class="kc-soon-badge">Coming soon</span></span><span class="hub-sub">Study sessions, videos, resources and quizzes — logged automatically</span></span></button>
+      <button class="hub-tile" style="--soft:#FDE4EE;" onclick="cpdRender();setTimeout(cpdExport,50)">
+        <span class="hub-ic">${kcIcon('<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M12 11v6M9 14l3 3 3-3"/>')}</span>
+        <span class="hub-text"><span class="hub-title">CPD Portfolio</span><span class="hub-sub">Export your CPD record as a PDF for quality assurance</span></span></button>
     </div>`;
 }
 
@@ -12799,23 +12792,21 @@ function cpdLearning() {
   const root = document.getElementById('cpdRoot');
   root.innerHTML = `<button class="rn-nav-btn rn-no-print" onclick="cpdHome()">← CPD</button>
     <div class="kc-page">
-      <div class="kc-icon">🎓</div>
+      <div class="hub-ic" style="--soft:#DDEFE6;margin:0 auto 10px;">${kcIcon('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M22 9v6"/>')}</div>
       <div class="hub-eyebrow">CPD Learning</div>
       <div class="hub-h" style="margin-bottom:6px;">Learn, then log it automatically</div>
       <span class="kc-badge kc-badge-lg">Coming soon</span>
       <p class="sc-p" style="max-width:560px;margin:16px auto 22px;">Short study sessions, videos, manufacturer guides and quizzes drawn from Resuscitation Council UK, Qualsafe, JRCALC and equipment manufacturers. Finish one and the hours drop straight into your CPD log, with the reflection prompt ready to complete.</p>
-      <div class="cpd-learn-grid">
-        ${[['🎥','Video sessions','Short clinical and teaching updates'],
-           ['📄','Guideline briefings','RCUK, JRCALC and HSE changes, summarised'],
-           ['🧰','Manufacturer training','AED, suction and airway equipment'],
-           ['❓','Knowledge quizzes','Check what you have taken in'],
-           ['🗂️','Resource library','Downloadable references for your portfolio'],
-           ['⏱️','Auto-logging','Hours and reflection added to My CPD']].map((c, i) => `
-          <div class="cpd-learn-card" style="animation-delay:${i * 0.09}s">
-            <div class="cpd-learn-emoji">${c[0]}</div>
-            <div class="cpd-learn-title">${c[1]}</div>
-            <div class="cpd-learn-sub">${c[2]}</div>
-          </div>`).join('')}
+      <div class="hub-tiles" style="margin-top:6px;text-align:left;">
+        ${[['<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-3v10l-4-3"/>','#FDE4EE','Video sessions','Short clinical and teaching updates'],
+           ['<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>','#E3E8FA','Guideline briefings','RCUK, JRCALC and HSE changes, summarised'],
+           ['<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5h8v2M3 12h18"/>','#FFE1D6','Manufacturer training','AED, suction and airway equipment'],
+           ['<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/>','#E8E3FA','Knowledge quizzes','Check what you have taken in'],
+           ['<path d="M4 4h4v16H4zM10 4h4v16h-4z"/><path d="M16.5 4.5l3.8-1 3 15.5-3.8 1z" transform="translate(-2 1)"/>','#DDEFE6','Resource library','Downloadable references for your portfolio'],
+           ['<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>','#FDE8D8','Auto-logging','Hours and reflection added to My CPD']].map(c => `
+          <div class="hub-tile" style="--soft:${c[1]};cursor:default;">
+            <span class="hub-ic">${kcIcon(c[0])}</span>
+            <span class="hub-text"><span class="hub-title">${c[2]}</span><span class="hub-sub">${c[3]}</span></span></div>`).join('')}
       </div>
       <div class="kc-progress" style="margin-top:26px;">
         <div class="kc-progress-top"><span>In development</span><span class="kc-pct">42%</span></div>
