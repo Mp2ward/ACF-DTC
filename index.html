@@ -1289,19 +1289,8 @@ function fmtD(v) {
   .cpd-table tr:nth-child(even) td { background:#F7F9FC; }
   .cpd-detail { font-size:0.75rem; color:#6B7A94; margin-top:2px; }
   .cpd-src { font-size:0.72rem; color:#6B7A94; white-space:nowrap; }
+  /* CPD tiles use the dashboard's .hub-tile — only the layout wrapper is local */
   .cpd-tiles { display:flex; flex-direction:column; gap:12px; margin:18px 0; max-width:640px; }
-  .cpd-tile { display:flex; align-items:center; gap:16px; padding:18px 20px; border:1px solid #D8DEE8; border-radius:8px; background:#fff; cursor:pointer; font:inherit; text-align:left; border-left:4px solid #0F6E56; }
-  .cpd-tile.learn { border-left-color:#6B3FA0; }
-  .cpd-tile-emoji { font-size:1.8rem; }
-  .cpd-tile-body { flex:1; min-width:0; }
-  .cpd-tile-title { font-family:'Public Sans',sans-serif; font-weight:700; font-size:1.05rem; color:#0D1B4C; }
-  .cpd-tile-sub { font-size:0.82rem; color:#6B7A94; margin-top:3px; }
-  .cpd-learn-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; max-width:620px; margin:0 auto; }
-  .cpd-learn-card { border:1px solid #E6E0F0; border-radius:10px; padding:16px 12px; background:#FBF9FE; opacity:0; transform:translateY(8px); animation:cpdRise .5s ease-out forwards; }
-  @keyframes cpdRise { to { opacity:1; transform:translateY(0); } }
-  .cpd-learn-emoji { font-size:1.5rem; }
-  .cpd-learn-title { font-family:'Public Sans',sans-serif; font-weight:700; font-size:0.9rem; color:#0D1B4C; margin-top:6px; }
-  .cpd-learn-sub { font-size:0.75rem; color:#6B7A94; margin-top:3px; }
   .cpd-cards { width:100%; box-sizing:border-box; display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:16px 0; }
   .cpd-card { border:1px solid #D8DEE8; border-left:4px solid #B8C2D0; border-radius:10px; padding:14px; background:#fff; }
   .cpd-card.ok { border-left-color:#0F6E56; background:#F4FAF7; }
@@ -1586,43 +1575,36 @@ function fmtD(v) {
 .acf-ad-chk{display:flex;gap:9px;align-items:flex-start;font-size:.79rem;color:#54616b;margin-bottom:8px}
 .acf-ad-chk input{width:17px;height:17px;flex:0 0 auto;margin-top:2px;accent-color:var(--brand-accent)}
 
-/* ---- Course journey tiles ---- */
-.acf-journey{margin:6px 0 18px}
-.acf-j-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:12px}
-.acf-j-k{font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:#8a97a2;font-weight:700}
-.acf-j-h{font-size:1rem;font-weight:800;color:var(--brand-dark)}
-.acf-j-ring{--p:0;width:52px;height:52px;border-radius:50%;flex:0 0 auto;display:flex;
+/* ---- Course journey tiles (built on the app's hub tiles) ---- */
+.acf-journey{margin:4px 0 20px}
+.acf-j-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px}
+.acf-j-h{font-family:'Fraunces','Public Sans',serif;font-size:1.15rem;font-weight:600;color:var(--brand-dark)}
+.acf-j-ring{--p:0;width:54px;height:54px;border-radius:50%;flex:0 0 auto;display:flex;
   align-items:center;justify-content:center;
   background:conic-gradient(var(--brand-accent) calc(var(--p)*1%), #E2E8EE 0)}
-.acf-j-ring span{width:40px;height:40px;border-radius:50%;background:#fff;display:flex;
-  align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:var(--brand-dark)}
-.acf-j-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.acf-j-ring span{width:42px;height:42px;border-radius:50%;background:#fff;display:flex;
+  align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:var(--brand-dark)}
 .acf-j-cellwrap{position:relative;display:flex;flex-direction:column}
-.acf-j-tile{position:relative;overflow:hidden;text-align:left;width:100%;flex:1;
-  border:1px solid #D8DEE8;border-radius:13px;background:#fff;padding:13px 12px 11px;
-  font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .08s,box-shadow .15s}
-.acf-j-tile:active{transform:scale(.98)}
-.acf-j-tile:hover{box-shadow:0 3px 12px rgba(10,58,36,.09)}
-.acf-j-tile.done{background:var(--brand-tint);border-color:var(--brand-accent)}
-.acf-j-tick{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  color:var(--brand-accent);opacity:.17;pointer-events:none}
-.acf-j-tick svg{width:78%;height:78%}
-.acf-j-n{font-size:.62rem;font-weight:800;color:#a7b3bd;letter-spacing:.08em}
-.acf-j-tile.done .acf-j-n{color:var(--brand-accent)}
-.acf-j-ic{width:22px;height:22px;color:var(--brand-accent);margin-bottom:2px}
-.acf-j-ic svg{width:100%;height:100%}
-.acf-j-t{font-size:.86rem;font-weight:800;color:var(--brand-dark);line-height:1.25}
-.acf-j-s{font-size:.68rem;color:#8a97a2}
-.acf-j-note{font-size:.68rem;color:var(--brand-accent);font-weight:700;margin-top:5px}
-.acf-j-mark{margin-top:6px;border:1px solid #CBD5DF;background:#fff;color:#54616b;border-radius:8px;
-  padding:6px;font:inherit;font-size:.68rem;font-weight:700;cursor:pointer}
+.acf-j-tiles{margin-top:0}
+.acf-j-tile{width:100%;height:100%;position:relative}
+.acf-j-tile.done{background:var(--soft)!important}
+/* the studio tiles are vertical, so the tick sits in the corner */
+.acf-j-tile .acf-j-tick{position:absolute;top:18px;right:18px;margin:0}
+.acf-j-note{display:block;font-size:.8rem;color:var(--brand-accent)!important;font-weight:700;margin-top:8px}
+.acf-j-tick{margin-left:auto;align-self:center;width:26px;height:26px;border-radius:50%;
+  background:var(--brand-accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.acf-j-tick svg{width:15px;height:15px}
+.acf-j-mark{margin-top:7px;border:1px solid #CBD5DF;background:#fff;color:#54616b;border-radius:9px;
+  padding:7px;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
 .acf-j-mark.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
-.acf-j-auto{margin-top:6px;text-align:center;font-size:.68rem;font-weight:700;
-  color:var(--brand-accent);padding:6px}
-.acf-j-arrow{position:absolute;right:-13px;top:46px;width:18px;height:18px;color:#C3D2C9;z-index:2}
+.acf-j-arrow{position:absolute;right:-14px;top:38px;width:18px;height:18px;color:#C3D2C9;z-index:2}
 .acf-j-arrow svg{width:100%;height:100%}
-@media (max-width:520px){ .acf-j-arrow{display:none} }
-
+@media (max-width:760px){ .acf-j-arrow{display:none} }
+.acf-ad-auto{display:flex;gap:9px;align-items:flex-start;font-size:.79rem;color:#8a97a2;margin-bottom:8px}
+.acf-ad-auto.on{color:#25323b}
+.acf-ad-box{width:17px;height:17px;flex:0 0 auto;border:1px solid #CBD5DF;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;background:#fff}
+.acf-ad-auto.on .acf-ad-box{background:var(--brand-accent);border-color:var(--brand-accent)}
 /* ---- Previous courses ---- */
 .lpm-past{margin-top:20px;border-top:1px solid #E2E8EE;padding-top:14px}
 .lpm-past-h{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;
@@ -9841,10 +9823,31 @@ function acfOutcomes() {
   });
 }
 
+// Ticks itself from what the course actually holds
+function acfAutoEnclosures() {
+  const d = acfAnnexD();
+  const spec = acfCourse(lpmCourse);
+  const learners = (lpmCourse.learners || []).filter(l => (l.name || '').trim());
+  const prac = acfPracFor(lpmCourse.id);
+  const marked = Object.values(prac.marks).filter(v => v === 'P' || v === 'R').length;
+  const sat = p => (lpmCourse.examSittings || []).filter(s => s.paper === p && s.status === 'marked').length;
+  const auto = {
+    nominal:   learners.length > 0,
+    practical: marked > 0 && Object.values(prac.initials).some(v => (v || '').trim()),
+    theory1:   sat('EFAWJAN26') > 0 || sat('EFAWRJAN26') > 0,
+    theory2:   spec && spec.key === 'faw' ? (sat('FAWJAN26') > 0 || sat('FAWRJAN26') > 0) : false,
+    elearning: (d.blended || 'NO') !== 'NO',
+    feedback:  (lpmCourse.feedback || []).length > 0
+  };
+  d.enclosures = auto;
+  return auto;
+}
+
 function acfRenderAnnexD() {
   const host = document.getElementById('acfAnnexDBox');
   if (!host || !lpmCourse) return;
   const d = acfAnnexD(), ro = lpmReadOnlyNow();
+  acfAutoEnclosures();
   const out = acfOutcomes();
   const passed = out.filter(o => o.passed).length;
   const referred = out.filter(o => o.started && !o.passed).length;
@@ -9873,12 +9876,12 @@ function acfRenderAnnexD() {
         ${txt('noContactDAO', 'Leave blank if none')}</label>
 
       <div class="acf-ad-h2">Documents enclosed for IQA</div>
-      ${ACF_ENCLOSURES.map(([k, label]) => `
-        <label class="acf-ad-chk">
-          <input type="checkbox" ${d.enclosures && d.enclosures[k] ? 'checked' : ''} ${ro ? 'disabled' : ''}
-            onchange="acfAnnexDEncl('${k}',this.checked)">
-          <span>${label}</span>
-        </label>`).join('')}
+      <p class="sc-p" style="margin-bottom:10px">These tick themselves as the evidence appears — nothing to fill in.</p>
+      ${ACF_ENCLOSURES.map(([k, label]) => {
+        const on = !!(d.enclosures && d.enclosures[k]);
+        return `<div class="acf-ad-auto${on ? ' on' : ''}">
+          <span class="acf-ad-box">${on ? '&#10003;' : ''}</span><span>${label}</span></div>`;
+      }).join('')}
 
       <div class="acf-ad-h2">Lead assessor</div>
       <div class="acf-ad-grid">
@@ -10094,7 +10097,6 @@ const ACF_JOURNEY = [
   { key:'skills',   title:'Practical assessment', sub:'Annex E criteria', ic:'check' },
   { key:'theory',   title:'Theory exams',   sub:'Sat by QR, auto-marked', ic:'paper' },
   { key:'feedback', title:'Feedback',       sub:'Course evaluation',      ic:'star' },
-  { key:'overview', title:'QA overview',    sub:'Check before submitting',ic:'shield' },
   { key:'pack',     title:'Course pack',    sub:'Annex D and submit',     ic:'send' }
 ];
 
@@ -10160,10 +10162,6 @@ function acfStepState(key) {
       note = n ? n + ' response' + (n === 1 ? '' : 's') : 'None yet';
       break;
     }
-    case 'overview':
-      auto = manual;
-      note = 'Check everything reads correctly';
-      break;
     case 'pack': {
       const st = lpmPackState(lpmCourse, true);
       auto = st === 'submitted' || st === 'accepted';
@@ -10175,6 +10173,16 @@ function acfStepState(key) {
   }
   return { done: auto || manual, auto, manual, note };
 }
+
+// Same accent + soft pairs the dashboard tiles use
+const ACF_J_COLOUR = {
+  details:  { accent:'#1F8A5B', soft:'#DDEFE6' },
+  learners: { accent:'#2446B8', soft:'#E3E8FA' },
+  skills:   { accent:'#C2185B', soft:'#FDE4EE' },
+  theory:   { accent:'#C2621A', soft:'#FDE8D8' },
+  feedback: { accent:'#6B3FA0', soft:'#E8E3FA' },
+  pack:     { accent:'#0F6E56', soft:'#DDEFE6' }
+};
 
 function acfRenderJourney() {
   const host = document.getElementById('acfJourney');
@@ -10188,32 +10196,34 @@ function acfRenderJourney() {
   host.innerHTML = `
     <div class="acf-j-head">
       <div>
-        <div class="acf-j-k">Course progress</div>
+        <div class="hub-eyebrow">Course progress</div>
         <div class="acf-j-h">${doneCount} of ${steps.length} steps complete</div>
       </div>
       <div class="acf-j-ring" style="--p:${steps.length ? doneCount / steps.length * 100 : 0}">
         <span>${steps.length ? Math.round(doneCount / steps.length * 100) : 0}%</span>
       </div>
     </div>
-    <div class="acf-j-grid">
+    <div class="hub-tiles acf-j-tiles">
       ${steps.map((s, i) => {
         const st = states[i];
         return `
         <div class="acf-j-cellwrap">
-          <button class="acf-j-tile${st.done ? ' done' : ''}" onclick="lpmShowStep('${s.key}')">
-            ${st.done ? '<span class="acf-j-tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg></span>' : ''}
-            <span class="acf-j-n">${i + 1}</span>
-            <span class="acf-j-ic">${acfJIcon(s.ic)}</span>
-            <span class="acf-j-t">${lpmEsc(s.title)}</span>
-            <span class="acf-j-s">${lpmEsc(s.sub)}</span>
-            <span class="acf-j-note">${lpmEsc(st.note)}</span>
+          <button class="hub-tile acf-j-tile${st.done ? ' done' : ''}"
+            style="--accent:${(ACF_J_COLOUR[s.key]||{}).accent || '#0A3A24'};--soft:${(ACF_J_COLOUR[s.key]||{}).soft || '#E8EDF3'};"
+            onclick="lpmShowStep('${s.key}')">
+            <span class="hub-ic">${acfJIcon(s.ic)}</span>
+            <span class="hub-text">
+              <span class="hub-title">${lpmEsc(s.title)}</span>
+              <span class="hub-sub">${lpmEsc(s.sub)}</span>
+              <span class="acf-j-note">${lpmEsc(st.note)}</span>
+            </span>
+            ${st.done
+              ? '<span class="acf-j-tick" aria-label="Complete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg></span>'
+              : '<span class="hub-chev">&rsaquo;</span>'}
           </button>
-          ${st.auto || ro ? '' : `
+          ${st.auto || ro || st.done ? '' : `
             <button class="acf-j-mark${st.manual ? ' on' : ''}"
-              onclick="event.stopPropagation();acfToggleDone('${s.key}')">
-              ${st.manual ? 'Marked complete' : 'Mark complete'}
-            </button>`}
-          ${st.auto ? `<div class="acf-j-auto">Complete</div>` : ''}
+              onclick="event.stopPropagation();acfToggleDone('${s.key}')">Mark complete</button>`}
           ${i < steps.length - 1 ? `<div class="acf-j-arrow" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></div>` : ''}
@@ -10238,7 +10248,7 @@ function lpmCourseKind(course) {
 function lpmHiddenSteps(course) {
   const kind = lpmCourseKind(course);
   if (kind === 'bls' || kind === 'basic') return ['skills', 'sessions', 'theory', 'overview'];
-  if (kind === 'acf') return ['sessions'];
+  if (kind === 'acf') return ['sessions', 'overview'];
   if (kind === 'ils') return ['sessions', 'theory'];
   return [];
 }
@@ -10290,8 +10300,8 @@ function lpmRenderDetails() {
     </div>
     <div class="lpm-field-row">
       <div class="lpm-field">
-        <label>Course reference</label>
-        <input type="text" value="${lpmEsc(c.courseRef)}" placeholder="Internal reference" oninput="lpmSetDetail('courseRef', this.value)">
+        <label>Course number</label>
+        <input type="text" value="${lpmEsc(c.courseRef)}" placeholder="Course number" oninput="lpmSetDetail('courseRef', this.value)">
       </div>
       <div class="lpm-field">
         <label>Training location</label>
@@ -10299,9 +10309,25 @@ function lpmRenderDetails() {
         ${c.location === 'Client location' ? `<textarea rows="3" style="margin-top:8px;" placeholder="Client name and full address, including postcode" oninput="lpmSetDetail('clientAddress', this.value)">${lpmEsc(c.clientAddress || '')}</textarea>` : ''}
       </div>
     </div>
-    <div class="lpm-field">
-      <label>Course start date</label>
-      <input type="date" id="lpmStartDateInput" value="${c.startDate||''}" oninput="lpmSetDetail('startDate', this.value); lpmApplyCourseLength();">
+    <div class="lpm-field-row">
+      <div class="lpm-field">
+        <label>Course start date</label>
+        <input type="date" id="lpmStartDateInput" value="${c.startDate||''}" oninput="lpmSetDetail('startDate', this.value); lpmApplyCourseLength(); lpmRenderDetails();">
+      </div>
+      <div class="lpm-field">
+        <label>Course end date</label>
+        <input type="date" value="${c.endDate||''}" min="${c.startDate||''}" oninput="lpmSetDetail('endDate', this.value); lpmRenderDetails();">
+      </div>
+    </div>
+    <div class="lpm-field-row">
+      <div class="lpm-field">
+        <label>Start time</label>
+        <input type="time" value="${lpmEsc(c.startTime||'')}" oninput="lpmSetDetail('startTime', this.value)">
+      </div>
+      <div class="lpm-field">
+        <label>Finish time</label>
+        <input type="time" value="${lpmEsc(c.finishTime||'')}" oninput="lpmSetDetail('finishTime', this.value)">
+      </div>
     </div>
     <p id="lpmDateNote" style="font-size:0.8rem;color:#6B7A94;margin:-8px 0 16px;">${lpmCourseLengthNote(c)}</p>
     <div class="lpm-field-row">
@@ -10322,8 +10348,28 @@ function lpmRenderDetails() {
         </div>`).join('')}
       <button class="lpm-more-btn rn-no-print" onclick="lpmAddExtraInstructor()">+ More instructors</button>
     </div>
+    <div class="lpm-field-row">
+      <div class="lpm-field">
+        <label>Trainer number &mdash; instructor 1</label>
+        <input type="text" value="${lpmEsc(c.trainerNo1 || acfMyTrainerNo())}" placeholder="From My Profile"
+          oninput="lpmSetDetail('trainerNo1', this.value)">
+      </div>
+      <div class="lpm-field">
+        <label>Trainer number &mdash; instructor 2</label>
+        <input type="text" value="${lpmEsc(c.trainerNo2 || '')}" placeholder="Optional"
+          oninput="lpmSetDetail('trainerNo2', this.value)">
+      </div>
+    </div>
     ${lpmInstructorDaysHTML(c)}
   `;
+}
+
+// Trainer number from My Profile, used as the default on new courses
+function acfMyTrainerNo() {
+  try { return (JSON.parse(localStorage.getItem('dtc_trainer_no') || '""') || ''); } catch (e) { return ''; }
+}
+function acfSetMyTrainerNo(v) {
+  try { localStorage.setItem('dtc_trainer_no', JSON.stringify((v || '').trim())); } catch (e) {}
 }
 
 // Which days each instructor taught — drives their CPD hours
@@ -12702,21 +12748,21 @@ function cpdHome() {
     <div class="hub-h" style="margin-bottom:6px;">My CPD</div>
     <p class="sc-p">Your record of teaching, assessing and learning — ready for external quality assurance.</p>
     <div class="cpd-tiles">
-      <button class="cpd-tile" onclick="cpdRender()">
-        <span class="cpd-tile-emoji">📘</span>
-        <div class="cpd-tile-body">
-          <div class="cpd-tile-title">My CPD</div>
-          <div class="cpd-tile-sub">${hrs} hours recorded over the last 3 years · ${all.length} activities</div>
-        </div>
+      <button class="hub-tile" style="--accent:#1F8A5B;--soft:#DDEFE6;" onclick="cpdRender()">
+        <span class="hub-ic" style="font-size:1.35rem;">📘</span>
+        <span class="hub-text">
+          <span class="hub-title">My CPD</span>
+          <span class="hub-sub">${hrs} hours recorded over the last 3 years · ${all.length} activities</span>
+        </span>
         <span class="hub-chev">&rsaquo;</span>
       </button>
-      <button class="cpd-tile learn" onclick="cpdLearning()">
-        <span class="cpd-tile-emoji">🎓</span>
-        <div class="cpd-tile-body">
-          <div class="cpd-tile-title">CPD Learning <span class="kc-badge">Coming soon</span></div>
-          <div class="cpd-tile-sub">Study sessions, videos, resources and quizzes — logged automatically</div>
+      <button class="hub-tile" style="--accent:#6B3FA0;--soft:#E8E3FA;" onclick="cpdLearning()">
+        <span class="hub-ic" style="font-size:1.35rem;">🎓</span>
+        <span class="hub-text">
+          <span class="hub-title">CPD Learning <span class="kc-badge">Coming soon</span></span>
+          <span class="hub-sub">Study sessions, videos, resources and quizzes — logged automatically</span>
           <div class="kc-bar"><div class="kc-bar-fill"></div></div>
-        </div>
+        </span>
         <span class="hub-chev">&rsaquo;</span>
       </button>
     </div>`;
@@ -15843,6 +15889,8 @@ function pfRender() {
       <div class="jb-form">
         <label>Full name<input id="pfName" value="${lpmEsc(name)}" autocomplete="name"></label>
         <label>Mobile<input id="pfPhone" value="${v('phone')}" inputmode="tel" autocomplete="tel"></label>
+        <label>Trainer number<input id="pfTrainerNo" value="${lpmEsc(acfMyTrainerNo())}"
+          placeholder="Used on course paperwork" oninput="acfSetMyTrainerNo(this.value)"></label>
       </div></div>
 
     ${P.role === 'learner' ? '' : `<div class="pf-sec"><h3>My CV</h3><p class="sc-p" style="margin:0;">Upload your latest CV (PDF or Word, up to 10 MB). Only you and your centre admin can see it.</p>
@@ -15888,6 +15936,7 @@ async function pfSave() {
     if (!/^\d{2}-?\d{2}-?\d{2}$/.test(data.sortCode.replace(/\s/g, ''))) { msg.style.color = '#C74444'; msg.textContent = 'Sort code should be 6 digits, like 12-34-56.'; return; }
     if (!/^\d{8}$/.test(data.accountNumber.replace(/\s/g, ''))) { msg.style.color = '#C74444'; msg.textContent = 'Account number should be 8 digits.'; return; }
   }
+  if (has('pfTrainerNo')) acfSetMyTrainerNo(g('pfTrainerNo'));
   const newName = g('pfName'); let nameNote = '', payNote = '';
   // Save the name FIRST, so an optional extra (pay details) can never block it
   if (newName && newName !== (cloud.profile.full_name || '')) {
