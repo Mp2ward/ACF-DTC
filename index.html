@@ -1610,6 +1610,9 @@ function fmtD(v) {
 .acf-j-tick{margin-left:auto;align-self:center;width:26px;height:26px;border-radius:50%;
   background:var(--brand-accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .acf-j-tick svg{width:15px;height:15px}
+.acf-j-untick{cursor:pointer;transition:transform .12s}
+.acf-j-untick::before{content:"";position:absolute;inset:-10px}
+.acf-j-untick:hover,.acf-j-untick:focus-visible{transform:scale(1.12);outline:none;box-shadow:0 0 0 3px rgba(0,0,0,.12)}
 .acf-j-mark{margin-top:7px;border:1px solid #CBD5DF;background:#fff;color:#54616b;border-radius:9px;
   padding:7px;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
 .acf-j-mark.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
@@ -1674,6 +1677,9 @@ function fmtD(v) {
 .acf-j-tick{margin-left:auto;align-self:center;width:26px;height:26px;border-radius:50%;
   background:var(--brand-accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .acf-j-tick svg{width:15px;height:15px}
+.acf-j-untick{cursor:pointer;transition:transform .12s}
+.acf-j-untick::before{content:"";position:absolute;inset:-10px}
+.acf-j-untick:hover,.acf-j-untick:focus-visible{transform:scale(1.12);outline:none;box-shadow:0 0 0 3px rgba(0,0,0,.12)}
 .acf-j-mark{margin-top:7px;border:1px solid #CBD5DF;background:#fff;color:#54616b;border-radius:9px;
   padding:7px;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
 .acf-j-mark.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
@@ -9035,12 +9041,17 @@ let lpmCourse = null;
 let lpmStepIdx = 0;
 const LPM_STEPS = ['details','learners','skills','sessions','theory','overview','feedback','pack','iqa'];
 
+function acfExample() { return {"course": {"id": "EXAMPLE-ACF-FAW", "isExample": true, "courseName": "First Aid at Work - 3 Day", "courseRef": "EXAMPLE / ACF-FAW-001", "location": "Example Cadet Training Centre", "startDate": "2026-10-05", "endDate": "2026-10-07", "instructor1": "Example Trainer", "instructor2": "", "extraInstructors": [], "learners": [{"id": "EXL1", "name": "Sgt Amy Clarke"}, {"id": "EXL2", "name": "SI Ben Hughes"}, {"id": "EXL3", "name": "SSI Chloe Patel"}, {"id": "EXL4", "name": "Lt Dan Morris"}, {"id": "EXL5", "name": "SI Emma Wright"}, {"id": "EXL6", "name": "Cpl Farid Khan"}, {"id": "EXL7", "name": "SI Grace Bell"}, {"id": "EXL8", "name": "2Lt Harry Owen"}], "examSittings": [{"id": "EXS1-0", "paper": "EFAWJAN26", "name": "Sgt Amy Clarke", "status": "marked", "score": 14, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-0", "paper": "FAWJAN26", "name": "Sgt Amy Clarke", "status": "marked", "score": 23, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-1", "paper": "EFAWJAN26", "name": "SI Ben Hughes", "status": "marked", "score": 13, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-1", "paper": "FAWJAN26", "name": "SI Ben Hughes", "status": "marked", "score": 22, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-2", "paper": "EFAWJAN26", "name": "SSI Chloe Patel", "status": "marked", "score": 15, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-2", "paper": "FAWJAN26", "name": "SSI Chloe Patel", "status": "marked", "score": 24, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-3", "paper": "EFAWJAN26", "name": "Lt Dan Morris", "status": "marked", "score": 12, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-3", "paper": "FAWJAN26", "name": "Lt Dan Morris", "status": "marked", "score": 19, "passed": false, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-4", "paper": "EFAWJAN26", "name": "SI Emma Wright", "status": "marked", "score": 14, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-4", "paper": "FAWJAN26", "name": "SI Emma Wright", "status": "marked", "score": 21, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-5", "paper": "EFAWJAN26", "name": "Cpl Farid Khan", "status": "marked", "score": 13, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-5", "paper": "FAWJAN26", "name": "Cpl Farid Khan", "status": "marked", "score": 20, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-6", "paper": "EFAWJAN26", "name": "SI Grace Bell", "status": "marked", "score": 15, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-6", "paper": "FAWJAN26", "name": "SI Grace Bell", "status": "marked", "score": 25, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}, {"id": "EXS1-7", "paper": "EFAWJAN26", "name": "2Lt Harry Owen", "status": "marked", "score": 14, "passed": true, "at": "2026-10-06T15:10:00Z", "sig": ""}, {"id": "EXS2-7", "paper": "FAWJAN26", "name": "2Lt Harry Owen", "status": "marked", "score": 22, "passed": true, "at": "2026-10-07T14:40:00Z", "sig": ""}], "feedback": [{"id": "EXF1", "learnerId": "", "name": "", "email": "", "title": "", "phone": "", "leaflet": "Yes", "ratings": {"venue": "Excellent", "classroom": "Excellent", "handouts": "Excellent", "equipment": "Excellent", "content": "Excellent", "knowledge": "Excellent", "interest": "Excellent", "methods": "Excellent", "support": "Excellent", "appearance": "Excellent", "confidence": "Excellent", "pace": "Good", "howconfident": "Very"}, "rateTrainer": "10", "rateCentre": "9", "comments": "Really practical, the scenarios helped a lot.", "source": "qr", "savedAt": "2026-10-07T16:00:00Z"}, {"id": "EXF2", "learnerId": "", "name": "", "email": "", "title": "", "phone": "", "leaflet": "Yes", "ratings": {"venue": "Very Good", "classroom": "Very Good", "handouts": "Very Good", "equipment": "Very Good", "content": "Very Good", "knowledge": "Very Good", "interest": "Very Good", "methods": "Very Good", "support": "Very Good", "appearance": "Very Good", "confidence": "Very Good", "pace": "Good", "howconfident": "Very"}, "rateTrainer": "9", "rateCentre": "9", "comments": "Good pace. More time on spinal injuries would help.", "source": "qr", "savedAt": "2026-10-07T16:00:00Z"}, {"id": "EXF3", "learnerId": "", "name": "", "email": "", "title": "", "phone": "", "leaflet": "Yes", "ratings": {"venue": "Excellent", "classroom": "Excellent", "handouts": "Excellent", "equipment": "Excellent", "content": "Excellent", "knowledge": "Excellent", "interest": "Excellent", "methods": "Excellent", "support": "Excellent", "appearance": "Excellent", "confidence": "Excellent", "pace": "Good", "howconfident": "Very"}, "rateTrainer": "10", "rateCentre": "10", "comments": "", "source": "qr", "savedAt": "2026-10-07T16:00:00Z"}], "stepDone": {}}, "prac": {"marks": {"0:0": "P", "0:1": "P", "0:2": "P", "0:3": "P", "0:4": "P", "0:5": "P", "0:6": "P", "0:7": "P", "0:8": "P", "1:0": "P", "1:1": "P", "1:2": "P", "1:3": "P", "1:4": "P", "1:5": "P", "1:6": "P", "1:7": "P", "1:8": "P", "2:0": "P", "2:1": "P", "2:2": "P", "2:3": "P", "2:4": "P", "2:5": "P", "2:6": "P", "2:7": "P", "2:8": "P", "3:0": "P", "3:1": "P", "3:2": "P", "3:3": "P", "3:4": "P", "3:5": "P", "3:6": "P", "3:7": "R", "3:8": "P", "4:0": "P", "4:1": "P", "4:2": "P", "4:3": "P", "4:4": "P", "4:5": "P", "4:6": "P", "4:7": "P", "4:8": "P", "5:0": "P", "5:1": "P", "5:2": "P", "5:3": "P", "5:4": "P", "5:5": "P", "5:6": "P", "5:7": "P", "5:8": "P", "6:0": "P", "6:1": "P", "6:2": "P", "6:3": "P", "6:4": "P", "6:5": "P", "6:6": "P", "6:7": "P", "6:8": "P", "7:0": "P", "7:1": "P", "7:2": "P", "7:3": "P", "7:4": "P", "7:5": "P", "7:6": "P", "7:7": "P", "7:8": "P"}, "initials": {}, "feedback": "All learners demonstrated safe practice. One referral on the spinal injury practical; re-assessment arranged.", "assessor": "Example Trainer", "trainerNo": "", "signature": "", "date": "2026-10-07"}}; }   // fresh copy each call; hoisted so it is safe during start-up
 function lpmLoadCourses() {
-  try { return JSON.parse(localStorage.getItem(LPM_STORE_KEY) || '[]'); }
-  catch(e) { return []; }
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(LPM_STORE_KEY) || '[]'); } catch(e) { list = []; }
+  if (!Array.isArray(list)) list = [];
+  list = list.filter(c => c && !c.isExample);            // drops any example planted by older versions
+  list.unshift(acfExample().course);
+  return list;
 }
 function lpmSaveCoursesRaw(list) {
-  try { localStorage.setItem(LPM_STORE_KEY, JSON.stringify(list)); return true; }
+  try { localStorage.setItem(LPM_STORE_KEY, JSON.stringify((list || []).filter(c => c && !c.isExample))); return true; }
   catch(e) { return false; }
 }
 function lpmSaveCourses(list) {
@@ -9054,6 +9065,7 @@ function lpmOnTeam(c) {
   return lpmAllInstructors(c).some(n => (n || '').trim().toLowerCase() === me);
 }
 function lpmReadOnlyNow() {
+  if (lpmCourse && lpmCourse.isExample) return true;       // the example course can be looked at, never changed
   if (typeof CLOUD_ON === 'undefined' || !CLOUD_ON) return false;
   if (typeof cloudActingReviewer === 'function' && cloudActingReviewer()) return false;   // IQA, and admin while in the Admin panel, can edit anything
   if (typeof lpmLockReason === 'function' && lpmLockReason(lpmCourse)) {
@@ -9516,6 +9528,7 @@ function acfPracSave(all) {
   try { localStorage.setItem(ACF_PRAC_KEY, JSON.stringify(all)); } catch (e) {}
 }
 function acfPracFor(courseId) {
+  if (courseId === 'EXAMPLE-ACF-FAW') return acfExample().prac;
   const all = acfPracLoad();
   return all[courseId] || (all[courseId] = { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' });
 }
@@ -9526,6 +9539,7 @@ function acfInitialsOf(name) {
   return words.map(w => (w.replace(/[^A-Za-z]/g, '')[0] || '')).join('').slice(0, 3).toUpperCase();
 }
 function acfPracSet(courseId, fn) {
+  if (courseId === 'EXAMPLE-ACF-FAW') return;
   const all = acfPracLoad();
   const rec = all[courseId] || { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' };
   fn(rec); all[courseId] = rec; acfPracSave(all);
@@ -9698,6 +9712,7 @@ function acfExamUrl(token) {
   return base + 'exam.html?t=' + token;
 }
 function acfCanQr() {
+  if (lpmCourse && lpmCourse.isExample) return false;
   return CLOUD_ON && cloud.session && lpmCourse && (!lpmCourse.owner || lpmCourse.owner === cloudMe());
 }
 
@@ -9722,6 +9737,7 @@ async function acfEnsureExamLink(paperCode) {
 
 // Pull marked sittings back into the course record
 async function acfPullSittings() {
+  if (lpmCourse && lpmCourse.isExample) return 0;
   if (!CLOUD_ON || !cloud.session || !navigator.onLine || !lpmCourse) return 0;
   try {
     const rows = await cloudRest('acf_sittings?select=id,paper_code,learner_name,status,score,passed,submitted_at,learner_sig'
@@ -9789,6 +9805,11 @@ async function acfRenderPaper(p) {
   acfRenderResults(p);
   const box = document.getElementById('acfQr-' + p.paper);
   if (!box) return;
+  if (lpmCourse && lpmCourse.isExample) {
+    box.innerHTML = `<div class="fb-qr-title">Scan to sit ${lpmEsc(p.label.split('—')[0].trim())}</div>
+      <p class="sc-p"><b>Example only.</b> On your own courses a live QR code and room code show here, and results fill in below as learners finish.</p>`;
+    return;
+  }
   if (!CLOUD_ON || !cloud.session) { box.innerHTML = `<p class="sc-p">Sign in to show the exam QR code.</p>`; return; }
   if (!acfCanQr()) { box.innerHTML = `<p class="sc-p">Only the course's instructor can show the QR code.</p>`; return; }
   if (!navigator.onLine) { box.innerHTML = `<p class="sc-p">Connect to the internet to show the QR code.</p>`; return; }
@@ -9945,10 +9966,24 @@ function acfDoneMap() {
   lpmCourse.stepDone = lpmCourse.stepDone || {};
   return lpmCourse.stepDone;
 }
+// Steps the instructor has unticked, even though the app thinks they're done
+function acfUndoneMap() {
+  lpmCourse.stepUndone = lpmCourse.stepUndone || {};
+  return lpmCourse.stepUndone;
+}
 function acfToggleDone(key) {
   if (lpmReadOnlyNow()) return;
-  const m = acfDoneMap();
+  const m = acfDoneMap(), u = acfUndoneMap();
   m[key] = !m[key];
+  if (m[key]) delete u[key];
+  lpmPersist();
+  acfRenderJourney();
+}
+// Green tick on a completed tile: tap to take it back to not complete
+function acfUntick(key) {
+  if (lpmReadOnlyNow()) return;
+  delete acfDoneMap()[key];
+  acfUndoneMap()[key] = true;
   lpmPersist();
   acfRenderJourney();
 }
@@ -9958,6 +9993,7 @@ function acfStepState(key) {
   const spec = acfCourse(lpmCourse);
   const learners = (lpmCourse.learners || []).filter(l => (l.name || '').trim());
   const manual = !!acfDoneMap()[key];
+  const undone = !!acfUndoneMap()[key];
   let auto = false, note = '';
   switch (key) {
     case 'details':
@@ -9999,7 +10035,7 @@ function acfStepState(key) {
       break;
     }
   }
-  return { done: auto || manual, auto, manual, note };
+  return { done: manual || (auto && !undone), auto, manual, undone, note };
 }
 
 // Same accent + soft pairs the dashboard tiles use
@@ -10047,10 +10083,12 @@ function acfRenderJourney() {
               <span class="acf-j-note">${lpmEsc(st.note)}</span>
             </span>
             ${st.done
-              ? '<span class="acf-j-tick" aria-label="Complete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg></span>'
+              ? (ro ? '<span class="acf-j-tick" aria-label="Complete"><svg' : `<span class="acf-j-tick acf-j-untick" role="button" tabindex="0" title="Tap to mark not complete" aria-label="Complete. Tap to mark not complete"
+                  onclick="event.stopPropagation();acfUntick('${s.key}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();acfUntick('${s.key}')}"><svg`)
+              + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg></span>'
               : '<span class="hub-chev">&rsaquo;</span>'}
           </button>
-          ${st.auto || ro || st.done ? '' : `
+          ${ro || st.done ? '' : `
             <button class="acf-j-mark${st.manual ? ' on' : ''}"
               onclick="event.stopPropagation();acfToggleDone('${s.key}')">Mark complete</button>`}
           ${i < steps.length - 1 ? `<div class="acf-j-arrow" aria-hidden="true">
@@ -14662,40 +14700,11 @@ async function alnPackPages(pdf, font, bold, ink, grey, A4) {
 </script>
 
 <script>
-// ====== Built-in example course: every instructor sees the same locked template ======
-(function () {
-  const EXAMPLE = {"course": {"id": "EXAMPLE-FREC", "courseName": "FREC 3 - 5 Day", "courseRef": "EXAMPLE / S3G-FREC-014", "location": "Park Royal", "startDate": "2026-10-05", "endDate": "2026-10-09", "instructor1": "John Smith", "instructor2": "Jane Smith", "extraInstructors": [], "taught": [1, 2, 3, 4, 5], "learners": [{"id": "L1", "name": "Daniel Price"}, {"id": "L2", "name": "Sophie Nolan"}, {"id": "L3", "name": "Marcus Webb"}, {"id": "L4", "name": "Alice Kerr", "aln": {"needs": ["Dyslexia"], "adjustments": ["Extra time (25%)", "Coloured overlay or paper"], "notes": "Coloured overlay used for the theory papers; extra time agreed and given.", "agreedBy": "John Smith", "date": "2026-10-05"}}], "records": [], "linkedSessionIds": [], "qa": {}, "feedback": [{"id": "FBD1", "learnerId": "", "source": "form", "savedAt": "2026-10-09T15:10:00Z", "ratings": {"venue": "Excellent", "classroom": "Excellent", "handouts": "Very Good", "equipment": "Excellent", "content": "Excellent", "knowledge": "Excellent", "interest": "Excellent", "methods": "Excellent", "support": "Excellent", "appearance": "Excellent", "confidence": "Excellent", "pace": "Excellent", "howconfident": "Extremely"}, "rateTrainer": "10", "rateCentre": "9", "leaflet": "Yes", "comments": "Best first aid course I have been on. The scenarios felt real and the feedback afterwards was clear and useful.", "name": "Daniel Price", "email": "daniel.price@example.com", "title": "", "phone": ""}], "examScores": {"L1": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}, "L2": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}, "L3": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}, "L4": {"anat": {"result": "P"}, "mc": {"score": 38, "total": 40}}}, "mcPassMark": 28, "paperNumbers": {"L1": "ASY8201", "L2": "ASY8202", "L3": "ASY8203", "L4": "ASY8204"}, "signature": "data:image/png;base64,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", "isExample": true}, "files": [{"kind": "register", "title": "Delegate register", "url": "register.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "other", "title": "Practical assessment record sheet", "url": "practical.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Daniel Price", "learnerId": "L1", "page": 1, "paperNo": "ASX7101", "url": "anat-1.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Daniel Price", "learnerId": "L1", "page": 2, "paperNo": "ASX7101", "url": "anat-2.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Daniel Price", "learnerId": "L1", "page": 1, "paperNo": "ASY8201", "url": "mcq-1.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Daniel Price", "learnerId": "L1", "page": 2, "paperNo": "ASY8201", "url": "mcq-2.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 1, "paperNo": "ASX7102", "url": "anat-3.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 2, "paperNo": "ASX7102", "url": "anat-4.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 1, "paperNo": "ASY8202", "url": "mcq-3.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Sophie Nolan", "learnerId": "L2", "page": 2, "paperNo": "ASY8202", "url": "mcq-4.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 1, "paperNo": "ASX7103", "url": "anat-5.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 2, "paperNo": "ASX7103", "url": "anat-6.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 1, "paperNo": "ASY8203", "url": "mcq-5.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Marcus Webb", "learnerId": "L3", "page": 2, "paperNo": "ASY8203", "url": "mcq-6.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 1, "paperNo": "ASX7104", "url": "anat-7.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "anat", "title": "Applied anatomy and physiology", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 2, "paperNo": "ASX7104", "url": "anat-8.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 1, "paperNo": "ASY8204", "url": "mcq-7.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "mc", "title": "Multiple choice", "learnerName": "Alice Kerr", "learnerId": "L4", "page": 2, "paperNo": "ASY8204", "url": "mcq-8.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "feedback", "title": "Learner feedback form", "url": "fb-1.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "feedback", "title": "Learner feedback form", "url": "fb-2.jpg", "courseId": "EXAMPLE-FREC"}, {"kind": "feedback", "title": "Learner feedback form", "url": "fb-3.jpg", "courseId": "EXAMPLE-FREC"}]};
-  const KEY = 'dtc_example_v1';
-  function put(db, rec) { return new Promise((ok, no) => { const t = db.transaction('files','readwrite'); t.objectStore('files').put(rec); t.oncomplete = ok; t.onerror = no; }); }
-  async function plant() {
-    try {
-      if (typeof lpmLoadCourses !== 'function') return setTimeout(plant, 400);
-      const courses = lpmLoadCourses();
-      const already = courses.some(c => c.isExample);
-      if (already && localStorage.getItem(KEY)) return;
-      if (!already) { courses.unshift(EXAMPLE.course); lpmSaveCoursesRaw(courses); }
-      const sk = skLoadAll();
-      if (!sk['EXAMPLE-FREC']) {
-        const refs = SK_ASSESSMENTS.flatMap(a => a.groups.flatMap(g => g[1].map(i => i[0])));
-        const marks = {};
-        refs.forEach(r => { marks[r] = {}; EXAMPLE.course.learners.forEach(l => { marks[r][l.id] = { v:'C', at:'2026-10-08T10:00:00Z' }; }); });
-        ['5.26','5.27'].forEach(r => { if (marks[r]) marks[r]['L3'] = { v:'R', at:'2026-10-08T10:00:00Z' }; });
-        sk['EXAMPLE-FREC'] = { marks, overrides:{}, signoff:{ centre:CENTRE_NAME, centreNo:CENTRE_NO, date:'2026-10-09', trainer:'Miles Ward' } };
-        skSaveAllRaw(sk);
-      }
-      const db = await packOpen();
-      const have = await packList('EXAMPLE-FREC');
-      if (!have.length) {
-        for (let i = 0; i < EXAMPLE.files.length; i++) {
-          await put(db, Object.assign({ id: 'EX' + i, addedAt: '2026-10-09T12:00:00Z' }, EXAMPLE.files[i]));
-        }
-      }
-      localStorage.setItem(KEY, '1');
-      try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
-    } catch (e) { console.log('example', e); }
-  }
-  window.addEventListener('load', () => setTimeout(plant, 600));
-})();
+// ====== Built-in example course ======
+// Read-only. It is added when the course list is read and stripped whenever the
+// list is saved, so it never goes into local storage or Supabase. Holds results
+// only: no questions or answer keys.
+// ======================================================================
 
 // ============ LOCKED COURSES AND REQUESTS TO EDIT ============
 const ER_KEY = 'dtc_edit_requests';
