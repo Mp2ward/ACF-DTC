@@ -1535,6 +1535,29 @@ function fmtD(v) {
 .acf-sigacts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 .acf-btn{background:var(--brand-accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
 .acf-btn.ghost{background:#fff;border:1px solid #CBD5DF;color:#54616b}
+
+/* ---- ACF theory exams ---- */
+.acf-paper{border:1px solid #D8DEE8;border-radius:12px;margin:14px 0;overflow:hidden;background:#fff}
+.acf-paper-h{background:var(--brand-tint);padding:11px 14px}
+.acf-paper-t{font-size:.92rem;font-weight:800;color:var(--brand-dark)}
+.acf-paper-s{font-size:.73rem;color:#54616b;margin-top:2px}
+.acf-paper-body{display:flex;flex-wrap:wrap;gap:16px;padding:14px}
+.acf-qr{flex:1 1 210px;text-align:center}
+.acf-qr .fb-qr-sub{word-break:break-all;font-size:.65rem}
+.acf-res{flex:2 1 260px;min-width:0}
+.acf-res-h{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;font-weight:800;color:var(--brand-dark);margin-bottom:6px}
+.acf-res-k{font-weight:600;font-size:.72rem;color:#54616b}
+.acf-res-t{width:100%;border-collapse:collapse;font-size:.78rem}
+.acf-res-t td{border-bottom:1px solid #EDF1F5;padding:6px 4px;vertical-align:middle}
+.acf-res-t td.nm{font-weight:600}
+.acf-res-t td.sc{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.acf-res-t td.sc i{color:#8a97a2;font-size:.72rem}
+.acf-res-t td.pf{text-align:center;width:66px}
+.acf-res-t td.dt{text-align:right;color:#8a97a2;font-size:.7rem;white-space:nowrap}
+.acf-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.66rem;font-weight:800}
+.acf-tag.ok{background:var(--brand-tint);color:var(--brand-accent)}
+.acf-tag.ref{background:#FBEDE9;color:#C0563C}
+.acf-pack-cta{border:1px dashed #CBD5DF;border-radius:12px;padding:14px;margin-top:18px;text-align:center}
 </style>
 
 <style id="studioTheme">
@@ -9253,7 +9276,7 @@ function lpmShowStep(key) {
   document.getElementById('lpmPanel-' + key).classList.add('active');
   if (key === 'skills') { if (lpmCourseKind(lpmCourse) === 'acf') { acfRenderPractical(); }
     else if (lpmCourseKind(lpmCourse) === 'ils') { ilsRender(); } else { skCourseId = lpmCourse.id; skRender(); } }
-  if (key === 'theory') lpmRenderTheory();
+  if (key === 'theory') { if (lpmCourseKind(lpmCourse) === 'acf') acfRenderTheory(); else lpmRenderTheory(); }
   if (key === 'feedback') lpmRenderFeedback();
   if (key === 'overview') lpmRenderOverview();
   if (key === 'pack') lpmRenderPack();
@@ -9497,6 +9520,183 @@ function acfSignPractical() {
   acfSign(url => { acfPracField(lpmCourse.id, 'signature', url); acfRenderPractical(); });
 }
 // =====================================================================
+
+// ================= ARMY CADETS — THEORY EXAMS BY QR =================
+// One QR per paper per course. Learners scan, sit the paper on their phone,
+// and it is marked in the database. Results land here for the course pack.
+
+function acfPapersFor(course) {
+  const spec = acfCourse(course);
+  if (!spec) return [];
+  return spec.modules.map(m => ACF_PAPERS[m]).filter(Boolean);
+}
+function acfExamUrl(token) {
+  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+  return base + 'exam.html?t=' + token;
+}
+function acfCanQr() {
+  return CLOUD_ON && cloud.session && lpmCourse && (!lpmCourse.owner || lpmCourse.owner === cloudMe());
+}
+
+async function acfEnsureExamLink(paperCode) {
+  lpmCourse.examLinks = lpmCourse.examLinks || {};
+  const l = lpmCourse.examLinks[paperCode];
+  if (l && l.token && new Date(l.expires) > new Date(Date.now() + 3600e3)) return l;
+  const ch = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(22))).map(b => ch[b % ch.length]).join('');
+  await cloudPush();   // the course must exist server-side before a link can point at it
+  try {
+    const rows = await cloudRest('courses?select=id&id=eq.' + encodeURIComponent(lpmCourse.id));
+    if (!rows || !rows.length) throw new Error("This course hasn't synced to the server yet. Check the sync indicator by your name, then try again.");
+  } catch (e) { if (/hasn't synced/.test(e.message)) throw e; }
+  const expires = new Date(Date.now() + 14 * 864e5).toISOString();
+  await cloudRest('exam_links', 'POST', [{ token, course_id: lpmCourse.id, paper_code: paperCode,
+    owner: cloudMe(), expires_at: expires }], 'return=minimal');
+  lpmCourse.examLinks[paperCode] = { token, expires };
+  lpmPersist();
+  return lpmCourse.examLinks[paperCode];
+}
+
+// Pull marked sittings back into the course record
+async function acfPullSittings() {
+  if (!CLOUD_ON || !cloud.session || !navigator.onLine || !lpmCourse) return 0;
+  try {
+    const rows = await cloudRest('acf_sittings?select=id,paper_code,learner_name,status,score,passed,submitted_at,learner_sig'
+      + '&course_id=eq.' + encodeURIComponent(lpmCourse.id) + '&order=submitted_at') || [];
+    lpmCourse.examSittings = lpmCourse.examSittings || [];
+    const have = new Set(lpmCourse.examSittings.map(s => s.id));
+    let added = 0, learnersAdded = 0;
+    const existing = new Set((lpmCourse.learners || []).map(l => (l.name || '').trim().toLowerCase()));
+    rows.forEach(r => {
+      const i = lpmCourse.examSittings.findIndex(s => s.id === r.id);
+      const rec = { id:r.id, paper:r.paper_code, name:r.learner_name || '', status:r.status,
+                    score:r.score, passed:r.passed, at:r.submitted_at, sig:r.learner_sig || '' };
+      if (i >= 0) lpmCourse.examSittings[i] = rec; else { lpmCourse.examSittings.push(rec); added++; }
+      const key = (r.learner_name || '').trim().toLowerCase();
+      if (key && !existing.has(key)) {
+        (lpmCourse.learners = lpmCourse.learners || []).push(
+          { id:'L' + Date.now() + Math.random().toString(36).slice(2, 6), name:(r.learner_name || '').trim() });
+        existing.add(key); learnersAdded++;
+      }
+    });
+    if ((added || learnersAdded) && (!lpmCourse.owner || lpmCourse.owner === cloudMe() || lpmOnTeam(lpmCourse))) lpmPersist();
+    return added;
+  } catch (e) { return 0; }
+}
+
+function acfSittingsFor(paper) {
+  return (lpmCourse.examSittings || []).filter(s => s.paper === paper);
+}
+
+async function acfRenderTheory() {
+  const el = document.getElementById('lpmPanel-theory');
+  if (!el || !lpmCourse) return;
+  const papers = acfPapersFor(lpmCourse);
+  const ro = lpmReadOnlyNow();
+
+  el.innerHTML = `<div class="sc-note">Each paper has its own QR code. Show it to the room — learners sit the
+      paper on their phone and it is marked automatically. Results appear below, ready for the course pack.</div>
+    <div id="acfPapers">${papers.map(p => `
+      <div class="acf-paper" id="acfP-${p.paper}">
+        <div class="acf-paper-h">
+          <div><div class="acf-paper-t">${lpmEsc(p.label)}</div>
+            <div class="acf-paper-s">Paper ${lpmEsc(p.paper)} &middot; ${p.questions} questions &middot;
+              pass ${p.pass}/${p.questions} &middot; ${p.minutes} minutes</div></div>
+        </div>
+        <div class="acf-paper-body">
+          <div class="acf-qr" id="acfQr-${p.paper}"><div class="fb-qr-wait">Preparing QR code…</div></div>
+          <div class="acf-res" id="acfRes-${p.paper}"></div>
+        </div>
+      </div>`).join('')}</div>
+    ${papers.length ? '' : '<p class="sc-p">Choose a course type to see its theory papers.</p>'}
+    <div class="acf-pack-cta rn-no-print">
+      <p class="sc-p">When the practical, theory and feedback are all complete, send the pack for IQA review.</p>
+      <button class="rn-nav-btn primary" ${ro ? 'disabled' : ''} onclick="lpmShowStep('pack')">Go to the course pack</button>
+    </div>`;
+
+  papers.forEach(p => acfRenderPaper(p));
+  if (!acfRenderTheory._pulling) {
+    acfRenderTheory._pulling = true;
+    acfPullSittings().then(n => { acfRenderTheory._pulling = false; if (n) papers.forEach(p => acfRenderResults(p)); });
+  }
+  acfStartPolling();
+}
+
+async function acfRenderPaper(p) {
+  acfRenderResults(p);
+  const box = document.getElementById('acfQr-' + p.paper);
+  if (!box) return;
+  if (!CLOUD_ON || !cloud.session) { box.innerHTML = `<p class="sc-p">Sign in to show the exam QR code.</p>`; return; }
+  if (!acfCanQr()) { box.innerHTML = `<p class="sc-p">Only the course's instructor can show the QR code.</p>`; return; }
+  if (!navigator.onLine) { box.innerHTML = `<p class="sc-p">Connect to the internet to show the QR code.</p>`; return; }
+  try {
+    const link = await acfEnsureExamLink(p.paper);
+    const url = acfExamUrl(link.token);
+    box.innerHTML = `<div class="fb-qr-title">Scan to sit ${lpmEsc(p.label.split('—')[0].trim())}</div>
+      <div id="acfQrImg-${p.paper}" class="fb-qr-img"></div>
+      <div class="fb-qr-sub">${lpmEsc(url)}</div>
+      <button class="rn-nav-btn" onclick="acfExamFullScreen('${p.paper}')">Show full screen</button>`;
+    await fbDrawQr(document.getElementById('acfQrImg-' + p.paper), url, 190);
+  } catch (e) {
+    const raw = String(e.message || e);
+    const friendly = /relation .* does not exist|PGRST20|42P01/.test(raw)
+      ? 'The exam tables are missing on the server. Run 8_supabase_register_exam.sql in Supabase, then try again.'
+      : /row-level security|42501/.test(raw)
+      ? "The exam tables haven't been set up, or this course hasn't finished syncing. Check the sync indicator is green, then try again."
+      : raw;
+    box.innerHTML = `<p class="sc-p" style="color:#C74444;">${lpmEsc(friendly)}</p>
+      <button class="rn-nav-btn" onclick="acfRenderPaper(ACF_PAPERS['${p.id}'])">Try again</button>`;
+  }
+}
+
+function acfRenderResults(p) {
+  const box = document.getElementById('acfRes-' + p.paper);
+  if (!box) return;
+  const rows = acfSittingsFor(p.paper).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const done = rows.filter(r => r.status === 'marked');
+  const passed = done.filter(r => r.passed).length;
+  box.innerHTML = `
+    <div class="acf-res-h">
+      <span>Results</span>
+      <span class="acf-res-k">${done.length} sat &middot; ${passed} passed &middot; ${done.length - passed} referred</span>
+    </div>
+    ${rows.length ? `<table class="acf-res-t"><tbody>${rows.map(r => `
+      <tr>
+        <td class="nm">${lpmEsc(r.name || '—')}</td>
+        <td class="sc">${r.status === 'marked' ? r.score + '/' + p.questions : '<i>in progress</i>'}</td>
+        <td class="pf">${r.status === 'marked'
+          ? `<span class="acf-tag ${r.passed ? 'ok' : 'ref'}">${r.passed ? 'PASS' : 'REFER'}</span>` : ''}</td>
+        <td class="dt">${r.at ? fmtD(r.at) : ''}</td>
+      </tr>`).join('')}</tbody></table>`
+      : `<p class="sc-p">No one has sat this paper yet. Results appear here as they finish.</p>`}`;
+}
+
+let acfPollTimer = null;
+function acfStartPolling() {
+  clearInterval(acfPollTimer);
+  if (!CLOUD_ON || !cloud.session) return;
+  acfPollTimer = setInterval(async () => {
+    const panel = document.getElementById('lpmPanel-theory');
+    if (!panel || !panel.classList.contains('active') || document.hidden) return;
+    const n = await acfPullSittings();
+    if (n) acfPapersFor(lpmCourse).forEach(p => acfRenderResults(p));
+  }, 15000);
+}
+
+async function acfExamFullScreen(paper) {
+  const link = (lpmCourse.examLinks || {})[paper];
+  if (!link) return;
+  const p = Object.values(ACF_PAPERS).find(x => x.paper === paper) || {};
+  const ov = document.createElement('div');
+  ov.className = 'fb-full'; ov.id = 'acfFull';
+  ov.innerHTML = `<button class="fb-full-x" onclick="document.getElementById('acfFull').remove()" aria-label="Close">✕</button>
+    <div class="fb-full-t">${lpmEsc(p.label || 'Theory paper')}</div>
+    <div id="acfFullQr" class="fb-full-qr"></div>
+    <div class="fb-full-s">Scan with your phone camera &middot; pass ${p.pass}/${p.questions} &middot; ${p.minutes} minutes</div>`;
+  document.body.appendChild(ov);
+  await fbDrawQr(document.getElementById('acfFullQr'), acfExamUrl(link.token), Math.min(window.innerWidth, window.innerHeight) * 0.62);
+}
+// ====================================================================
 
 const LPM_COURSE_NAMES = ['Emergency First Aid at Work - 1 Day', 'First Aid at Work - 3 Day'];
 const LPM_LOCATIONS = LICENCE.locations.slice();
@@ -14080,39 +14280,43 @@ async function alnPackPages(pdf, font, bold, ink, grey, A4) {
 </script>
 
 <script>
-// ====== Built-in example course: every instructor sees the same locked template ======
+// ====== Example course removed ======
+// No example course is planted for Army Cadets. This also clears any example
+// left behind by an earlier version of the app (local, cloud and pack files).
 (function () {
-  const EXAMPLE = {"course": {"id": "EXAMPLE-FAW", "courseName": "First Aid at Work - 3 Day", "courseRef": "EXAMPLE / ACF-FAW-001", "location": "County Training Centre", "startDate": "2026-10-05", "endDate": "2026-10-07", "instructor1": "Capt A. Ward", "instructor2": "SI J. Brennan", "extraInstructors": [], "taught": [1, 2, 3], "learners": [{"id": "L1", "name": "Cdt J. Harper"}, {"id": "L2", "name": "Cdt P. Singh"}, {"id": "L3", "name": "SI M. Okafor"}, {"id": "L4", "name": "Cdt L. Byrne", "aln": {"needs": ["Dyslexia"], "adjustments": ["Extra time (25%)", "Coloured overlay or paper"], "notes": "Coloured overlay used for the theory papers; extra time agreed and given.", "agreedBy": "Capt A. Ward", "date": "2026-10-05"}}], "records": [], "linkedSessionIds": [], "qa": {}, "feedback": [{"id": "FBD1", "learnerId": "", "source": "form", "savedAt": "2026-10-07T15:10:00Z", "ratings": {"venue": "Excellent", "classroom": "Excellent", "handouts": "Very Good", "equipment": "Excellent", "content": "Excellent", "knowledge": "Excellent", "interest": "Excellent", "methods": "Excellent", "support": "Excellent", "appearance": "Excellent", "confidence": "Excellent", "pace": "Excellent", "howconfident": "Extremely"}, "rateTrainer": "10", "rateCentre": "9", "leaflet": "Yes", "comments": "Clear teaching and the practicals were well run. I feel confident doing CPR and using an AED now.", "name": "Cdt J. Harper", "email": "", "title": "", "phone": ""}], "examScores": {"L1": {"m1": {"score": 14, "total": 15, "result": "P"}, "m2": {"score": 23, "total": 25, "result": "P"}}, "L2": {"m1": {"score": 13, "total": 15, "result": "P"}, "m2": {"score": 21, "total": 25, "result": "P"}}, "L3": {"m1": {"score": 15, "total": 15, "result": "P"}, "m2": {"score": 24, "total": 25, "result": "P"}}, "L4": {"m1": {"score": 12, "total": 15, "result": "P"}, "m2": {"score": 20, "total": 25, "result": "P"}}}, "mcPassMark": 20, "paperNumbers": {"L1": "EFAWJAN26", "L2": "EFAWJAN26", "L3": "EFAWJAN26", "L4": "EFAWJAN26"}, "signature": "data:image/png;base64,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", "isExample": true}, "files": [{"kind": "register", "title": "Nominal roll", "url": "register.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "other", "title": "Practical assessment paper (Annex E)", "url": "practical.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "other", "title": "First Aid Course Information (Annex D)", "url": "annexd.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "feedback", "title": "Course evaluation form", "url": "fb-1.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m1", "title": "EFAW Module 1 theory", "learnerName": "Cdt J. Harper", "learnerId": "L1", "page": 1, "paperNo": "EFAWJAN26", "url": "m1-L1.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m2", "title": "FAW Module 2 theory", "learnerName": "Cdt J. Harper", "learnerId": "L1", "page": 1, "paperNo": "FAWJAN26", "url": "m2-L1.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m1", "title": "EFAW Module 1 theory", "learnerName": "Cdt P. Singh", "learnerId": "L2", "page": 1, "paperNo": "EFAWJAN26", "url": "m1-L2.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m2", "title": "FAW Module 2 theory", "learnerName": "Cdt P. Singh", "learnerId": "L2", "page": 1, "paperNo": "FAWJAN26", "url": "m2-L2.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m1", "title": "EFAW Module 1 theory", "learnerName": "SI M. Okafor", "learnerId": "L3", "page": 1, "paperNo": "EFAWJAN26", "url": "m1-L3.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m2", "title": "FAW Module 2 theory", "learnerName": "SI M. Okafor", "learnerId": "L3", "page": 1, "paperNo": "FAWJAN26", "url": "m2-L3.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m1", "title": "EFAW Module 1 theory", "learnerName": "Cdt L. Byrne", "learnerId": "L4", "page": 1, "paperNo": "EFAWJAN26", "url": "m1-L4.jpg", "courseId": "EXAMPLE-FAW"}, {"kind": "m2", "title": "FAW Module 2 theory", "learnerName": "Cdt L. Byrne", "learnerId": "L4", "page": 1, "paperNo": "FAWJAN26", "url": "m2-L4.jpg", "courseId": "EXAMPLE-FAW"}]};
   const KEY = 'dtc_example_v1';
-  function put(db, rec) { return new Promise((ok, no) => { const t = db.transaction('files','readwrite'); t.objectStore('files').put(rec); t.oncomplete = ok; t.onerror = no; }); }
-  async function plant() {
+  async function purgeExample() {
     try {
-      if (typeof lpmLoadCourses !== 'function') return setTimeout(plant, 400);
+      if (typeof lpmLoadCourses !== 'function') return setTimeout(purgeExample, 400);
       const courses = lpmLoadCourses();
-      const already = courses.some(c => c.isExample);
-      if (already && localStorage.getItem(KEY)) return;
-      if (!already) { courses.unshift(EXAMPLE.course); lpmSaveCoursesRaw(courses); }
-      const sk = skLoadAll();
-      if (!sk['EXAMPLE-FAW']) {
-        const refs = SK_ASSESSMENTS.flatMap(a => a.groups.flatMap(g => g[1].map(i => i[0])));
-        const marks = {};
-        refs.forEach(r => { marks[r] = {}; EXAMPLE.course.learners.forEach(l => { marks[r][l.id] = { v:'C', at:'2026-10-08T10:00:00Z' }; }); });
-        ['5.26','5.27'].forEach(r => { if (marks[r]) marks[r]['L3'] = { v:'R', at:'2026-10-08T10:00:00Z' }; });
-        sk['EXAMPLE-FAW'] = { marks, overrides:{}, signoff:{ centre:CENTRE_NAME, centreNo:CENTRE_NO, date:'2026-10-09', trainer:'Miles Ward' } };
-        skSaveAllRaw(sk);
-      }
-      const db = await packOpen();
-      const have = await packList('EXAMPLE-FAW');
-      if (!have.length) {
-        for (let i = 0; i < EXAMPLE.files.length; i++) {
-          await put(db, Object.assign({ id: 'EX' + i, addedAt: '2026-10-09T12:00:00Z' }, EXAMPLE.files[i]));
+      const stale = courses.filter(c => c.isExample || /^EXAMPLE-/.test(c.id || ''));
+      if (stale.length) {
+        lpmSaveCoursesRaw(courses.filter(c => !(c.isExample || /^EXAMPLE-/.test(c.id || ''))));
+        // skills ticks
+        try {
+          const sk = skLoadAll(); let touched = false;
+          stale.forEach(c => { if (sk[c.id]) { delete sk[c.id]; touched = true; } });
+          if (touched) skSaveAllRaw(sk);
+        } catch (e) {}
+        // pack photos held in IndexedDB
+        for (const c of stale) {
+          try {
+            const files = await packList(c.id);
+            for (const f of files) { try { await packDelete(f.id); } catch (e) {} }
+          } catch (e) {}
         }
+        // and the copy in Supabase, if one was ever synced
+        if (typeof CLOUD_ON !== 'undefined' && CLOUD_ON && cloud.session) {
+          for (const c of stale) {
+            try { await cloudRest('courses?id=eq.' + encodeURIComponent(c.id), 'DELETE', null, 'return=minimal'); } catch (e) {}
+          }
+        }
+        try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
       }
-      localStorage.setItem(KEY, '1');
-      try { if (document.getElementById('lpmCourseList')) lpmRenderCourseList(); } catch (e) {}
-    } catch (e) { console.log('example', e); }
+      localStorage.removeItem(KEY);
+    } catch (e) { console.log('example purge', e); }
   }
-  window.addEventListener('load', () => setTimeout(plant, 600));
+  window.addEventListener('load', () => setTimeout(purgeExample, 600));
 })();
 
 // ============ LOCKED COURSES AND REQUESTS TO EDIT ============

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A3A24">
+<title>Course Registration | Army Cadets Digital Training Centre</title>
+<link rel="icon" href="acf-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#0A3A24;--accent:#1E7A46;--tint:#E9F4EC;--ink:#25323b;--mut:#54616b;
+  --line:#D8DEE8;--bg:#F5F8F6;--card:#fff;--bad:#C0563C;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Public Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{background:var(--dark);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+header img{height:34px;width:34px;border-radius:5px;background:#fff;object-fit:contain;padding:2px}
+header b{font-size:.78rem;letter-spacing:.07em;display:block}
+header span{font-size:.66rem;opacity:.78}
+main{max-width:520px;margin:0 auto;padding:16px 14px 50px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h1{font-size:1.3rem;color:var(--dark);margin-bottom:4px}
+.meta{font-size:.78rem;color:var(--mut)}
+.meta b{color:var(--ink)}
+label{display:block;font-size:.76rem;font-weight:700;color:var(--dark);margin:12px 0 4px}
+label .opt{font-weight:500;color:var(--mut)}
+input,select{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;
+  font:inherit;font-size:1rem;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.72rem;color:var(--mut);margin-top:3px}
+.check{display:flex;gap:9px;align-items:flex-start;margin-top:14px;font-size:.8rem;color:var(--mut)}
+.check input{width:18px;height:18px;flex:0 0 auto;margin-top:2px}
+#pad{width:100%;height:150px;border:1px dashed var(--line);border-radius:10px;touch-action:none;background:#fff}
+.padrow{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;padding:0}
+.btn{width:100%;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:14px;
+  font:inherit;font-size:1rem;font-weight:700;cursor:pointer;margin-top:18px}
+.btn:disabled{opacity:.55}
+.msg{font-size:.8rem;margin-top:10px;color:var(--bad)}
+.done{text-align:center;padding:26px 16px}
+.done .tick{width:56px;height:56px;border-radius:50%;background:var(--tint);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.7rem;font-weight:800}
+.done h2{font-size:1.15rem;color:var(--dark);margin-bottom:6px}
+.done p{font-size:.85rem;color:var(--mut)}
+footer{text-align:center;font-size:.68rem;color:var(--mut);padding:0 14px 26px}
+.load{text-align:center;color:var(--mut);font-size:.85rem;padding:40px 0}
+</style></head>
+<body>
+<header>
+  <img src="acf-logo.png" alt="" onerror="this.style.display='none'">
+  <div><b>ARMY CADETS</b><span>Digital Training Centre</span></div>
+</header>
+<main id="main"><div class="load">Loading…</div></main>
+<footer>Your details are held by the Army Cadet Force for this course record only.</footer>
+
+<script>
+const SB = { url:'https://nyawiqngmlpklxqkuhbm.supabase.co', key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55YXdpcW5nbWxwa2x4cWt1aGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNzAwNDgsImV4cCI6MjEwNTg0NjA0OH0.lCaVp0v3ZeXE82X97H_PJXs7TMzFIbwP9PmxGZXEaYU' };
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function rpc(fn, body) {
+  const r = await fetch(SB.url + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', apikey:SB.key, Authorization:'Bearer ' + SB.key },
+    body: JSON.stringify(body)
+  });
+  const txt = await r.text();
+  let data = null; try { data = txt ? JSON.parse(txt) : null; } catch (e) { data = txt; }
+  if (!r.ok) throw new Error((data && (data.message || data.hint)) || txt || ('HTTP ' + r.status));
+  return data;
+}
+
+const fmtDate = d => { if (!d) return ''; const x = new Date(d);
+  return isNaN(x) ? d : x.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); };
+
+async function boot() {
+  const main = document.getElementById('main');
+  if (!TOKEN) { main.innerHTML = '<div class="card"><h1>Link not valid</h1><p class="meta">This page needs the QR code from your instructor.</p></div>'; return; }
+  let info;
+  try { info = await rpc('register_link_info', { p_token: TOKEN }); }
+  catch (e) { main.innerHTML = `<div class="card"><h1>Couldn't open the register</h1><p class="meta">${esc(e.message)}</p></div>`; return; }
+  if (!info) { main.innerHTML = '<div class="card"><h1>This link has expired</h1><p class="meta">Ask your instructor for a new QR code.</p></div>'; return; }
+  render(info);
+}
+
+function render(info) {
+  document.getElementById('main').innerHTML = `
+    <div class="card">
+      <h1>Course registration</h1>
+      <p class="meta"><b>${esc(info.course || 'First Aid course')}</b><br>
+        ${esc(fmtDate(info.date))}${info.venue ? ' &middot; ' + esc(info.venue) : ''}<br>
+        ${info.trainer ? 'Trainer: ' + esc(info.trainer) : ''}</p>
+    </div>
+    <div class="card">
+      <label for="fName">Full name</label>
+      <input id="fName" autocomplete="name" placeholder="First and last name">
+      <label for="fDob">Date of birth</label>
+      <input id="fDob" type="date">
+      <label for="fP">P number <span class="opt">(if you have one)</span></label>
+      <input id="fP" autocomplete="off" placeholder="e.g. 30123456">
+      <label for="fEmail">Email address</label>
+      <input id="fEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+      <label for="fGender">Gender</label>
+      <select id="fGender">
+        <option value="">Prefer not to say</option>
+        <option>Female</option><option>Male</option><option>Other</option>
+      </select>
+      <label for="fUnit">Unit / detachment <span class="opt">(optional)</span></label>
+      <input id="fUnit" placeholder="e.g. A Company, Chelmsford">
+      <label for="fFile">Attachment <span class="opt">(optional)</span></label>
+      <input id="fFile" type="file" accept="image/*,application/pdf">
+      <div class="hint">A photo or PDF, if your instructor has asked for one. Max 4&nbsp;MB.</div>
+
+      <label style="margin-top:16px">Signature</label>
+      <canvas id="pad"></canvas>
+      <div class="padrow">
+        <span class="hint">Sign with your finger to confirm these details are correct.</span>
+        <button class="link" type="button" onclick="wipe()">Clear</button>
+      </div>
+
+      <div class="check">
+        <input id="fDao" type="checkbox" checked>
+        <label for="fDao" style="margin:0;font-weight:500;color:var(--mut)">
+          I am happy to be contacted by the DAO about this qualification.
+        </label>
+      </div>
+
+      <button class="btn" id="go" onclick="send()">Sign the register</button>
+      <div class="msg" id="msg"></div>
+    </div>`;
+  initPad();
+}
+
+let ctx, drawing = false, last = null, inked = false;
+function initPad() {
+  const cv = document.getElementById('pad');
+  const ratio = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * ratio; cv.height = h * ratio;
+  ctx = cv.getContext('2d'); ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0A3A24';
+  const at = e => { const b = cv.getBoundingClientRect(); return { x:e.clientX - b.left, y:e.clientY - b.top }; };
+  cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); drawing = true; last = at(e); };
+  cv.onpointermove = e => { if (!drawing) return; const p = at(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; inked = true; };
+  cv.onpointerup = cv.onpointercancel = () => { drawing = false; };
+}
+function wipe() { const cv = document.getElementById('pad'); ctx.clearRect(0, 0, cv.width, cv.height); inked = false; }
+
+function readFile(f) {
+  return new Promise((ok, no) => {
+    const r = new FileReader();
+    r.onload = () => ok(r.result); r.onerror = () => no(new Error('Could not read that file'));
+    r.readAsDataURL(f);
+  });
+}
+
+async function send() {
+  const msg = document.getElementById('msg'), go = document.getElementById('go');
+  const v = id => (document.getElementById(id).value || '').trim();
+  const name = v('fName');
+  if (!/\S+\s+\S+/.test(name)) { msg.textContent = 'Enter your first and last name.'; return; }
+  if (!v('fDob')) { msg.textContent = 'Enter your date of birth.'; return; }
+  const email = v('fEmail');
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = 'Check the email address.'; return; }
+  if (!inked) { msg.textContent = 'Please sign in the box above.'; return; }
+
+  msg.style.color = 'var(--mut)'; msg.textContent = 'Sending…'; go.disabled = true;
+  let upload = '';
+  try {
+    const f = document.getElementById('fFile').files[0];
+    if (f) {
+      if (f.size > 4 * 1024 * 1024) throw new Error('That file is larger than 4 MB.');
+      upload = await readFile(f);
+    }
+    await rpc('submit_registration', { p_token: TOKEN, p_data: {
+      name, dob: v('fDob'), p_number: v('fP'), email,
+      gender: document.getElementById('fGender').value,
+      organisation: v('fUnit'), position: '',
+      upload_url: upload,
+      consent_dao: document.getElementById('fDao').checked,
+      signature: document.getElementById('pad').toDataURL('image/png')
+    }});
+    document.getElementById('main').innerHTML = `
+      <div class="card done"><div class="tick">✓</div>
+        <h2>You're on the register</h2>
+        <p>Thanks, ${esc(name.split(/\s+/)[0])}. Your instructor can see your details now.
+           You can close this page.</p></div>`;
+    window.scrollTo(0, 0);
+  } catch (e) {
+    msg.style.color = 'var(--bad)'; msg.textContent = e.message || 'Could not send your details.';
+    go.disabled = false;
+  }
+}
+boot();
+</script>
+</body></html>

@@ -1,7 +1,8 @@
 /* Army Cadets Digital Training Centre — service worker
    Bump CACHE_VERSION on every deploy or devices will keep serving the old page. */
-const CACHE_VERSION = 'acf-dtc-v1';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_VERSION = 'acf-dtc-v2';
+const APP_SHELL = ['./', './index.html', './register.html', './exam.html',
+                   './manifest.json', './icon-192.png', './icon-512.png', './acf-logo.png'];
 
 // Scenario audio is hosted on the SceneSounds GitHub Pages repo.
 const SOUND_HOST = 'mp2ward.github.io';
