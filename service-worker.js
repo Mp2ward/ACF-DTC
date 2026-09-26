@@ -1,6 +1,6 @@
 /* Army Cadets Digital Training Centre — service worker
    Bump CACHE_VERSION on every deploy or devices will keep serving the old page. */
-const CACHE_VERSION = 'acf-dtc-v2';
+const CACHE_VERSION = 'acf-dtc-v3';
 const APP_SHELL = ['./', './index.html', './register.html', './exam.html', './feedback.html',
                    './manifest.json', './icon-192.png', './icon-512.png', './acf-logo.png'];
 
@@ -37,7 +37,19 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // App shell: network-first, fall back to cache when offline.
+  // The page itself: always network, so an old copy can never stick around.
+  if (url.origin === location.origin && (req.mode === 'navigate' || /\.html?$/.test(url.pathname) || url.pathname === '/')) {
+    e.respondWith(
+      fetch(req, { cache: 'no-store' }).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE_VERSION).then(c => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Everything else same-origin: network-first, fall back to cache when offline.
   if (url.origin === location.origin) {
     e.respondWith(
       fetch(req).then(res => {
