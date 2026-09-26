@@ -1112,6 +1112,9 @@ function fmtD(v) {
 
 
   /* ---- Run a Scenario ---- */
+  .rn-pick-group { margin-top:22px; display:flex; align-items:center; gap:8px; }
+  .rn-pick-count { font-size:0.72rem; font-weight:700; background:#EEF2FA; color:#0D1B4C; border-radius:999px; padding:2px 9px; }
+  .rn-pick-tiles .hub-tile.rn-locked { opacity:0.5; cursor:not-allowed; }
   .rn-view { display:none; }
   .rn-view.active { display:block; }
   .rn-wrap { max-width:920px; margin:0 auto; padding:24px 20px 60px;  width:100%; box-sizing:border-box; }
@@ -2150,14 +2153,9 @@ window.addEventListener('load', function () {
       <span class="hub-text"><span class="hub-title">Course Matrix</span><span class="hub-sub" id="hubLpmSub">Record competencies, upload exams and submit course paperwork</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
-    <button class="hub-tile" style="--accent:#2446B8;--soft:#E3E8FA;" onclick="showView('cards')">
-      <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="15" rx="2"/><path d="M19 8v9a3 3 0 0 1-3 3M7 9.5h5M7 13h5"/></svg></span>
-      <span class="hub-text"><span class="hub-title">Scenario Cards</span><span class="hub-sub" id="hubCardsSub">Briefs, role-player cards and assessment criteria</span></span>
-      <span class="hub-chev">&rsaquo;</span>
-    </button>
     <button class="hub-tile" style="--accent:#C2410C;--soft:#FFE1D6;" onclick="showView('run');rnRenderPick();">
       <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/></svg></span>
-      <span class="hub-text"><span class="hub-title">Run a Scenario</span><span class="hub-sub">Brief, safety, roles, sound and assessment in one flow</span></span>
+      <span class="hub-text"><span class="hub-title">Scenarios</span><span class="hub-sub">Medical and trauma scenarios — brief, roles, sound and assessment</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
     <button class="hub-tile" style="--accent:#5B3FA0;--soft:#E8E3F6;" onclick="showView('sounds')">
@@ -2456,8 +2454,8 @@ window.addEventListener('load', function () {
     <div class="rn-wrap">
       <button class="sc-back rn-no-print rn-course-back" style="display:none;" onclick="rnBackToCourse()">&larr; Back to course</button>
       <div class="hub-eyebrow lic-short">Sector 3 Group</div>
-      <div class="hub-h">Run a scenario</div>
-      <div class="hub-p">Choose a scenario to run.</div>
+      <div class="hub-h">Scenarios</div>
+      <div class="hub-p">Choose a scenario to run. Each one takes you through the brief, safety, roles, sound and assessment.</div>
       <div id="rnPickList"></div>
     </div>
   </div>
@@ -3849,8 +3847,7 @@ const MENU_ITEMS = [
     { label:'Job Scheduling', sub:'Jobs, timesheets and payments', go:"jbOpenAdmin()" } ] },
   { g:'Course Delivery', iqaHide:true, items:[
     { label:'Course Matrix', sub:'Record competencies, upload exams, submit paperwork', go:"showView('lpm');lpmShowPick()" },
-    { label:'Scenario Cards', sub:'Briefs, roles, assessment criteria', go:"showView('cards');scRenderGrid()" },
-    { label:'Run a Scenario', sub:'Deliver and assess in one flow', go:"showView('run');rnRenderPick()" },
+    { label:'Scenarios', sub:'Medical and trauma — deliver and assess', go:"showView('run');rnRenderPick()" },
     { label:'Soundboard', sub:'Live scene sound mixer', go:"showView('sounds')" },
     { label:'Knowledge Centre', sub:'QR pop quizzes', go:"showView('knowledge')" } ] },
   { g:'My Account', iqaHide:true, items:[
@@ -8169,13 +8166,20 @@ function rnExit() {
 function rnRenderPick() {
   const wrap = document.getElementById('rnPickList');
   if (!wrap) return;
-  let html = scByType().map(([label, list]) => `<div class="sc-type-h">${label}</div>` + list.map(s => {
-    const ready = s.ready;
-    return `<button class="rn-pick-row ${ready ? '' : 'rn-locked'}" ${ready ? `onclick="rnStart(${s.id})"` : 'disabled'}>
-      <div class="rn-pick-title">${scNumTitle(s)}</div>
-      <div class="rn-pick-sub">${s.sub}</div>
-    </button>`;
-  }).join('')).join('');
+  const look = {
+    Medical: { accent:'#C2185B', soft:'#FDE4EE', ic:'<path d="M12 21s-7-4.4-9-9.2C1.7 8.4 3.8 5 7.2 5c2 0 3.5 1 4.8 2.6C13.3 6 14.8 5 16.8 5c3.4 0 5.5 3.4 4.2 6.8C19 16.6 12 21 12 21z"/><path d="M7 12h2.5l1.5-2.5 2 5 1.5-2.5H17"/>' },
+    Trauma:  { accent:'#C2410C', soft:'#FFE1D6', ic:'<path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M12 8v8M8 12h8"/>' }
+  };
+  let html = scByType().map(([label, list]) => {
+    const L = look[label] || look.Medical;
+    return `<div class="hub-group rn-pick-group">${label} <span class="rn-pick-count">${list.filter(x => x.ready).length}</span></div>
+      <div class="hub-tiles rn-pick-tiles">${list.map(s => `
+        <button class="hub-tile ${s.ready ? '' : 'rn-locked'}" style="--accent:${L.accent};--soft:${L.soft};" ${s.ready ? `onclick="rnStart(${s.id})"` : 'disabled'}>
+          <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${L.ic}</svg></span>
+          <span class="hub-text"><span class="hub-title">${scNumTitle(s)}</span><span class="hub-sub">${s.ready ? s.sub : 'Coming soon'}</span></span>
+          <span class="hub-chev">&rsaquo;</span>
+        </button>`).join('')}</div>`;
+  }).join('');
 
 
   wrap.innerHTML = html;
@@ -13305,7 +13309,7 @@ function ticketRef() {
 function ticketContext() {
   const active = document.querySelector('.app-view.active');
   const view = active ? active.id.replace('view-', '') : 'hub';
-  const names = { hub:'Home', lpm:'Course Matrix', cards:'Scenario Cards', run:'Run a Scenario', sounds:'Soundboard', cpd:'My CPD', knowledge:'Knowledge Centre' };
+  const names = { hub:'Home', lpm:'Course Matrix', cards:'Scenarios', run:'Scenarios', sounds:'Soundboard', cpd:'My CPD', knowledge:'Knowledge Centre' };
   let screen = names[view] || view;
   try { if (view === 'lpm' && lpmCourse && document.getElementById('lpm-course').classList.contains('active')) screen += ' → ' + (LPM_STEPS[lpmStepIdx] || ''); } catch (e) {}
   const ctx = { screen, device: navigator.userAgent.replace(/\s*\(KHTML.*$/, '').slice(0, 140), version: APP_VERSION };
@@ -15622,7 +15626,7 @@ function stBuildRail() {
   const nav = document.createElement('nav'); nav.id = 'stRail'; nav.className = 'st-rail'; nav.setAttribute('aria-label', 'Main');
   let html = `<button class="st-logo" onclick="showView('hub')" aria-label="Home"><img src="${S3_LOGO}" alt="${lpmEsc(LICENCE.short)}" onerror="this.onerror=null;this.src=licBadge()"></button>
     <button class="st-item" data-view="hub" onclick="showView('hub')">${ST_HOME_ICON}<span>Home</span></button>`;
-  const SHORT = { 'Equipment':'Equipment', 'LMS Overview':'LMS Overview', 'Workbook Marking':'Marking', 'Instructor Admin':'Instructors', 'Job Scheduling':'Jobs', 'Scenario Cards':'Scenarios', 'Run a Scenario':'Run Scenario' };
+  const SHORT = { 'Equipment':'Equipment', 'LMS Overview':'LMS Overview', 'Workbook Marking':'Marking', 'Instructor Admin':'Instructors', 'Job Scheduling':'Jobs', 'Scenario Cards':'Scenarios', 'Run a Scenario':'Scenarios', 'Scenarios':'Scenarios' };
   let i = 0;
   document.querySelectorAll('#view-hub .hub-group').forEach(g => {
     const tiles = g.nextElementSibling; if (!tiles) return;
@@ -15689,7 +15693,7 @@ function stTodayRender() {
     : `<div class="ht-next"><div class="ht-k">Coming up</div><div class="ht-t">Nothing scheduled</div><div class="ht-m">Your next job or course will show here.</div></div>`) +
     `<div class="ht-quick"><b>Quick actions</b>
       ${FEAT('knowledgeCentre') ? `<button onclick="showView('knowledge')">${ic('M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z')}Start a live quiz</button>` : ''}
-      ${FEAT('runScenario') ? `<button onclick="showView('run');rnRenderPick()">${ic('M7 4l13 8-13 8z')}Run a scenario</button>` : ''}
+      ${FEAT('runScenario') ? `<button onclick="showView('run');rnRenderPick()">${ic('M7 4l13 8-13 8z')}Scenarios</button>` : ''}
       ${FEAT('myCpd') ? `<button onclick="showView('cpd');cpdOpen()">${ic('M12 5v14M5 12h14')}Add a CPD entry</button>` : ''}</div>`;
 }
 document.addEventListener('DOMContentLoaded', () => { try { stBuildRail(); stTodayRender(); } catch (e) { console.warn('studio', e); } });
