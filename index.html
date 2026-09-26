@@ -77,6 +77,9 @@ function fmtD(v) {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
+    --brand-dark: #0A3A24;
+    --brand-accent: #1E7A46;
+    --brand-tint: #E9F4EC;
     --bg: #FFFFFF;
     --surface: #FFFFFF;
     --panel: #F7F9FC;
@@ -1496,6 +1499,150 @@ function fmtD(v) {
   .lpm-ov-legend span { display:inline-flex; align-items:center; gap:6px; }
   .lpm-ov-swatch { width:16px; height:16px; display:inline-block; border:1px solid #D8DEE8; }
 
+/* ---- Army Cadets practical assessment (Annex E) ---- */
+.acf-prac{padding:4px 2px 30px}
+.acf-head h3{font-size:1.05rem;margin:0 0 6px;color:var(--brand-dark)}
+.acf-head p{font-size:.78rem;color:#54616b;margin:0 0 6px;line-height:1.5}
+.acf-hint{font-size:.74rem;color:var(--brand-accent);font-weight:600}
+.acf-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #D8DEE8;border-radius:10px;margin:10px 0 14px}
+.acf-grid{border-collapse:collapse;min-width:100%;font-size:.78rem}
+.acf-grid th,.acf-grid td{border:1px solid #E2E8EE;padding:5px 6px;text-align:center;vertical-align:middle}
+.acf-grid thead th{background:var(--brand-tint);color:var(--brand-dark);font-weight:700;position:sticky;top:0}
+.acf-grid th.acf-crit,.acf-grid td.acf-crit{text-align:left;min-width:190px;position:sticky;left:0;background:#fff;z-index:2;font-weight:600;color:#25323b}
+.acf-grid thead th.acf-crit{background:var(--brand-tint);z-index:3}
+.acf-num{display:block;font-size:.7rem;color:#8a97a2}
+.acf-nm{display:block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acf-initrow{font-weight:500!important;font-size:.72rem;color:#54616b!important}
+.acf-init{width:52px;text-align:center;text-transform:uppercase;border:1px solid #CBD5DF;border-radius:6px;padding:4px;font-size:.78rem}
+.acf-cell{width:42px;height:34px;border:1px solid #CBD5DF;border-radius:7px;background:#fff!important;
+  font-weight:800;font-size:.85rem;color:#c3ccd4!important;cursor:pointer;transition:transform .08s}
+.acf-cell:active{transform:scale(.92)}
+.acf-cell.ok{background:#1E7A46!important;border-color:#1E7A46!important;color:#fff!important;box-shadow:0 1px 3px rgba(30,122,70,.35)}
+.acf-cell.ref{background:#C0563C!important;border-color:#C0563C!important;color:#fff!important}
+.acf-cell:disabled{opacity:.7;cursor:default}
+.acf-lbl{display:block;font-size:.78rem;font-weight:700;color:var(--brand-dark);margin-bottom:5px}
+.acf-fb{width:100%;border:1px solid #CBD5DF;border-radius:10px;padding:9px;font:inherit;font-size:.82rem;resize:vertical}
+.acf-declare{font-size:.8rem;font-weight:600;color:#25323b;margin:14px 0 8px}
+.acf-sign{display:flex;flex-wrap:wrap;gap:10px}
+.acf-sign label{flex:1 1 150px;font-size:.72rem;color:#54616b;font-weight:600}
+.acf-sign input{width:100%;margin-top:3px;border:1px solid #CBD5DF;border-radius:8px;padding:7px;font:inherit;font-size:.82rem}
+.acf-sigbox{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.acf-sigbox span{font-size:.72rem;color:#54616b;font-weight:600}
+.acf-sigbox img{height:46px;background:#fff;border-bottom:1px solid #25323b}
+.acf-sigbtn,.acf-clear{border:1px dashed var(--brand-accent);background:var(--brand-tint);color:var(--brand-accent);
+  border-radius:8px;padding:8px 14px;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer}
+.acf-clear{border-style:solid;border-color:#CBD5DF;background:#fff;color:#54616b}
+.acf-sigov{position:fixed;inset:0;background:rgba(10,58,36,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px}
+.acf-sigcard{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:460px}
+.acf-sigcard h4{margin:0 0 10px;font-size:.95rem;color:var(--brand-dark)}
+#acfSigPad{width:100%;height:170px;border:1px solid #CBD5DF;border-radius:10px;touch-action:none;background:#fff}
+.acf-sigacts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.acf-btn{background:var(--brand-accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+.acf-btn.ghost{background:#fff;border:1px solid #CBD5DF;color:#54616b}
+
+/* ---- ACF theory exams ---- */
+.acf-paper{border:1px solid #D8DEE8;border-radius:12px;margin:14px 0;overflow:hidden;background:#fff}
+.acf-paper-h{background:var(--brand-tint);padding:11px 14px}
+.acf-paper-t{font-size:.92rem;font-weight:800;color:var(--brand-dark)}
+.acf-paper-s{font-size:.73rem;color:#54616b;margin-top:2px}
+.acf-paper-body{display:flex;flex-wrap:wrap;gap:16px;padding:14px}
+.acf-qr{flex:1 1 210px;text-align:center}
+.acf-qr .fb-qr-sub{word-break:break-all;font-size:.65rem}
+.acf-res{flex:2 1 260px;min-width:0}
+.acf-res-h{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;font-weight:800;color:var(--brand-dark);margin-bottom:6px}
+.acf-res-k{font-weight:600;font-size:.72rem;color:#54616b}
+.acf-res-t{width:100%;border-collapse:collapse;font-size:.78rem}
+.acf-res-t td{border-bottom:1px solid #EDF1F5;padding:6px 4px;vertical-align:middle}
+.acf-res-t td.nm{font-weight:600}
+.acf-res-t td.sc{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.acf-res-t td.sc i{color:#8a97a2;font-size:.72rem}
+.acf-res-t td.pf{text-align:center;width:66px}
+.acf-res-t td.dt{text-align:right;color:#8a97a2;font-size:.7rem;white-space:nowrap}
+.acf-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.66rem;font-weight:800}
+.acf-tag.ok{background:var(--brand-tint);color:var(--brand-accent)}
+.acf-tag.ref{background:#FBEDE9;color:#C0563C}
+.acf-pack-cta{border:1px dashed #CBD5DF;border-radius:12px;padding:14px;margin-top:18px;text-align:center}
+
+/* ---- Annex D form ---- */
+.acf-annexd{border:1px solid #D8DEE8;border-radius:12px;padding:16px;margin-top:18px;background:#fff}
+.acf-ad-h{font-size:.95rem;font-weight:800;color:var(--brand-dark);margin-bottom:4px}
+.acf-ad-h2{font-size:.82rem;font-weight:800;color:var(--brand-dark);margin:18px 0 8px}
+.acf-ad-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.acf-ad-grid label{flex:1 1 150px;font-size:.72rem;font-weight:600;color:#54616b}
+.acf-ad-grid input,.acf-ad-grid select{width:100%;margin-top:3px;border:1px solid #CBD5DF;border-radius:8px;
+  padding:8px;font:inherit;font-size:.84rem;background:#fff}
+.acf-ad-l{display:block;font-size:.72rem;font-weight:600;color:#54616b;margin-top:12px}
+.acf-ad-l input{width:100%;margin-top:3px;border:1px solid #CBD5DF;border-radius:8px;padding:8px;font:inherit;font-size:.84rem}
+.acf-ad-tally{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;
+  background:var(--brand-tint);border-radius:9px;font-size:.78rem;color:#54616b}
+.acf-ad-tally b{color:var(--brand-dark);font-size:1rem}
+.acf-ad-chk{display:flex;gap:9px;align-items:flex-start;font-size:.79rem;color:#54616b;margin-bottom:8px}
+.acf-ad-chk input{width:17px;height:17px;flex:0 0 auto;margin-top:2px;accent-color:var(--brand-accent)}
+
+/* ---- Course journey tiles (built on the app's hub tiles) ---- */
+.acf-journey{margin:4px 0 20px}
+.acf-j-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px}
+.acf-j-h{font-family:'Fraunces','Public Sans',serif;font-size:1.15rem;font-weight:600;color:var(--brand-dark)}
+.acf-j-ring{--p:0;width:54px;height:54px;border-radius:50%;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;
+  background:conic-gradient(var(--brand-accent) calc(var(--p)*1%), #E2E8EE 0)}
+.acf-j-ring span{width:42px;height:42px;border-radius:50%;background:#fff;display:flex;
+  align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:var(--brand-dark)}
+.acf-j-cellwrap{position:relative;display:flex;flex-direction:column}
+.acf-j-tiles{margin-top:0}
+.acf-j-tile{width:100%;height:100%;position:relative}
+.acf-j-tile.done{background:var(--soft)!important}
+/* the step you are on is outlined in its own colour — no size change */
+.acf-j-tile[data-active="1"]{border-color:var(--accent)!important;
+  box-shadow:0 0 0 2px var(--accent) inset!important;transform:none!important}
+.acf-j-tile[data-active="1"] .hub-title{color:var(--accent)!important}
+/* the studio tiles are vertical, so the tick sits in the corner */
+.acf-j-tile .acf-j-tick{position:absolute;top:18px;right:18px;margin:0}
+.acf-j-note{display:block;font-size:.8rem;color:var(--brand-accent)!important;font-weight:700;margin-top:8px}
+.acf-j-tick{margin-left:auto;align-self:center;width:26px;height:26px;border-radius:50%;
+  background:var(--brand-accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.acf-j-tick svg{width:15px;height:15px}
+.acf-j-mark{margin-top:7px;border:1px solid #CBD5DF;background:#fff;color:#54616b;border-radius:9px;
+  padding:7px;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
+.acf-j-mark.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+.acf-j-arrow{position:absolute;right:-14px;top:38px;width:18px;height:18px;color:#C3D2C9;z-index:2}
+.acf-j-arrow svg{width:100%;height:100%}
+@media (max-width:760px){ .acf-j-arrow{display:none} }
+.acf-ad-auto{display:flex;gap:9px;align-items:flex-start;font-size:.79rem;color:#8a97a2;margin-bottom:8px}
+.acf-ad-auto.on{color:#25323b}
+.acf-ad-box{width:17px;height:17px;flex:0 0 auto;border:1px solid #CBD5DF;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;background:#fff}
+.acf-ad-auto.on .acf-ad-box{background:var(--brand-accent);border-color:var(--brand-accent)}
+/* ---- Previous courses ---- */
+.lpm-past{margin-top:20px;border-top:1px solid #E2E8EE;padding-top:14px}
+.lpm-past-h{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;
+  font:inherit;font-size:.82rem;font-weight:800;color:var(--brand-dark);cursor:pointer;padding:4px 0 10px}
+.lpm-past-h svg{margin-left:auto;color:#8a97a2;transition:transform .18s}
+.lpm-past-c{background:var(--brand-tint);color:var(--brand-accent);border-radius:999px;
+  padding:2px 9px;font-size:.72rem;font-weight:800}
+
+/* sign-off row: every field the same height */
+.acf-sign label{flex:1 1 160px;font-size:.72rem;color:#54616b;font-weight:600;display:flex;flex-direction:column}
+.acf-sign input,.acf-sign select,.acf-sign .acf-sig-pad,.acf-sign .acf-sig-filled{
+  width:100%;margin-top:3px;height:42px;border:1px solid #CBD5DF;border-radius:8px;
+  padding:0 9px;font:inherit;font-size:.84rem;background:#fff;color:#25323b;box-sizing:border-box}
+.acf-sign .acf-sig-pad{border-style:dashed;border-color:var(--brand-accent);background:var(--brand-tint);
+  color:var(--brand-accent);font-weight:700;cursor:pointer}
+.acf-sign .acf-sig-filled{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 6px}
+.acf-sign .acf-sig-filled img{max-height:36px;max-width:82%}
+.acf-sig-x{border:0;background:none;color:#8a97a2;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 4px}
+.acf-sign-sig{flex:1 1 180px}
+
+/* QR enlarge in place */
+.acf-qr,.fb-qr-card{position:relative}
+.qr-zoom{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:9px;
+  border:1px solid #D8DEE8;background:#fff;color:#54616b;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;z-index:2}
+.qr-zoom.on{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+.qr-big{flex:1 1 100%!important}
+.qr-big .fb-qr-img,.qr-big [id^=acfQrImg]{margin:0 auto}
+.qr-big .fb-qr-img canvas,.qr-big .fb-qr-img img,
+.qr-big [id^=acfQrImg] canvas,.qr-big [id^=acfQrImg] img{max-width:100%;height:auto}
 </style>
 
 <style id="studioTheme">
@@ -9074,7 +9221,7 @@ function lpmOpenCourse(id) {
   lpmUpdateCourseSub();
 
   document.getElementById('lpmSteps').innerHTML = LPM_STEPS.map((k,i) => {
-    const labels = {details:'Course details', learners:'Learners', skills:'Skills stations', sessions:'Scenario sessions', theory:'Theory exams', overview:'QA overview', feedback:'Feedback', pack:'Course pack', iqa:'IQA review'};
+    const labels = {details:'Course details', learners:'Learners', skills:(lpmCourseKind(lpmCourse)==='acf'?'Practical assessment':'Skills stations'), sessions:'Scenario sessions', theory:'Theory exams', overview:'QA overview', feedback:'Feedback', pack:'Course pack', iqa:'IQA review'};
     return `<button class="rn-step" id="lpmStep${i}" onclick="lpmShowStep('${k}')">${labels[k]}</button>`;
   }).join('');
 
@@ -9212,8 +9359,9 @@ function lpmShowStep(key) {
   });
   document.querySelectorAll('.lpm-view#lpm-course .rn-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('lpmPanel-' + key).classList.add('active');
-  if (key === 'skills') { if (lpmCourseKind(lpmCourse) === 'ils') { ilsRender(); } else { skCourseId = lpmCourse.id; skRender(); } }
-  if (key === 'theory') lpmRenderTheory();
+  if (key === 'skills') { if (lpmCourseKind(lpmCourse) === 'acf') { acfRenderPractical(); }
+    else if (lpmCourseKind(lpmCourse) === 'ils') { ilsRender(); } else { skCourseId = lpmCourse.id; skRender(); } }
+  if (key === 'theory') { if (lpmCourseKind(lpmCourse) === 'acf') acfRenderTheory(); else lpmRenderTheory(); }
   if (key === 'feedback') lpmRenderFeedback();
   if (key === 'overview') lpmRenderOverview();
   if (key === 'pack') lpmRenderPack();
@@ -9224,11 +9372,454 @@ function lpmShowStep(key) {
 }
 
 // ---- Course details ----
+// ======================= ARMY CADETS FIRST AID =======================
+// Course types, Annex E practical criteria, Annex D course information and
+// theory paper metadata. Question text and answer keys are NOT held here —
+// they live in Supabase behind an authenticated sitting (see supabase_acf_exams.sql).
+
+const ACF_COURSES = {
+  efaw: {
+    key: 'efaw',
+    name: 'Emergency First Aid at Work - 1 Day',
+    short: 'EFAW',
+    unit: 'J/506/7072',
+    days: 1,
+    glh: '6 hours',
+    annexE: 'Emergency First Aid at Work Practical Assessment',
+    modules: ['m1'],
+    criteria: [
+      'Unconscious Casualty Practical',
+      'CPR and AED Casualty Practical',
+      'Choking Practical',
+      'Bleeding Practical',
+      'Life-threatening (Catastrophic) Bleeding Practical'
+    ]
+  },
+  faw: {
+    key: 'faw',
+    name: 'First Aid at Work - 3 Day',
+    short: 'FAW',
+    unit: '',
+    days: 3,
+    glh: '18 hours',
+    annexE: 'First Aid at Work Practical Assessment',
+    modules: ['m1', 'm2'],
+    criteria: [
+      'Unconscious Casualty Practical',
+      'CPR and AED Casualty Practical',
+      'Choking Practical',
+      'Bleeding Practical',
+      'Life-threatening (Catastrophic) Bleeding Practical',
+      'Secondary Survey Practical',
+      'Sling Practical',
+      'Spinal Injury Practical',
+      'Anaphylaxis Practical'
+    ]
+  }
+};
+
+// Theory papers. `paper` matches the paper_code seeded in Supabase.
+const ACF_PAPERS = {
+  m1:  { id: 'm1',  label: 'Module 1 — Emergency First Aid at Work', paper: 'EFAWJAN26',   questions: 15, pass: 12, minutes: 30, unit: 'UNIT 1' },
+  m1r: { id: 'm1r', label: 'Module 1 — RESIT',                       paper: 'EFAWRJAN26',  questions: 15, pass: 12, minutes: 30, unit: 'UNIT 1' },
+  m2:  { id: 'm2',  label: 'Module 2 — First Aid at Work',           paper: 'FAWJAN26',    questions: 25, pass: 20, minutes: 40, unit: 'UNIT 2' },
+  m2r: { id: 'm2r', label: 'Module 2 — RESIT',                       paper: 'FAWRJAN26',   questions: 25, pass: 20, minutes: 40, unit: 'UNIT 2' }
+};
+
+const ACF_MAX_LEARNERS = 12;   // Annex E has 12 learner columns
+
+// Annex D — First Aid Course Information. Every field here is gathered by the matrix.
+function acfAnnexDBlank() {
+  return {
+    creNumber: '', countyUnit: LICENCE.name || '',
+    courseType: '',                       // EFAW | FAW | FAWR
+    blended: 'NO',                        // NO | VIRTUAL SESSIONS | DLE COURSES
+    noContactDAO: '',                     // learners who do not wish to be contacted by the DAO
+    trainers: [],                         // { name, trainerNo, fawInDate, qualInDate }
+    dates: [],                            // { date, timeStart, timeFinish }
+    enclosures: {},                       // checklist ticks, keyed below
+    leadAssessor: '', leadTrainerNo: '', leadSignature: '', leadDate: ''
+  };
+}
+
+const ACF_ENCLOSURES = [
+  ['nominal',   '1 x Nominal roll (first name, surname, PNumber, DOB and gender)'],
+  ['practical', '1 x practical assessment paper — initialled by learners'],
+  ['theory1',   'EFAW Theory Papers x1 per learner (also required as part of a full FAW/FAWR)'],
+  ['theory2',   'FAW Theory Papers x1 per learner (FAW and FAWR only)'],
+  ['elearning', 'Evidence of e-learning having taken place (if blended learning is used)'],
+  ['feedback',  'Feedback forms']
+];
+
+function acfCourse(c) {
+  const n = ((c || lpmCourse || {}).courseName || '').trim().toUpperCase();
+  if (n.startsWith('EMERGENCY FIRST AID')) return ACF_COURSES.efaw;
+  if (n.startsWith('FIRST AID AT WORK')) return ACF_COURSES.faw;
+  return null;
+}
+
+// ---- Annex E practical grid ----
+const ACF_PRAC_KEY = 'acf_practical_v1';
+
+function acfPracLoad() {
+  try { return JSON.parse(localStorage.getItem(ACF_PRAC_KEY) || '{}'); } catch (e) { return {}; }
+}
+function acfPracSave(all) {
+  try { localStorage.setItem(ACF_PRAC_KEY, JSON.stringify(all)); } catch (e) {}
+}
+function acfPracFor(courseId) {
+  const all = acfPracLoad();
+  return all[courseId] || (all[courseId] = { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' });
+}
+// Initials worked out from the learner's name, e.g. "Cdt J. Harper" -> JH
+function acfInitialsOf(name) {
+  const words = String(name || '').trim().split(/\s+/)
+    .filter(w => !/^(cdt|si|ssi|lcpl|cpl|sgt|ssgt|wo2|wo1|capt|lt|maj|mr|mrs|ms|miss|dr)\.?$/i.test(w));
+  return words.map(w => (w.replace(/[^A-Za-z]/g, '')[0] || '')).join('').slice(0, 3).toUpperCase();
+}
+function acfPracSet(courseId, fn) {
+  const all = acfPracLoad();
+  const rec = all[courseId] || { marks: {}, initials: {}, feedback: '', assessor: '', trainerNo: '', signature: '', date: '' };
+  fn(rec); all[courseId] = rec; acfPracSave(all);
+}
+
+function acfPracCycle(courseId, learnerIdx, critIdx) {
+  if (lpmReadOnlyNow()) return;
+  const k = learnerIdx + ':' + critIdx;
+  acfPracSet(courseId, r => {
+    const cur = r.marks[k] || '';
+    r.marks[k] = cur === '' ? 'P' : (cur === 'P' ? 'R' : '');
+  });
+  acfRenderPractical();
+}
+
+function acfPracField(courseId, field, val) {
+  acfPracSet(courseId, r => { r[field] = val; });
+}
+
+function acfRenderPractical() {
+  const host = document.getElementById('lpmPanel-skills');
+  if (!host || !lpmCourse) return;
+  const spec = acfCourse(lpmCourse);
+  if (!spec) return;
+  const rec = acfPracFor(lpmCourse.id);
+  const learners = (lpmCourse.learners || []).slice(0, ACF_MAX_LEARNERS);
+  const ro = lpmReadOnlyNow();
+  const cols = Math.max(learners.length, 1);
+
+  let head = '<th class="acf-crit">Criteria</th>';
+  for (let i = 0; i < cols; i++) {
+    const nm = learners[i] ? lpmEsc(learners[i].name || learners[i]) : '&mdash;';
+    head += `<th><span class="acf-num">${i + 1}.</span><span class="acf-nm">${nm}</span></th>`;
+  }
+
+  let initRow = '<td class="acf-crit acf-initrow">The learner is to initial this column under their name to confirm this is their own work</td>';
+  for (let i = 0; i < cols; i++) {
+    const auto = learners[i] ? acfInitialsOf(learners[i].name || learners[i]) : '';
+    const val = rec.initials[i] != null && rec.initials[i] !== '' ? rec.initials[i] : auto;
+    initRow += `<td><input class="acf-init" maxlength="4" value="${lpmEsc(val)}" ${ro ? 'disabled' : ''}
+      title="Taken from the learner's name — the learner can change it"
+      oninput="acfPracSet('${lpmCourse.id}', r => r.initials[${i}] = this.value.toUpperCase())"></td>`;
+  }
+
+  let rows = '';
+  spec.criteria.forEach((crit, ci) => {
+    let tds = `<td class="acf-crit">${lpmEsc(crit)}</td>`;
+    for (let i = 0; i < cols; i++) {
+      const v = rec.marks[i + ':' + ci] || '';
+      const cls = v === 'P' ? 'ok' : (v === 'R' ? 'ref' : '');
+      const face = v === 'P' ? '&#10003;' : (v === 'R' ? 'R' : '&middot;');
+      tds += `<td><button class="acf-cell ${cls}" ${ro ? 'disabled' : ''}
+        title="${v === 'P' ? 'Pass' : v === 'R' ? 'Referral' : 'Not assessed'}"
+        onclick="acfPracCycle('${lpmCourse.id}',${i},${ci})">${face}</button></td>`;
+    }
+    rows += `<tr>${tds}</tr>`;
+  });
+
+  host.innerHTML = `
+    <div class="acf-prac">
+      <div class="acf-head">
+        <h3>${lpmEsc(spec.annexE)}</h3>
+        <p>The Trainer/Assessor must observe each candidate carrying out the correct treatment under current
+           protocols on each of the below criteria and place a &ldquo;P&rdquo; to confirm the candidate has met the criteria.
+           The full criteria for each learning outcome and assessment format can be found in the First Aid
+           Assessment Guide. This must be followed for assessment purposes.</p>
+        <p class="acf-hint">Tap a cell to cycle blank &rarr; P (pass) &rarr; R (referral).</p>
+      </div>
+      <div class="acf-scroll">
+        <table class="acf-grid"><thead><tr>${head}</tr></thead>
+          <tbody><tr class="acf-initials">${initRow}</tr>${rows}</tbody></table>
+      </div>
+      <label class="acf-lbl">Assessor Feedback (please give student specific feedback and general feedback)</label>
+      <textarea class="acf-fb" rows="4" ${ro ? 'disabled' : ''}
+        oninput="acfPracField('${lpmCourse.id}','feedback',this.value)">${lpmEsc(rec.feedback || '')}</textarea>
+      <p class="acf-declare">The above candidates have met the criteria and passed the practical assessments</p>
+      <div class="acf-sign">
+        <label>Trainer/Assessor
+          <select ${ro ? 'disabled' : ''} onchange="acfPracPickAssessor(this.value)">
+            <option value="">Choose…</option>
+            ${acfCourseTrainers().map(t => `<option value="${lpmEsc(t.name)}"${(rec.assessor || '') === t.name ? ' selected' : ''}>${lpmEsc(t.name)}</option>`).join('')}
+          </select></label>
+        <label>Trainer No<input value="${lpmEsc(rec.trainerNo || '')}" ${ro ? 'disabled' : ''}
+          oninput="acfPracField('${lpmCourse.id}','trainerNo',this.value)"></label>
+        <label>Date<input type="date" value="${lpmEsc(rec.date || '')}" ${ro ? 'disabled' : ''}
+          oninput="acfPracField('${lpmCourse.id}','date',this.value)"></label>
+        <label class="acf-sign-sig">Trainer/Assessor Signature
+          ${rec.signature
+            ? `<span class="acf-sig-filled"><img src="${rec.signature}" alt="signature">
+                 ${ro ? '' : `<button class="acf-sig-x" title="Clear" onclick="acfPracField('${lpmCourse.id}','signature','');acfRenderPractical()">&times;</button>`}</span>`
+            : `<button class="acf-sig-pad" ${ro ? 'disabled' : ''} onclick="acfSignPractical()">Sign here</button>`}
+        </label>
+      </div>
+    </div>`;
+}
+
+// Self-contained signature pad, reusing the app's existing ink-trim helper.
+function acfSign(onDone) {
+  const ov = document.createElement('div');
+  ov.className = 'acf-sigov';
+  ov.innerHTML = `<div class="acf-sigcard">
+      <h4>Sign below</h4>
+      <canvas id="acfSigPad"></canvas>
+      <div class="acf-sigacts">
+        <button class="acf-btn ghost" id="acfSigCancel">Cancel</button>
+        <button class="acf-btn ghost" id="acfSigWipe">Clear</button>
+        <button class="acf-btn" id="acfSigOk">Save signature</button>
+      </div></div>`;
+  document.body.appendChild(ov);
+  const cv = ov.querySelector('#acfSigPad');
+  const ratio = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || 300, h = cv.clientHeight || 160;
+  cv.width = w * ratio; cv.height = h * ratio;
+  const ctx = cv.getContext('2d');
+  ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0A3A24';
+  let drawing = false, last = null, dirty = false;
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); drawing = true; last = pos(e); };
+  cv.onpointermove = e => {
+    if (!drawing) return;
+    const q = pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    last = q; dirty = true;
+  };
+  const end = () => { drawing = false; };
+  cv.onpointerup = end; cv.onpointercancel = end;
+  const close = () => ov.remove();
+  ov.querySelector('#acfSigCancel').onclick = close;
+  ov.querySelector('#acfSigWipe').onclick = () => { ctx.clearRect(0, 0, w, h); dirty = false; };
+  ov.querySelector('#acfSigOk').onclick = () => {
+    if (!dirty) { close(); return; }
+    const url = (typeof qsTrimSignature === 'function') ? qsTrimSignature(cv) : cv.toDataURL('image/png');
+    close(); onDone(url);
+  };
+}
+
+// Instructors named on the course details, with their trainer numbers
+function acfCourseTrainers() {
+  const c = lpmCourse || {};
+  const list = [];
+  if (c.instructor1) list.push({ name: c.instructor1, no: c.trainerNo1 || acfMyTrainerNo() || '' });
+  if (c.instructor2) list.push({ name: c.instructor2, no: c.trainerNo2 || '' });
+  (c.extraInstructors || []).filter(Boolean).forEach(n => list.push({ name: n, no: '' }));
+  return list;
+}
+function acfPracPickAssessor(name) {
+  const t = acfCourseTrainers().find(x => x.name === name);
+  acfPracSet(lpmCourse.id, r => { r.assessor = name; if (t && t.no) r.trainerNo = t.no; });
+  acfRenderPractical();
+}
+
+function acfSignPractical() {
+  acfSign(url => { acfPracField(lpmCourse.id, 'signature', url); acfRenderPractical(); });
+}
+// =====================================================================
+
+
+// ================= ARMY CADETS — THEORY EXAMS BY QR =================
+// One QR per paper per course. Learners scan, sit the paper on their phone,
+// and it is marked in the database. Results land here for the course pack.
+
+function acfPapersFor(course) {
+  const spec = acfCourse(course);
+  if (!spec) return [];
+  return spec.modules.map(m => ACF_PAPERS[m]).filter(Boolean);
+}
+function acfExamUrl(token) {
+  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+  return base + 'exam.html?t=' + token;
+}
+function acfCanQr() {
+  return CLOUD_ON && cloud.session && lpmCourse && (!lpmCourse.owner || lpmCourse.owner === cloudMe());
+}
+
+async function acfEnsureExamLink(paperCode) {
+  lpmCourse.examLinks = lpmCourse.examLinks || {};
+  const l = lpmCourse.examLinks[paperCode];
+  if (l && l.token && new Date(l.expires) > new Date(Date.now() + 3600e3)) return l;
+  const ch = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(22))).map(b => ch[b % ch.length]).join('');
+  await cloudPush();   // the course must exist server-side before a link can point at it
+  try {
+    const rows = await cloudRest('courses?select=id&id=eq.' + encodeURIComponent(lpmCourse.id));
+    if (!rows || !rows.length) throw new Error("This course hasn't synced to the server yet. Check the sync indicator by your name, then try again.");
+  } catch (e) { if (/hasn't synced/.test(e.message)) throw e; }
+  const expires = new Date(Date.now() + 14 * 864e5).toISOString();
+  await cloudRest('exam_links', 'POST', [{ token, course_id: lpmCourse.id, paper_code: paperCode,
+    owner: cloudMe(), expires_at: expires }], 'return=minimal');
+  lpmCourse.examLinks[paperCode] = { token, expires };
+  lpmPersist();
+  return lpmCourse.examLinks[paperCode];
+}
+
+// Pull marked sittings back into the course record
+async function acfPullSittings() {
+  if (!CLOUD_ON || !cloud.session || !navigator.onLine || !lpmCourse) return 0;
+  try {
+    const rows = await cloudRest('acf_sittings?select=id,paper_code,learner_name,status,score,passed,submitted_at,learner_sig'
+      + '&course_id=eq.' + encodeURIComponent(lpmCourse.id) + '&order=submitted_at') || [];
+    lpmCourse.examSittings = lpmCourse.examSittings || [];
+    const have = new Set(lpmCourse.examSittings.map(s => s.id));
+    let added = 0, learnersAdded = 0;
+    const existing = new Set((lpmCourse.learners || []).map(l => (l.name || '').trim().toLowerCase()));
+    rows.forEach(r => {
+      const i = lpmCourse.examSittings.findIndex(s => s.id === r.id);
+      const rec = { id:r.id, paper:r.paper_code, name:r.learner_name || '', status:r.status,
+                    score:r.score, passed:r.passed, at:r.submitted_at, sig:r.learner_sig || '' };
+      if (i >= 0) lpmCourse.examSittings[i] = rec; else { lpmCourse.examSittings.push(rec); added++; }
+      const key = (r.learner_name || '').trim().toLowerCase();
+      if (key && !existing.has(key)) {
+        (lpmCourse.learners = lpmCourse.learners || []).push(
+          { id:'L' + Date.now() + Math.random().toString(36).slice(2, 6), name:(r.learner_name || '').trim() });
+        existing.add(key); learnersAdded++;
+      }
+    });
+    if ((added || learnersAdded) && (!lpmCourse.owner || lpmCourse.owner === cloudMe() || lpmOnTeam(lpmCourse))) lpmPersist();
+    return added;
+  } catch (e) { return 0; }
+}
+
+function acfSittingsFor(paper) {
+  return (lpmCourse.examSittings || []).filter(s => s.paper === paper);
+}
+
+async function acfRenderTheory() {
+  const el = document.getElementById('lpmPanel-theory');
+  if (!el || !lpmCourse) return;
+  const papers = acfPapersFor(lpmCourse);
+  const ro = lpmReadOnlyNow();
+
+  el.innerHTML = `<div class="sc-note">Each paper has its own QR code. Show it to the room — learners sit the
+      paper on their phone and it is marked automatically. Results appear below, ready for the course pack.</div>
+    <div id="acfPapers">${papers.map(p => `
+      <div class="acf-paper" id="acfP-${p.paper}">
+        <div class="acf-paper-h">
+          <div><div class="acf-paper-t">${lpmEsc(p.label)}</div>
+            <div class="acf-paper-s">Paper ${lpmEsc(p.paper)} &middot; ${p.questions} questions &middot;
+              pass ${p.pass}/${p.questions} &middot; ${p.minutes} minutes</div></div>
+        </div>
+        <div class="acf-paper-body">
+          <div class="acf-qr" id="acfQr-${p.paper}"><div class="fb-qr-wait">Preparing QR code…</div></div>
+          <div class="acf-res" id="acfRes-${p.paper}"></div>
+        </div>
+      </div>`).join('')}</div>
+    ${papers.length ? '' : '<p class="sc-p">Choose a course type to see its theory papers.</p>'}
+    <div class="acf-pack-cta rn-no-print">
+      <p class="sc-p">When the practical, theory and feedback are all complete, send the pack for IQA review.</p>
+      <button class="rn-nav-btn primary" ${ro ? 'disabled' : ''} onclick="lpmShowStep('pack')">Go to the course pack</button>
+    </div>`;
+
+  papers.forEach(p => acfRenderPaper(p));
+  if (!acfRenderTheory._pulling) {
+    acfRenderTheory._pulling = true;
+    acfPullSittings().then(n => { acfRenderTheory._pulling = false; if (n) papers.forEach(p => acfRenderResults(p)); });
+  }
+  acfStartPolling();
+}
+
+async function acfRenderPaper(p) {
+  acfRenderResults(p);
+  const box = document.getElementById('acfQr-' + p.paper);
+  if (!box) return;
+  if (!CLOUD_ON || !cloud.session) { box.innerHTML = `<p class="sc-p">Sign in to show the exam QR code.</p>`; return; }
+  if (!acfCanQr()) { box.innerHTML = `<p class="sc-p">Only the course's instructor can show the QR code.</p>`; return; }
+  if (!navigator.onLine) { box.innerHTML = `<p class="sc-p">Connect to the internet to show the QR code.</p>`; return; }
+  try {
+    const link = await acfEnsureExamLink(p.paper);
+    const url = acfExamUrl(link.token);
+    box.innerHTML = `<div class="fb-qr-title">Scan to sit ${lpmEsc(p.label.split('—')[0].trim())}</div>
+      <div id="acfQrImg-${p.paper}" class="fb-qr-img"></div>
+      <div class="fb-qr-sub">${lpmEsc(url)}</div>
+      `;
+    await fbDrawQr(document.getElementById('acfQrImg-' + p.paper), url, 190);
+  } catch (e) {
+    const raw = String(e.message || e);
+    const friendly = /relation .* does not exist|PGRST20|42P01/.test(raw)
+      ? 'The exam tables are missing on the server. Run 8_supabase_register_exam.sql in Supabase, then try again.'
+      : /row-level security|42501/.test(raw)
+      ? "The exam tables haven't been set up, or this course hasn't finished syncing. Check the sync indicator is green, then try again."
+      : raw;
+    box.innerHTML = `<p class="sc-p" style="color:#C74444;">${lpmEsc(friendly)}</p>
+      <button class="rn-nav-btn" onclick="acfRenderPaper(ACF_PAPERS['${p.id}'])">Try again</button>`;
+  }
+}
+
+function acfRenderResults(p) {
+  const box = document.getElementById('acfRes-' + p.paper);
+  if (!box) return;
+  const rows = acfSittingsFor(p.paper).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const done = rows.filter(r => r.status === 'marked');
+  const passed = done.filter(r => r.passed).length;
+  box.innerHTML = `
+    <div class="acf-res-h">
+      <span>Results</span>
+      <span class="acf-res-k">${done.length} sat &middot; ${passed} passed &middot; ${done.length - passed} referred</span>
+    </div>
+    ${rows.length ? `<table class="acf-res-t"><tbody>${rows.map(r => `
+      <tr>
+        <td class="nm">${lpmEsc(r.name || '—')}</td>
+        <td class="sc">${r.status === 'marked' ? r.score + '/' + p.questions : '<i>in progress</i>'}</td>
+        <td class="pf">${r.status === 'marked'
+          ? `<span class="acf-tag ${r.passed ? 'ok' : 'ref'}">${r.passed ? 'PASS' : 'REFER'}</span>` : ''}</td>
+        <td class="dt">${r.at ? fmtD(r.at) : ''}</td>
+      </tr>`).join('')}</tbody></table>`
+      : `<p class="sc-p">No one has sat this paper yet. Results appear here as they finish.</p>`}`;
+}
+
+let acfPollTimer = null;
+function acfStartPolling() {
+  clearInterval(acfPollTimer);
+  if (!CLOUD_ON || !cloud.session) return;
+  acfPollTimer = setInterval(async () => {
+    const panel = document.getElementById('lpmPanel-theory');
+    if (!panel || !panel.classList.contains('active') || document.hidden) return;
+    const n = await acfPullSittings();
+    if (n) acfPapersFor(lpmCourse).forEach(p => acfRenderResults(p));
+  }, 15000);
+}
+
+async function acfExamFullScreen(paper) {
+  const link = (lpmCourse.examLinks || {})[paper];
+  if (!link) return;
+  const p = Object.values(ACF_PAPERS).find(x => x.paper === paper) || {};
+  const ov = document.createElement('div');
+  ov.className = 'fb-full'; ov.id = 'acfFull';
+  ov.innerHTML = `<button class="fb-full-x" onclick="document.getElementById('acfFull').remove()" aria-label="Close">✕</button>
+    <div class="fb-full-t">${lpmEsc(p.label || 'Theory paper')}</div>
+    <div id="acfFullQr" class="fb-full-qr"></div>
+    <div class="fb-full-s">Scan with your phone camera &middot; pass ${p.pass}/${p.questions} &middot; ${p.minutes} minutes</div>`;
+  document.body.appendChild(ov);
+  await fbDrawQr(document.getElementById('acfFullQr'), acfExamUrl(link.token), Math.min(window.innerWidth, window.innerHeight) * 0.62);
+}
+// ====================================================================
+
+
 const LPM_COURSE_NAMES = ['Emergency First Aid at Work - 1 Day', 'First Aid at Work - 3 Day'];
 const LPM_LOCATIONS = LICENCE.locations.slice();
 // Course "family" — governs which tabs, skills grid and pack contents a course gets
 function lpmCourseKind(course) {
   const n = ((course || lpmCourse || {}).courseName || '').trim().toUpperCase();
+  if (n.startsWith('EMERGENCY FIRST AID') || n.startsWith('FIRST AID AT WORK')) return 'acf';
   if (n.startsWith('BLS')) return 'bls';
   if (n.startsWith('ILS')) return 'ils';
   if (n.startsWith('DENTAL') || n.startsWith('GP') || n.startsWith('HEALTH AND SAFETY')) return 'basic';   // tabs set once their documents are added
@@ -9238,6 +9829,7 @@ function lpmCourseKind(course) {
 function lpmHiddenSteps(course) {
   const kind = lpmCourseKind(course);
   if (kind === 'bls' || kind === 'basic') return ['skills', 'sessions', 'theory', 'overview'];
+  if (kind === 'acf') return ['sessions', 'overview'];
   if (kind === 'ils') return ['sessions', 'theory'];
   return [];
 }
@@ -9270,6 +9862,15 @@ function lpmTyped(sel, label, cur) {
 }
 const LPM_COURSE_LENGTH_DAYS = { 'Emergency First Aid at Work - 1 Day': 1, 'First Aid at Work - 3 Day': 3 };
 const LPM_HOURS_PER_DAY = 8;
+const LPM_DAY_HOURS = {
+  'Emergency First Aid at Work - 1 Day': [6],
+  'First Aid at Work - 3 Day': [4, 7, 7]
+};
+function lpmHoursForDays(courseName, days) {
+  const map = LPM_DAY_HOURS[courseName];
+  if (!map) return days.length * LPM_HOURS_PER_DAY;
+  return days.reduce((t, d) => t + (map[d - 1] != null ? map[d - 1] : LPM_HOURS_PER_DAY), 0);
+}
 
 function lpmOpt(list, current) {
   return '<option value="">Select…</option>' + list.map(v =>
@@ -9289,18 +9890,34 @@ function lpmRenderDetails() {
     </div>
     <div class="lpm-field-row">
       <div class="lpm-field">
-        <label>Course reference</label>
-        <input type="text" value="${lpmEsc(c.courseRef)}" placeholder="Internal reference" oninput="lpmSetDetail('courseRef', this.value)">
+        <label>Course number</label>
+        <input type="text" value="${lpmEsc(c.courseRef)}" placeholder="Course number" oninput="lpmSetDetail('courseRef', this.value)">
       </div>
       <div class="lpm-field">
         <label>Training location</label>
-        <select onchange="{ const v = lpmTyped(this, 'Type the training location', ${lpmEsc(JSON.stringify(c.location || ''))}); if (v !== null) { lpmSetDetail('location', v); lpmRenderDetails(); } }">${lpmOptType(LPM_LOCATIONS.concat(['Client location']), c.location, 'Other — type a location…')}</select>
-        ${c.location === 'Client location' ? `<textarea rows="3" style="margin-top:8px;" placeholder="Client name and full address, including postcode" oninput="lpmSetDetail('clientAddress', this.value)">${lpmEsc(c.clientAddress || '')}</textarea>` : ''}
+        <input type="text" value="${lpmEsc(c.location || '')}" placeholder="Where the course is being run"
+          oninput="lpmSetDetail('location', this.value)">
       </div>
     </div>
-    <div class="lpm-field">
-      <label>Course start date</label>
-      <input type="date" id="lpmStartDateInput" value="${c.startDate||''}" oninput="lpmSetDetail('startDate', this.value); lpmApplyCourseLength();">
+    <div class="lpm-field-row">
+      <div class="lpm-field">
+        <label>Course start date</label>
+        <input type="date" id="lpmStartDateInput" value="${c.startDate||''}" oninput="lpmSetDetail('startDate', this.value); lpmApplyCourseLength(); lpmRenderDetails();">
+      </div>
+      <div class="lpm-field">
+        <label>Course end date</label>
+        <input type="date" value="${c.endDate||''}" min="${c.startDate||''}" oninput="lpmSetDetail('endDate', this.value); lpmRenderDetails();">
+      </div>
+    </div>
+    <div class="lpm-field-row">
+      <div class="lpm-field">
+        <label>Start time</label>
+        <input type="time" value="${lpmEsc(c.startTime||'')}" oninput="lpmSetDetail('startTime', this.value)">
+      </div>
+      <div class="lpm-field">
+        <label>Finish time</label>
+        <input type="time" value="${lpmEsc(c.finishTime||'')}" oninput="lpmSetDetail('finishTime', this.value)">
+      </div>
     </div>
     <p id="lpmDateNote" style="font-size:0.8rem;color:#6B7A94;margin:-8px 0 16px;">${lpmCourseLengthNote(c)}</p>
     <div class="lpm-field-row">
@@ -9321,8 +9938,27 @@ function lpmRenderDetails() {
         </div>`).join('')}
       <button class="lpm-more-btn rn-no-print" onclick="lpmAddExtraInstructor()">+ More instructors</button>
     </div>
+    <div class="lpm-field-row">
+      <div class="lpm-field">
+        <label>Trainer number &mdash; instructor 1</label>
+        <input type="text" value="${lpmEsc(c.trainerNo1 || acfMyTrainerNo())}" placeholder="From My Profile"
+          oninput="lpmSetDetail('trainerNo1', this.value)">
+      </div>
+      <div class="lpm-field">
+        <label>Trainer number &mdash; instructor 2</label>
+        <input type="text" value="${lpmEsc(c.trainerNo2 || '')}" placeholder="Trainer number"
+          oninput="lpmSetDetail('trainerNo2', this.value)">
+      </div>
+    </div>
     ${lpmInstructorDaysHTML(c)}
   `;
+}
+
+function acfMyTrainerNo() {
+  try { return (JSON.parse(localStorage.getItem('dtc_trainer_no') || '""') || ''); } catch (e) { return ''; }
+}
+function acfSetMyTrainerNo(v) {
+  try { localStorage.setItem('dtc_trainer_no', JSON.stringify((v || '').trim())); } catch (e) {}
 }
 
 // Which days each instructor taught — drives their CPD hours
@@ -11652,7 +12288,7 @@ function cpdAuto(who) {
     const taught = lpmDaysFor(c, who);
     if (!taught.length) return;
     const learners = (c.learners || []).filter(l => (l.name || '').trim()).length;
-    out.push({ auto:true, date: c.startDate || '', type:'Teaching / delivery', hours: taught.length * LPM_HOURS_PER_DAY,
+    out.push({ auto:true, date: c.startDate || '', type:'Teaching / delivery', hours: lpmHoursForDays(c.courseName, taught),
       title: (c.courseName || 'Course') + (c.location ? ' — ' + c.location : ''),
       detail: (taught.length === days ? 'Full course' : 'Day' + (taught.length > 1 ? 's ' : ' ') + taught.join(', ')) + ' · ' + learners + ' learner' + (learners === 1 ? '' : 's') + (team.length > 1 ? ', co-delivered with ' + team.filter(t => t !== who).join(', ') : '') });
     const assessed = (c.records || []).length + ((c.linkedSessionIds || []).length);
@@ -14770,6 +15406,8 @@ function pfRender() {
       <div class="jb-form">
         <label>Full name<input id="pfName" value="${lpmEsc(name)}" autocomplete="name"></label>
         <label>Mobile<input id="pfPhone" value="${v('phone')}" inputmode="tel" autocomplete="tel"></label>
+        <label>Trainer number<input id="pfTrainerNo" value="${lpmEsc(acfMyTrainerNo())}"
+          placeholder="Used on course paperwork" oninput="acfSetMyTrainerNo(this.value)"></label>
       </div></div>
 
     ${P.role === 'learner' ? '' : `<div class="pf-sec"><h3>My CV</h3><p class="sc-p" style="margin:0;">Upload your latest CV (PDF or Word, up to 10 MB). Only you and your centre admin can see it.</p>
