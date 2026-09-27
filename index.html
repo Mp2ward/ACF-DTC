@@ -2050,8 +2050,18 @@ function fmtD(v) {
     .hub-tiles { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px !important; }
     .hub-tile { min-height:150px; padding:16px !important; gap:14px !important; border-radius:18px !important; }
     .hub-tile .hub-ic { width:46px !important; height:46px !important; border-radius:14px !important; }
-    .hub-tile .hub-title { font-size:1.12rem !important; }
+    .hub-tile .hub-title { font-size:1.02rem !important; line-height:1.2 !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto; }
+    .hub-tile .hub-text { width:100%; min-width:0; }
+    .hub-tile .hub-title .kc-soon-badge { display:table; margin:6px 0 0; }
     .hub-tile .hub-sub { display:none; }
+    .rn-pick-tag { font-size:0.62rem !important; line-height:1.3; }
+  }
+  /* iPhone: stop Safari resizing text on rotate, and keep long words inside their boxes */
+  html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  @media (max-width:600px) {
+    .sc-p, .hub-p, .nb-body, .nb-title, .lpm-course-name, .rn-head-sub, td, th { overflow-wrap:anywhere; }
+    .rn-steps { -webkit-overflow-scrolling:touch; }
+    input, select, textarea { font-size:16px; }   /* stops iOS zooming into fields */
   }
 </style>
 </head>
@@ -14334,7 +14344,7 @@ function jbRenderHub() {
   const offered = mine.filter(j => j.status === 'offered').length;
   const month = mine.filter(j => j.status === 'confirmed' && jbInMonth(j, ym)).length;
   const s = document.getElementById('hubMyJobsSub');
-  if (s) s.textContent = (offered ? offered + ' new job' + (offered === 1 ? '' : 's') + ' to confirm · ' : '') + month + ' confirmed this month';
+  if (s) s.textContent = (typeof nb !== 'undefined' && nbUnread() ? nbUnread() + ' new notice' + (nbUnread() === 1 ? '' : 's') + ' · ' : '') + (offered ? offered + ' new job' + (offered === 1 ? '' : 's') + ' to confirm · ' : '') + month + ' confirmed this month';
   try { stTodayRender(); stSyncRail(); } catch (e) {}
   const as = document.getElementById('hubJobsSub');
   if (as && jbIsAdmin()) {
@@ -14728,6 +14738,8 @@ function jbRenderMine() {
     <div class="hub-h" style="margin-bottom:4px;">My Schedule</div>
     <p class="sc-p">Jobs your centre has offered you. Confirmed courses appear on your Course Matrix automatically, ready to run and submit.</p>`;
   if (!jbSignedIn()) { root.innerHTML = html + '<p class="jb-empty">Sign in to see your schedule.</p>'; return; }
+  html += `<div class="nb" id="nbBoard">${nbHTML()}</div>`;
+  if (!nb.loaded && !nb.loading && !nb.err) setTimeout(nbLoad, 0);
   if (jb.err) html += `<p class="jb-msg" style="color:#C74444;">${lpmEsc(jb.err)}</p>`;
   if (offered.length) {
     html += `<div class="sc-h2">Needs your reply (${offered.length})</div>` + offered.map(jbMineCard).join('');
@@ -18293,6 +18305,242 @@ function acfFbRenderForm() {
       <button class="rn-nav-btn" onclick="fbCancel()">Cancel</button>
       ${fbList().some(x => x.id === f.id) ? '<button class="rn-nav-btn" onclick="fbDelete()">Delete</button>' : ''}
     </div></div>`;
+}
+
+</script>
+<script>
+// =====================================================================
+// NOTICE BOARD — on My Schedule. Admins post; everyone reads, reacts,
+// marks as read and comments. Tables: supabase_notices.sql
+// =====================================================================
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `
+  .nb{margin:18px 0 26px}
+  .nb-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .nb-head h3{margin:0;font-size:1.1rem;color:#0D1B4C;display:flex;align-items:center;gap:8px}
+  .nb-new{background:#2B5BD7;color:#fff;border-radius:999px;font-size:.7rem;font-weight:800;padding:2px 9px}
+  .nb-head .rn-nav-btn{margin-left:auto}
+  .nb-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .nb-f{border:1px solid #D8DEE8;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:.78rem;font-weight:700;color:#0D1B4C;cursor:pointer}
+  .nb-f.on{background:#0D1B4C;color:#fff;border-color:#0D1B4C}
+  .nb-card{position:relative;background:#fff;border:1px solid #D8DEE8;border-left:5px solid #2B5BD7;border-radius:14px;padding:14px 16px;margin-bottom:12px;transition:box-shadow .2s}
+  .nb-card.important{border-left-color:#D98A00}.nb-card.urgent{border-left-color:#C74444}
+  .nb-card.unread{box-shadow:0 10px 26px -18px rgba(43,91,215,.9)}
+  .nb-card.expired{opacity:.6}
+  .nb-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.72rem;color:#6B7A94;margin-bottom:6px}
+  .nb-tag{font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:2px 7px;font-size:.66rem}
+  .nb-tag.info{background:#EAF1FD;color:#2B5BD7}.nb-tag.important{background:#FFF1DB;color:#8A5200}.nb-tag.urgent{background:#FBE3E3;color:#B42318}
+  .nb-tag.pin{background:#0D1B4C;color:#fff}.nb-tag.newdot{background:#2B5BD7;color:#fff}
+  .nb-title{font-size:1rem;font-weight:800;color:#0D1B4C;margin:0 0 4px}
+  .nb-body{font-size:.9rem;color:#25323b;white-space:pre-wrap;line-height:1.5}
+  .nb-body a{color:#2B5BD7}
+  .nb-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .nb-re{border:1px solid #D8DEE8;background:#fff;border-radius:999px;padding:4px 10px;font:inherit;font-size:.85rem;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:transform .12s}
+  .nb-re:active{transform:scale(.92)}
+  .nb-re.on{background:#EAF1FD;border-color:#9DB8EE}
+  .nb-re b{font-size:.75rem;color:#0D1B4C}
+  .nb-ack{margin-left:auto;border:0;border-radius:999px;padding:7px 14px;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer;background:#2B5BD7;color:#fff}
+  .nb-ack.done{background:#DDF1E8;color:#0F6E56}
+  .nb-link{background:none;border:0;padding:0;font:inherit;font-size:.78rem;font-weight:700;color:#2B5BD7;cursor:pointer}
+  .nb-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.78rem}
+  .nb-who{margin-top:8px;font-size:.78rem;color:#25323b;background:#F5F7FB;border-radius:8px;padding:8px 10px}
+  .nb-comments{margin-top:10px;border-top:1px solid #EEF1F6;padding-top:10px}
+  .nb-c{font-size:.84rem;margin-bottom:8px}.nb-c b{color:#0D1B4C}.nb-c span{color:#6B7A94;font-size:.72rem;margin-left:6px}
+  .nb-crow{display:flex;gap:8px;margin-top:6px}
+  .nb-crow input{flex:1;border:1px solid #D8DEE8;border-radius:9px;padding:9px 11px;font:inherit;font-size:.88rem}
+  .nb-admin{position:absolute;top:10px;right:10px;display:flex;gap:4px}
+  .nb-admin button{border:1px solid #D8DEE8;background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.8rem}
+  .nb-form{background:#F5F7FB;border:1px solid #D8DEE8;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .nb-form label{display:block;font-size:.76rem;font-weight:700;color:#0D1B4C;margin:10px 0 4px}
+  .nb-form input,.nb-form textarea,.nb-form select{width:100%;border:1px solid #CBD5DF;border-radius:9px;padding:9px 11px;font:inherit;font-size:.9rem;background:#fff}
+  .nb-form .row{display:flex;gap:10px;flex-wrap:wrap}.nb-form .row>*{flex:1;min-width:140px}
+  .nb-empty{font-size:.88rem;color:#6B7A94;background:#fff;border:1px dashed #D8DEE8;border-radius:14px;padding:18px;text-align:center}
+  .nb-card.pop{animation:nbPop .35s ease}@keyframes nbPop{0%{transform:scale(.98)}60%{transform:scale(1.01)}100%{transform:none}}`;
+  document.head.appendChild(st);
+})();
+
+const NB_EMOJI = ['👍', '❤️', '🎉', '👀'];
+let nb = { list: [], reacts: [], reads: [], comments: [], loaded: false, loading: false, err: '', filter: 'all', open: {}, who: {}, form: null, flash: '' };
+
+function nbMe() { return cloudMe(); }
+function nbMyName() { return (cloud.profile && cloud.profile.full_name) || ''; }
+function nbAdmin() { return typeof jbIsAdmin === 'function' && jbIsAdmin(); }
+function nbToday() { return isoLocal(); }
+function nbLive(n) { return !n.expires_on || n.expires_on >= nbToday(); }
+function nbIsRead(id) { return nb.reads.some(r => r.notice_id === id && r.user_id === nbMe()); }
+function nbVisible() {
+  return nb.list.filter(n => nbAdmin() || nbLive(n))
+    .sort((a, b) => (b.pinned - a.pinned) || ((b.priority === 'urgent') - (a.priority === 'urgent')) || (b.created_at || '').localeCompare(a.created_at || ''));
+}
+function nbUnread() { return nbVisible().filter(n => nbLive(n) && !nbIsRead(n.id)).length; }
+function nbAgo(t) {
+  const s = (Date.now() - new Date(t)) / 1000;
+  if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago';
+  if (s < 86400) return Math.floor(s / 3600) + ' h ago'; if (s < 604800) return Math.floor(s / 86400) + ' d ago';
+  return fmtD(String(t).slice(0, 10));
+}
+function nbLinkify(t) { return lpmEsc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+
+async function nbLoad() {
+  if (!jbSignedIn() || nb.loading) return;
+  nb.loading = true;
+  try {
+    const [list, reacts, reads, comments] = await Promise.all([
+      cloudRest('notices?select=*&order=created_at.desc&limit=100'),
+      cloudRest('notice_reactions?select=notice_id,user_id,emoji'),
+      cloudRest('notice_reads?select=notice_id,user_id,user_name,read_at'),
+      cloudRest('notice_comments?select=*&order=created_at')
+    ]);
+    Object.assign(nb, { list: list || [], reacts: reacts || [], reads: reads || [], comments: comments || [], loaded: true, err: '' });
+  } catch (e) {
+    nb.err = /notice|PGRST20|42P01|app_is_admin/.test(String(e.message)) ? 'The notice board needs one set-up step: run supabase_notices.sql in Supabase.' : 'Could not load notices. Check the connection.';
+  }
+  nb.loading = false;
+  nbRender();
+  try { jbRenderHub(); } catch (e) {}
+}
+
+function nbHTML() {
+  if (!jbSignedIn()) return '';
+  const admin = nbAdmin(), unread = nbUnread();
+  let list = nbVisible();
+  if (nb.filter === 'unread') list = list.filter(n => !nbIsRead(n.id));
+  if (nb.filter === 'pinned') list = list.filter(n => n.pinned);
+  let h = `<div class="nb-head"><h3>📌 Notice board ${unread ? `<span class="nb-new">${unread} new</span>` : ''}</h3>
+    ${admin ? `<button class="rn-nav-btn primary" onclick="nbOpenForm()">+ New notice</button>` : ''}</div>`;
+  if (nb.form) h += nbFormHTML();
+  if (nb.err) return h + `<div class="nb-empty">${lpmEsc(nb.err)}</div>`;
+  if (!nb.loaded) return h + `<div class="nb-empty">Loading notices…</div>`;
+  h += `<div class="nb-filters">${[['all', 'All'], ['unread', 'Unread'], ['pinned', 'Pinned']].map(([k, l]) =>
+    `<button class="nb-f ${nb.filter === k ? 'on' : ''}" onclick="nb.filter='${k}';nbRender()">${l}</button>`).join('')}</div>`;
+  if (!list.length) return h + `<div class="nb-empty">${nb.filter === 'unread' ? "You're all caught up." : admin ? 'No notices yet. Post the first one.' : 'No notices at the moment.'}</div>`;
+  return h + list.map(nbCardHTML).join('');
+}
+
+function nbCardHTML(n) {
+  const me = nbMe(), admin = nbAdmin(), read = nbIsRead(n.id), live = nbLive(n);
+  const reads = nb.reads.filter(r => r.notice_id === n.id);
+  const comments = nb.comments.filter(c => c.notice_id === n.id);
+  const react = e => { const rs = nb.reacts.filter(r => r.notice_id === n.id && r.emoji === e), mine = rs.some(r => r.user_id === me);
+    return `<button class="nb-re ${mine ? 'on' : ''}" onclick="nbReact('${n.id}','${e}')" aria-pressed="${mine}">${e}${rs.length ? `<b>${rs.length}</b>` : ''}</button>`; };
+  const open = nb.open[n.id], who = nb.who[n.id];
+  return `<div class="nb-card ${n.priority} ${read ? '' : 'unread'} ${live ? '' : 'expired'} ${nb.flash === n.id ? 'pop' : ''}" id="nb-${n.id}">
+    ${admin ? `<div class="nb-admin">
+      <button title="${n.pinned ? 'Unpin' : 'Pin to top'}" onclick="nbPin('${n.id}',${!n.pinned})">${n.pinned ? '📍' : '📌'}</button>
+      <button title="Edit" onclick="nbOpenForm('${n.id}')">✎</button>
+      <button title="Delete" onclick="nbDelete('${n.id}')">🗑</button></div>` : ''}
+    <div class="nb-top">
+      ${n.pinned ? '<span class="nb-tag pin">Pinned</span>' : ''}
+      <span class="nb-tag ${n.priority}">${n.priority === 'urgent' ? 'Urgent' : n.priority === 'important' ? 'Important' : 'Info'}</span>
+      ${!read && live ? '<span class="nb-tag newdot">New</span>' : ''}
+      ${!live ? '<span class="nb-tag info">Expired</span>' : ''}
+      <span>${lpmEsc(n.author_name || 'Admin')} · ${nbAgo(n.created_at)}${n.expires_on && live ? ' · until ' + fmtD(n.expires_on) : ''}</span>
+    </div>
+    <div class="nb-title" style="${admin ? 'padding-right:104px' : ''}">${lpmEsc(n.title)}</div>
+    <div class="nb-body">${nbLinkify(n.body || '')}</div>
+    <div class="nb-actions">
+      ${NB_EMOJI.map(react).join('')}
+      <button class="nb-ack ${read ? 'done' : ''}" onclick="nbToggleRead('${n.id}')">${read ? '✓ Read' : 'Got it'}</button>
+    </div>
+    <div class="nb-meta">
+      <button class="nb-link" onclick="nb.open['${n.id}']=!nb.open['${n.id}'];nbRender()">💬 ${comments.length ? comments.length + ' comment' + (comments.length === 1 ? '' : 's') : 'Comment'}</button>
+      ${admin ? `<button class="nb-link" onclick="nb.who['${n.id}']=!nb.who['${n.id}'];nbRender()">👁 Read by ${reads.length}</button>` : ''}
+    </div>
+    ${admin && who ? `<div class="nb-who">${reads.length ? reads.map(r => `${lpmEsc(r.user_name || 'Instructor')} <span style="color:#6B7A94">(${nbAgo(r.read_at)})</span>`).join(' · ') : 'Nobody has marked this as read yet.'}</div>` : ''}
+    ${open ? `<div class="nb-comments">
+      ${comments.map(c => `<div class="nb-c"><b>${lpmEsc(c.user_name || 'Instructor')}</b><span>${nbAgo(c.created_at)}</span>
+        ${c.user_id === me || admin ? `<button class="nb-link" style="margin-left:8px;color:#C74444" onclick="nbDelComment('${c.id}')">Delete</button>` : ''}
+        <div>${nbLinkify(c.body)}</div></div>`).join('') || '<div class="nb-c" style="color:#6B7A94">No comments yet.</div>'}
+      <div class="nb-crow"><input id="nbc-${n.id}" maxlength="1000" placeholder="Write a comment…" onkeydown="if(event.key==='Enter')nbComment('${n.id}')">
+        <button class="rn-nav-btn primary" onclick="nbComment('${n.id}')">Post</button></div>
+    </div>` : ''}
+  </div>`;
+}
+
+function nbFormHTML() {
+  const f = nb.form;
+  return `<div class="nb-form">
+    <div class="sc-h2" style="margin-top:0;">${f.id ? 'Edit notice' : 'New notice'}</div>
+    <label>Title</label><input id="nbfT" maxlength="120" value="${lpmEsc(f.title || '')}" placeholder="e.g. First aid kits to be checked by Friday">
+    <label>Message</label><textarea id="nbfB" rows="4" placeholder="Links are clickable.">${lpmEsc(f.body || '')}</textarea>
+    <div class="row">
+      <div><label>Priority</label><select id="nbfP">${[['info', 'Info'], ['important', 'Important'], ['urgent', 'Urgent']].map(([v, l]) => `<option value="${v}" ${f.priority === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div><label>Show until <span style="font-weight:500;color:#6B7A94">(optional)</span></label><input type="date" id="nbfE" value="${f.expires_on || ''}"></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="nbfPin" ${f.pinned ? 'checked' : ''} style="width:auto"> Pin to the top</label>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <button class="rn-nav-btn primary" onclick="nbSave()">${f.id ? 'Save changes' : 'Post notice'}</button>
+      <button class="rn-nav-btn" onclick="nb.form=null;nbRender()">Cancel</button>
+      <span id="nbfMsg" style="font-size:.82rem;color:#C74444;align-self:center"></span>
+    </div></div>`;
+}
+
+function nbRender() {
+  const el = document.getElementById('nbBoard');
+  if (el) el.innerHTML = nbHTML();
+  nb.flash = '';
+}
+function nbOpenForm(id) {
+  const n = id ? nb.list.find(x => x.id === id) : null;
+  nb.form = n ? Object.assign({}, n) : { priority: 'info', pinned: false };
+  nbRender();
+  const t = document.getElementById('nbfT'); if (t) t.focus();
+}
+async function nbSave() {
+  const v = id => document.getElementById(id);
+  const row = { title: v('nbfT').value.trim(), body: v('nbfB').value.trim(), priority: v('nbfP').value,
+    pinned: v('nbfPin').checked, expires_on: v('nbfE').value || null, updated_at: new Date().toISOString() };
+  const msg = v('nbfMsg');
+  if (!row.title) { msg.textContent = 'Give the notice a title.'; return; }
+  msg.style.color = '#6B7A94'; msg.textContent = 'Saving…';
+  try {
+    if (nb.form.id) await cloudRest('notices?id=eq.' + nb.form.id, 'PATCH', row, 'return=minimal');
+    else await cloudRest('notices', 'POST', [Object.assign(row, { author_name: nbMyName() })], 'return=minimal');
+    nb.form = null; await nbLoad();
+  } catch (e) { msg.style.color = '#C74444'; msg.textContent = /row-level|permission|403/.test(String(e.message)) ? 'Only admins can post notices.' : 'Could not save. ' + (e.message || ''); }
+}
+async function nbDelete(id) {
+  if (!confirm('Delete this notice for everyone?')) return;
+  try { await cloudRest('notices?id=eq.' + id, 'DELETE', null, 'return=minimal'); nb.list = nb.list.filter(n => n.id !== id); nbRender(); } catch (e) { alert('Could not delete the notice.'); }
+}
+async function nbPin(id, on) {
+  const n = nb.list.find(x => x.id === id); if (!n) return;
+  n.pinned = on; nb.flash = id; nbRender();
+  try { await cloudRest('notices?id=eq.' + id, 'PATCH', { pinned: on }, 'return=minimal'); } catch (e) { n.pinned = !on; nbRender(); }
+}
+// Optimistic: update on screen first, then the server
+async function nbReact(id, emoji) {
+  const me = nbMe(), i = nb.reacts.findIndex(r => r.notice_id === id && r.user_id === me && r.emoji === emoji);
+  const had = i >= 0;
+  if (had) nb.reacts.splice(i, 1); else nb.reacts.push({ notice_id: id, user_id: me, emoji });
+  nbRender();
+  try {
+    if (had) await cloudRest('notice_reactions?notice_id=eq.' + id + '&user_id=eq.' + me + '&emoji=eq.' + encodeURIComponent(emoji), 'DELETE', null, 'return=minimal');
+    else await cloudRest('notice_reactions', 'POST', [{ notice_id: id, user_id: me, emoji }], 'return=minimal');
+  } catch (e) { await nbLoad(); }
+}
+async function nbToggleRead(id) {
+  const me = nbMe(), had = nbIsRead(id);
+  if (had) nb.reads = nb.reads.filter(r => !(r.notice_id === id && r.user_id === me));
+  else { nb.reads.push({ notice_id: id, user_id: me, user_name: nbMyName(), read_at: new Date().toISOString() }); nb.flash = id; }
+  nbRender(); try { jbRenderHub(); } catch (e) {}
+  try {
+    if (had) await cloudRest('notice_reads?notice_id=eq.' + id + '&user_id=eq.' + me, 'DELETE', null, 'return=minimal');
+    else await cloudRest('notice_reads', 'POST', [{ notice_id: id, user_id: me, user_name: nbMyName() }], 'return=minimal');
+  } catch (e) { await nbLoad(); }
+}
+async function nbComment(id) {
+  const box = document.getElementById('nbc-' + id), body = (box && box.value || '').trim();
+  if (!body) return;
+  const temp = { id: 'tmp' + Date.now(), notice_id: id, user_id: nbMe(), user_name: nbMyName(), body, created_at: new Date().toISOString() };
+  nb.comments.push(temp); nbRender();
+  try { await cloudRest('notice_comments', 'POST', [{ notice_id: id, user_id: nbMe(), user_name: nbMyName(), body }], 'return=minimal'); await nbLoad(); nb.open[id] = true; nbRender(); }
+  catch (e) { nb.comments = nb.comments.filter(c => c !== temp); nbRender(); alert('Could not post the comment.'); }
+}
+async function nbDelComment(cid) {
+  if (!confirm('Delete this comment?')) return;
+  try { await cloudRest('notice_comments?id=eq.' + cid, 'DELETE', null, 'return=minimal'); nb.comments = nb.comments.filter(c => c.id !== cid); nbRender(); } catch (e) { alert('Could not delete the comment.'); }
 }
 
 </script>
