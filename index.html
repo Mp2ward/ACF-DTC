@@ -3430,6 +3430,11 @@ window.addEventListener('load', function () {
       <span class="hub-text"><span class="hub-title">Equipment</span><span class="hub-sub">Training kit, locations and service records</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
+    <button class="hub-tile" style="--accent:#00513F;--soft:#DDEFE8;" onclick="showView('beds')">
+      <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/></svg></span>
+      <span class="hub-text"><span class="hub-title">Bed Planner</span><span class="hub-sub">CTC Cherry Tree rooms, blocks and nominal roll</span></span>
+      <span class="hub-chev">&rsaquo;</span>
+    </button>
     <button class="hub-tile" style="--accent:#2446B8;--soft:#E3E8FA;" onclick="lmaOpen()">
       <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       <span class="hub-text"><span class="hub-title">LMS Overview</span><span class="hub-sub">Every learner and cohort at a glance</span></span>
@@ -3877,6 +3882,19 @@ window.addEventListener('load', function () {
       <span class="hub-chev">&rsaquo;</span>
     </button>
     </div>
+  </div>
+</div>
+
+<div class="app-view" id="view-beds">
+  <div class="rn-wrap" style="max-width:1400px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <button class="rn-nav-btn" onclick="showView('hub')">&larr; Home</button>
+      <a class="rn-nav-btn" href="bedplanner.html" target="_blank" rel="noopener" style="text-decoration:none">Open full screen</a>
+    </div>
+    <div class="hub-eyebrow">Management Panel</div>
+    <div class="hub-h" style="margin-bottom:4px;">Bed Planner</div>
+    <p class="sc-p">Plan CTC Cherry Tree accommodation: enter numbers or load a nominal roll, and the planner fills rooms by block and sex, then downloads the Excel bed plan.</p>
+    <iframe id="bedsFrame" title="CTC Cherry Tree bed planner" data-src="bedplanner.html" style="width:100%;height:calc(100vh - 230px);min-height:620px;border:1px solid #E3E8F0;border-radius:14px;background:#fff;margin-top:12px"></iframe>
   </div>
 </div>
 
@@ -5167,6 +5185,7 @@ function pauseAll() {
 <script>
 const MENU_ITEMS = [
   { g:'Management Panel', reviewer:true, items:[
+    { label:'Bed Planner', sub:'CTC Cherry Tree accommodation', go:"showView('beds')" },
     { label:'Course Admin', sub:'Search every course and course pack', go:"admOpenCourses()" },
     { label:'Instructor Admin', sub:"Instructors' courses and CPD", go:"admOpenInstructors()" },
     { label:'Job Scheduling', sub:'Jobs, timesheets and payments', go:"jbOpenAdmin()" } ] },
@@ -20542,6 +20561,12 @@ async function mcPdf(row, btn) {
   if (window.visualViewport) { visualViewport.addEventListener('resize', later); visualViewport.addEventListener('scroll', later); }
   window.addEventListener('scroll', later, { passive:true }); window.addEventListener('orientationchange', later);
 })();
+</script>
+<script>
+(function () { const go = window.showView; if (typeof go !== 'function') return;
+  window.showView = function (v) { const r = go.apply(this, arguments);
+    if (v === 'beds') { const f = document.getElementById('bedsFrame'); if (f && !f.src) f.src = f.dataset.src; }
+    return r; }; })();
 </script>
 </body>
 </html>
