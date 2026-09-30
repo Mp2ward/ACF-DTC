@@ -2999,6 +2999,7 @@ function fmtD(v) {
   .rg-grid small,.rg-needs small{display:block;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6B7A94}
   .rg-needs{margin-top:8px;background:#EAF1FD;border-radius:8px;padding:8px 10px;font-size:.86rem}
   .rg-sig{display:block;max-width:220px;max-height:70px;margin-top:8px;border-bottom:1px solid #D8DEE8}
+  @media (hover:none), (pointer:coarse) { .hub-tile:hover { transform:none !important; box-shadow:none !important; } .hub-tile:hover .hub-chev { transform:none; } }
 </style>
 
 <style id="studioTheme">
@@ -3317,12 +3318,13 @@ function fmtD(v) {
   @media (min-width:900px) {
     body.has-rail { padding-left:104px; }
     .st-rail { display:flex; position:fixed; left:0; top:0; bottom:0; width:104px; z-index:160; flex-direction:column; align-items:center; gap:4px; padding:16px 0; box-sizing:border-box;
-      background:#fff; border-right:1px solid var(--st-line); overflow-y:auto; }
+      background:#fff; border-right:1px solid var(--st-line); overflow-y:auto; -webkit-overflow-scrolling:touch;
+      transform:translate3d(0,0,0); -webkit-transform:translate3d(0,0,0); will-change:transform; }   /* keeps iPad Safari's tap/pointer position in line with the drawn menu */
     .st-logo { width:80px; height:80px; border-radius:14px; background:#fff; color:var(--st-ink); border:1px solid var(--st-line) !important; box-shadow:0 2px 8px rgba(22,32,61,0.06); display:flex; align-items:center; justify-content:center; font-weight:800; margin-bottom:14px; flex-shrink:0; overflow:hidden; border:0; cursor:pointer; font-family:'Public Sans',sans-serif; }
     .st-logo img { width:100%; height:100%; object-fit:contain; padding:3px; box-sizing:border-box; }
     .st-item { width:88px; min-height:62px; padding:8px 4px 7px; box-sizing:border-box; border-radius:14px; border:0; background:transparent; color:#4F586C; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; flex-shrink:0; font-family:'Public Sans',sans-serif; }
     .st-item span { font-size:10.5px; font-weight:600; line-height:1.15; text-align:center; }
-    .st-item:hover { background:#F1EEE6; color:var(--st-ink); }
+    @media (hover:hover) and (pointer:fine) { .st-item:hover:not(.on) { background:#F1EEE6; color:var(--st-ink); } }
     .st-item.on { background:var(--st-ink); color:#fff; }
     .st-item svg { width:23px; height:23px; }
     .st-sep { width:72px; height:1px; background:var(--st-line); margin:6px 0 2px; flex-shrink:0; }
@@ -3470,7 +3472,7 @@ window.addEventListener('load', function () {
     <div class="hub-tiles grp-instr">
     <button class="hub-tile" id="hubMyJobsTile" style="--accent:#8A5A00;--soft:#FFF0C9;display:none;" onclick="jbOpenMine()">
       <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h3M8 17.5h6"/></svg></span>
-      <span class="hub-text"><span class="hub-title">My Schedule</span><span class="hub-sub" id="hubMyJobsSub">Your jobs and courses by month</span></span>
+      <span class="hub-text"><span class="hub-title">Notice Board</span><span class="hub-sub" id="hubMyJobsSub">News and updates from the ACF National First Aid Team</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
     <button class="hub-tile" id="hubPayTile" style="--accent:#1F8A5B;--soft:#DDEFE6;display:none;" onclick="mpOpen()">
@@ -5174,7 +5176,7 @@ const MENU_ITEMS = [
     { label:'Knowledge Centre', sub:'QR pop quizzes', go:"showView('knowledge')" } ] },
 
   { g:'My Account', iqaHide:true, items:[
-    { label:'My Schedule', sub:'Your jobs by month', go:"jbOpenMine()" },
+    { label:'Notice Board', sub:'News from the National First Aid Team', go:"jbOpenMine()" },
     { label:'My Pay', sub:'Monthly totals, timesheets and invoices', go:"mpOpen()" },
     { label:'My CPD', sub:'Your teaching and learning record', go:"showView('cpd');cpdOpen()" },
     { label:'My Profile', sub:'Your details, payment details and password', go:"pfOpen()" } ] },
@@ -15688,6 +15690,9 @@ function jbRenderHub() {
   const pt = document.getElementById('hubProfileTile'); if (pt) pt.style.display = jbSignedIn() ? '' : 'none';
   const pyt = document.getElementById('hubPayTile'); if (pyt) pyt.style.display = jbSignedIn() ? '' : 'none';
   if (a) a.style.display = jbIsAdmin() ? '' : 'none';
+  if (!FEAT('jobs')) { const s = document.getElementById('hubMyJobsSub'), u = typeof nb !== 'undefined' ? nbUnread() : 0;
+    if (s) s.textContent = u ? u + ' new notice' + (u === 1 ? '' : 's') + ' from the National First Aid Team' : 'News and updates from the ACF National First Aid Team';
+    if (t) t.style.display = ''; return; }
   if (!jb.loaded) return;
   const me = cloudMe(), ym = isoLocal().slice(0, 7);
   const mine = jb.jobs.filter(j => j.instructor === me);
@@ -16071,6 +16076,7 @@ async function jbTimesheetPdf() {
 async function jbOpenMine() {
   showView('myjobs');
   jbRenderMine();
+  if (!FEAT('jobs')) { nbLoad(); return; }   // ACF: notice board only
   await jbLoad();
   if (jb.myPay === null) {
     try { const r = await cloudRest('pay_details?select=data&owner=eq.' + cloudMe()) || []; jb.myPay = r[0] ? r[0].data : {}; } catch (e) { jb.myPay = {}; }
@@ -16087,6 +16093,14 @@ function jbRenderMine() {
     <div class="hub-eyebrow" style="margin-top:14px;">My Account</div>
     <div class="hub-h" style="margin-bottom:4px;">My Schedule</div>
     <p class="sc-p">Jobs your centre has offered you. Confirmed courses appear on your Course Matrix automatically, ready to run and submit.</p>`;
+  if (!FEAT('jobs')) {
+    html = `<button class="rn-nav-btn rn-no-print" onclick="showView('hub')">← Home</button>
+      <div class="hub-eyebrow" style="margin-top:14px;">My Account</div>
+      <div class="hub-h" style="margin-bottom:4px;">Notice Board</div>
+      <p class="sc-p">News and updates from the ACF National First Aid Team. React, mark as read and join the conversation.</p>
+      <div class="nb" id="nbBoard">${nbHTML()}</div>`;
+    root.innerHTML = html; nbAnimate(); return;
+  }
   if (!jbSignedIn()) { root.innerHTML = html + '<p class="jb-empty">Sign in to see your schedule.</p>'; return; }
   html += `<div class="nb" id="nbBoard">${nbHTML()}</div>`;
   if (!nb.loaded && !nb.loading && !nb.err) setTimeout(nbLoad, 0);
@@ -19722,11 +19736,30 @@ function acfFbRenderForm() {
   .nb-form input,.nb-form textarea,.nb-form select{width:100%;border:1px solid #CBD5DF;border-radius:9px;padding:9px 11px;font:inherit;font-size:.9rem;background:#fff}
   .nb-form .row{display:flex;gap:10px;flex-wrap:wrap}.nb-form .row>*{flex:1;min-width:140px}
   .nb-empty{font-size:.88rem;color:#6B7A94;background:#fff;border:1px dashed #D8DEE8;border-radius:14px;padding:18px;text-align:center}
-  .nb-card.pop{animation:nbPop .35s ease}@keyframes nbPop{0%{transform:scale(.98)}60%{transform:scale(1.01)}100%{transform:none}}`;
+  .nb-card.pop{animation:nbPop .35s ease}@keyframes nbPop{0%{transform:scale(.98)}60%{transform:scale(1.01)}100%{transform:none}}
+  .nb-card.nb-in{opacity:0;animation:nbIn .6s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i,0) * 120ms + 80ms)}
+  @keyframes nbIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+  .nb-card.important,.nb-card.urgent{overflow:hidden}
+  .nb-card.important::after,.nb-card.urgent::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-100%);animation:nbShine 5s ease-in-out 1.2s infinite}
+  @keyframes nbShine{0%,70%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .nb-tag.newdot{animation:nbPulse 1.6s ease-in-out infinite}
+  @keyframes nbPulse{0%,100%{box-shadow:0 0 0 0 rgba(43,91,215,.55)}50%{box-shadow:0 0 0 6px rgba(43,91,215,0)}}
+  .nb-tag.pin{display:inline-block;animation:nbSwing 2.4s ease-in-out 1s 2}
+  @keyframes nbSwing{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+  .nb-re.on{animation:nbBounce .4s ease}@keyframes nbBounce{40%{transform:scale(1.2)}}
+  .nb-head h3{animation:nbIn .5s ease both}
+  @media (prefers-reduced-motion:reduce){.nb-card.nb-in,.nb-card.important::after,.nb-card.urgent::after,.nb-tag.newdot,.nb-tag.pin,.nb-re.on,.nb-head h3{animation:none;opacity:1}}`;
   document.head.appendChild(st);
 })();
 
 const NB_EMOJI = ['👍', '❤️', '🎉', '👀'];
+// Standing notices from the ACF National First Aid Team (shown alongside anything admins post)
+const NB_EXAMPLES = [
+  { id:'ex-compliance', ex:true, title:'Course compliance is now 99%', body:'Course compliance is now 99% – thank you to all first aid instructors for your hard work.', priority:'important', pinned:true,
+    author_name:'Amanda · ACF National First Aid Lead', created_at:'2026-09-28T09:00:00Z' },
+  { id:'ex-exams', ex:true, title:'New exams live from January 2027', body:'New exams are live as of January 2027. There is nothing you need to do – the app will automatically display the correct exams.\n\nThank you – Jen', priority:'info', pinned:false,
+    author_name:'Jen · ACF National First Aid Team', created_at:'2026-09-29T09:00:00Z' }
+];
 let nb = { list: [], reacts: [], reads: [], comments: [], loaded: false, loading: false, err: '', filter: 'all', open: {}, who: {}, form: null, flash: '' };
 
 function nbMe() { return cloudMe(); }
@@ -19734,9 +19767,10 @@ function nbMyName() { return (cloud.profile && cloud.profile.full_name) || ''; }
 function nbAdmin() { return typeof jbIsAdmin === 'function' && jbIsAdmin(); }
 function nbToday() { return isoLocal(); }
 function nbLive(n) { return !n.expires_on || n.expires_on >= nbToday(); }
-function nbIsRead(id) { return nb.reads.some(r => r.notice_id === id && r.user_id === nbMe()); }
+function nbIsRead(id) { if (String(id).startsWith('ex-')) return !!(nbExLocal()[id] || {}).read; return nb.reads.some(r => r.notice_id === id && r.user_id === nbMe()); }
+function nbExLocal() { try { return JSON.parse(localStorage.getItem('nb_ex') || '{}'); } catch (e) { return {}; } }
 function nbVisible() {
-  return nb.list.filter(n => nbAdmin() || nbLive(n))
+  return nb.list.concat(NB_EXAMPLES.filter(e => !nb.list.some(n => n.title === e.title))).filter(n => nbAdmin() || nbLive(n))
     .sort((a, b) => (b.pinned - a.pinned) || ((b.priority === 'urgent') - (a.priority === 'urgent')) || (b.created_at || '').localeCompare(a.created_at || ''));
 }
 function nbUnread() { return nbVisible().filter(n => nbLive(n) && !nbIsRead(n.id)).length; }
@@ -19773,25 +19807,24 @@ function nbHTML() {
   let list = nbVisible();
   if (nb.filter === 'unread') list = list.filter(n => !nbIsRead(n.id));
   if (nb.filter === 'pinned') list = list.filter(n => n.pinned);
-  let h = `<div class="nb-head"><h3>📌 Notice board ${unread ? `<span class="nb-new">${unread} new</span>` : ''}</h3>
+  let h = `<div class="nb-head"><h3>📌 Latest notices ${unread ? `<span class="nb-new">${unread} new</span>` : ''}</h3>
     ${admin ? `<button class="rn-nav-btn primary" onclick="nbOpenForm()">+ New notice</button>` : ''}</div>`;
   if (nb.form) h += nbFormHTML();
-  if (nb.err) return h + `<div class="nb-empty">${lpmEsc(nb.err)}</div>`;
-  if (!nb.loaded) return h + `<div class="nb-empty">Loading notices…</div>`;
+  if (nb.err && admin) h += `<div class="nb-empty" style="margin-bottom:12px">${lpmEsc(nb.err)}</div>`;
   h += `<div class="nb-filters">${[['all', 'All'], ['unread', 'Unread'], ['pinned', 'Pinned']].map(([k, l]) =>
     `<button class="nb-f ${nb.filter === k ? 'on' : ''}" onclick="nb.filter='${k}';nbRender()">${l}</button>`).join('')}</div>`;
   if (!list.length) return h + `<div class="nb-empty">${nb.filter === 'unread' ? "You're all caught up." : admin ? 'No notices yet. Post the first one.' : 'No notices at the moment.'}</div>`;
-  return h + list.map(nbCardHTML).join('');
+  return h + list.map((n, i) => nbCardHTML(n, i)).join('');
 }
 
-function nbCardHTML(n) {
-  const me = nbMe(), admin = nbAdmin(), read = nbIsRead(n.id), live = nbLive(n);
+function nbCardHTML(n, idx) {
+  const me = nbMe(), admin = nbAdmin() && !n.ex, read = nbIsRead(n.id), live = nbLive(n), exl = n.ex ? (nbExLocal()[n.id] || {}) : null;
   const reads = nb.reads.filter(r => r.notice_id === n.id);
   const comments = nb.comments.filter(c => c.notice_id === n.id);
-  const react = e => { const rs = nb.reacts.filter(r => r.notice_id === n.id && r.emoji === e), mine = rs.some(r => r.user_id === me);
+  const react = e => { const rs = n.ex ? (exl.r || []).filter(x => x === e).map(() => ({ user_id: me })) : nb.reacts.filter(r => r.notice_id === n.id && r.emoji === e), mine = rs.some(r => r.user_id === me);
     return `<button class="nb-re ${mine ? 'on' : ''}" onclick="nbReact('${n.id}','${e}')" aria-pressed="${mine}">${e}${rs.length ? `<b>${rs.length}</b>` : ''}</button>`; };
   const open = nb.open[n.id], who = nb.who[n.id];
-  return `<div class="nb-card ${n.priority} ${read ? '' : 'unread'} ${live ? '' : 'expired'} ${nb.flash === n.id ? 'pop' : ''}" id="nb-${n.id}">
+  return `<div class="nb-card ${n.priority} ${read ? '' : 'unread'} ${live ? '' : 'expired'} ${nb.flash === n.id ? 'pop' : ''} ${nb.animated ? '' : 'nb-in'}" style="--i:${idx || 0}" id="nb-${n.id}">
     ${admin ? `<div class="nb-admin">
       <button title="${n.pinned ? 'Unpin' : 'Pin to top'}" onclick="nbPin('${n.id}',${!n.pinned})">${n.pinned ? '📍' : '📌'}</button>
       <button title="Edit" onclick="nbOpenForm('${n.id}')">✎</button>
@@ -19845,8 +19878,9 @@ function nbFormHTML() {
 function nbRender() {
   const el = document.getElementById('nbBoard');
   if (el) el.innerHTML = nbHTML();
-  nb.flash = '';
+  nb.flash = ''; nbAnimate();
 }
+function nbAnimate() { if (!nb.animated && document.querySelector('#nbBoard .nb-card')) setTimeout(() => { nb.animated = true; }, 1200); }
 function nbOpenForm(id) {
   const n = id ? nb.list.find(x => x.id === id) : null;
   nb.form = n ? Object.assign({}, n) : { priority: 'info', pinned: false };
@@ -19876,7 +19910,9 @@ async function nbPin(id, on) {
   try { await cloudRest('notices?id=eq.' + id, 'PATCH', { pinned: on }, 'return=minimal'); } catch (e) { n.pinned = !on; nbRender(); }
 }
 // Optimistic: update on screen first, then the server
+function nbExSet(id, f) { const all = nbExLocal(), cur = all[id] || { r: [] }; f(cur); all[id] = cur; try { localStorage.setItem('nb_ex', JSON.stringify(all)); } catch (e) {} }
 async function nbReact(id, emoji) {
+  if (String(id).startsWith('ex-')) { nbExSet(id, c => { c.r = c.r || []; c.r = c.r.includes(emoji) ? c.r.filter(x => x !== emoji) : c.r.concat(emoji); }); nb.flash = id; nbRender(); return; }
   const me = nbMe(), i = nb.reacts.findIndex(r => r.notice_id === id && r.user_id === me && r.emoji === emoji);
   const had = i >= 0;
   if (had) nb.reacts.splice(i, 1); else nb.reacts.push({ notice_id: id, user_id: me, emoji });
@@ -19887,6 +19923,7 @@ async function nbReact(id, emoji) {
   } catch (e) { await nbLoad(); }
 }
 async function nbToggleRead(id) {
+  if (String(id).startsWith('ex-')) { nbExSet(id, c => { c.read = !c.read; }); nb.flash = id; nbRender(); try { jbRenderHub(); } catch (e) {} return; }
   const me = nbMe(), had = nbIsRead(id);
   if (had) nb.reads = nb.reads.filter(r => !(r.notice_id === id && r.user_id === me));
   else { nb.reads.push({ notice_id: id, user_id: me, user_name: nbMyName(), read_at: new Date().toISOString() }); nb.flash = id; }
@@ -19897,6 +19934,7 @@ async function nbToggleRead(id) {
   } catch (e) { await nbLoad(); }
 }
 async function nbComment(id) {
+  if (String(id).startsWith('ex-')) { alert('Comments on National First Aid Team notices are switched off.'); return; }
   const box = document.getElementById('nbc-' + id), body = (box && box.value || '').trim();
   if (!body) return;
   const temp = { id: 'tmp' + Date.now(), notice_id: id, user_id: nbMe(), user_name: nbMyName(), body, created_at: new Date().toISOString() };
@@ -20496,6 +20534,14 @@ async function mcPdf(row, btn) {
   btn.disabled = false; btn.textContent = old;
 }
 
+</script>
+<script>
+(function () {
+  const nudge = () => { const r = document.getElementById('stRail'); if (!r) return; r.style.transform = 'translate3d(0,0,0.01px)'; requestAnimationFrame(() => { r.style.transform = ''; }); };
+  let t; const later = () => { clearTimeout(t); t = setTimeout(nudge, 120); };
+  if (window.visualViewport) { visualViewport.addEventListener('resize', later); visualViewport.addEventListener('scroll', later); }
+  window.addEventListener('scroll', later, { passive:true }); window.addEventListener('orientationchange', later);
+})();
 </script>
 </body>
 </html>
