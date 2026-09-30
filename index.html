@@ -4303,38 +4303,43 @@ function calcVolume(soundVol, master) {
 }
 
 function makeRealAudio(sound, vol) {
+  // Played through Web Audio so the volume sliders work on iPhone and iPad too
+  // (iOS ignores audio.volume on its own).
   const audio = new Audio();
-  audio.loop = true;
-  audio.preload = 'auto';
-  const v = calcVolume(vol, masterVolumeLevel);
-  audio.volume = v;
-  audio.muted = (v === 0);
+  audio.loop = true; audio.preload = 'auto'; audio.crossOrigin = 'anonymous';
+  let gainNode = null, stopped = false;
+  try {
+    const srcNode = audioCtx.createMediaElementSource(audio);
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = Math.max(0, Math.min(vol, 1));
+    srcNode.connect(gainNode); gainNode.connect(masterGain);
+  } catch (e) { gainNode = null; audio.volume = calcVolume(vol, masterVolumeLevel); }
 
-  // If the hosted file fails, try a copy next to this app (same repo), then fall back to a tone
+  // If a copy won't load, try the next one; only fall back to a tone when every copy fails
   const fileName = String(sound.url || '').split('/').pop();
-  const tries = SOUND_MIRRORS.map(b => b + fileName);
+  const tries = SOUND_MIRRORS.map(b => b + fileName).filter(Boolean);
   audio.onerror = () => {
-    const next = fileName && tries.shift();
-    if (next !== undefined && next) {
-      console.warn('[SS] Sound failed, trying:', next);
-      audio.src = next;
-      audio.play().catch(() => {});
-      return;
-    }
+    if (stopped) return;                              // stopping clears the source – that isn't a failure
+    const next = tries.shift();
+    if (next) { console.warn('[SS] Sound failed, trying:', next); audio.src = next; audio.play().catch(() => {}); return; }
     console.warn('[SS] File not found, using oscillator:', sound.url);
-    if (activeNodes[sound.id] && activeNodes[sound.id].isReal) {
-      activeNodes[sound.id].stop();
-      const fallback = makeOscillator({...sound, freq: sound.freq || 220, type: sound.type || 'sine'}, vol);
-      activeNodes[sound.id] = fallback;
+    if (activeNodes[sound.id] && activeNodes[sound.id].audio === audio) {
+      node.stop();
+      activeNodes[sound.id] = makeOscillator({ ...sound, freq: sound.freq || 220, type: sound.type || 'sine' }, soundVolumes[sound.id] ?? vol);
     }
   };
-
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   audio.src = sound.url;
   audio.play().catch(err => console.warn('[SS]', sound.id, err));
-  return {
-    audio, gainNode: null, isReal: true,
-    stop: () => { try { audio.pause(); audio.src = ''; } catch(e){} }
+  const node = {
+    audio, gainNode, isReal: true,
+    stop: () => {
+      stopped = true;
+      try { audio.onerror = null; audio.pause(); audio.removeAttribute('src'); audio.load(); } catch (e) {}
+      try { if (gainNode) gainNode.disconnect(); } catch (e) {}
+    }
   };
+  return node;
 }
 
 function makeOscillator(sound, vol) {
@@ -4343,7 +4348,7 @@ function makeOscillator(sound, vol) {
   osc.type = sound.type || 'sine';
   osc.frequency.value = sound.freq || 220;
   const base = sound.pulse ? 0.08 : 0.12;
-  const v = calcVolume(vol, masterVolumeLevel);
+  const v = Math.max(0, Math.min(vol, 1));   // the master slider is applied once, by masterGain
   gainNode.gain.value = base * v;
 
   if (sound.pulse) {
@@ -4366,10 +4371,10 @@ function applyVolume(id) {
   const node = activeNodes[id];
   if (!node) return;
   const sv = soundVolumes[id] ?? 0.8;
-  const v = calcVolume(sv, masterVolumeLevel);
+  const v = Math.max(0, Math.min(sv, 1));    // master volume is applied by masterGain
   if (node.isReal) {
-    node.audio.muted = (v === 0);
-    node.audio.volume = v;
+    if (node.gainNode) node.gainNode.gain.setTargetAtTime(v, audioCtx.currentTime, 0.02);
+    else { node.audio.volume = calcVolume(sv, masterVolumeLevel); node.audio.muted = calcVolume(sv, masterVolumeLevel) === 0; }
   } else {
     const sound = sounds.find(s => s.id === id);
     const base = sound && sound.pulse ? 0.08 : 0.12;
@@ -16446,12 +16451,14 @@ function qzTimeOpts() {
     `<button class="${k === qzTimeMode ? 'on' : ''}" onclick="qzSetTime('${k}')"><b>${QZ_TIMES[k].label}</b><span>${QZ_TIMES[k].sub}</span></button>`).join('')}</div></div>`;
 }
 // Sound files — hosted centrally at s3g.digitaltrainingcentre.app, shared across every customer's build.
-const QZ_SOUND_BASE = SOUND_BASE;   // quiz music lives in the SceneSounds repo too
+// Quiz music lives in the Sector 3 repo (Mp2ward/S3G.digitaltrainingcentre), served by jsDelivr; the s3g website is the backup.
+const QZ_SOUND_BASE = 'https://cdn.jsdelivr.net/gh/Mp2ward/S3G.digitaltrainingcentre@main/';
+const QZ_SOUND_BACKUP = 'https://s3g.digitaltrainingcentre.app/';
 const QZ_SOUNDS = {
   lobby:    QZ_SOUND_BASE + 'quiz-lobby.mp3',     // looping music in the lobby and between questions
   question: QZ_SOUND_BASE + 'quiz-question.mp3',  // looping, more intense music while a question is open
   join:     QZ_SOUND_BASE + 'quiz-join.mp3',      // pop when a learner joins
-  tick:     QZ_SOUND_BASE + 'quiz-tick.mp3',      // each of the last 5 seconds
+  tick:     QZ_SOUND_BASE + 'quiz-ping.mp3',      // each of the last 5 seconds
   reveal:   QZ_SOUND_BASE + 'quiz-reveal.mp3',    // answer revealed
   winner:   QZ_SOUND_BASE + 'quiz-winner.mp3'     // podium fanfare
 };
@@ -16474,7 +16481,8 @@ document.addEventListener('pointerdown', () => { if (qzCtx) qzCtxGet(); }, true)
 function qzBuf(k) {
   // this site's own copy first, then the shared copy
   const local = QZ_SOUNDS[k].split('/').pop();
-  if (!qzBufs[k]) qzBufs[k] = fetch(local).then(r => { if (!r.ok) throw 0; return r; }).catch(() => fetch(QZ_SOUNDS[k])).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+  const ok = r => { if (!r.ok) throw 0; return r; };
+  if (!qzBufs[k]) qzBufs[k] = fetch(local).then(ok).catch(() => fetch(QZ_SOUND_BACKUP + local).then(ok)).catch(() => fetch('https://raw.githubusercontent.com/Mp2ward/S3G.digitaltrainingcentre/main/' + local).then(ok)).catch(() => fetch(QZ_SOUNDS[k]).then(ok)).then(r => r.arrayBuffer())
     .then(ab => new Promise((res, rej) => qzCtx.decodeAudioData(ab, res, rej))).catch(() => null);
   return qzBufs[k];
 }
