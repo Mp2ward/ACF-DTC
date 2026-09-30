@@ -1303,6 +1303,16 @@ const LICENCE = {
 };
 const FEAT = k => (LICENCE.features || {})[k] !== false;
 // A simple initials badge, used until the customer's logo file is uploaded
+function tmFix(el) {   // typed times: "930", "0930", "9.30", "9" -> "09:30"/"09:00"
+  const raw = (el.value || '').trim(); if (!raw) return;
+  let m = raw.replace(/[.\-\s]/g, ':').match(/^(\d{1,2})(?::?(\d{2}))?$/), h, mi;
+  if (m) { h = +m[1]; mi = +(m[2] || 0); }
+  else if (/^\d{3,4}$/.test(raw)) { h = +raw.slice(0, raw.length - 2); mi = +raw.slice(-2); }
+  if (h === undefined || h > 23 || mi > 59) { el.style.outline = '2px solid #C74444'; el.title = 'Use 24-hour time, e.g. 09:30'; return; }
+  el.style.outline = ''; el.title = '';
+  const v = String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0');
+  if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles:true })); el.dispatchEvent(new Event('change', { bubbles:true })); }
+}
 function licBadge() {
   const ini = LICENCE.short.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase();
   return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="#16203D"/><text x="50" y="62" font-family="Arial,sans-serif" font-size="${ini.length > 2 ? 30 : 38}" font-weight="700" fill="#fff" text-anchor="middle">${ini}</text></svg>`);
@@ -2974,6 +2984,7 @@ function fmtD(v) {
 .acf-ad-box{width:17px;height:17px;flex:0 0 auto;border:1px solid #CBD5DF;border-radius:5px;
   display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;background:#fff}
 .acf-ad-auto.on .acf-ad-box{background:var(--brand-accent);border-color:var(--brand-accent)}
+  .tm-in{max-width:120px;font-variant-numeric:tabular-nums}
 </style>
 
 <style id="studioTheme">
@@ -3429,19 +3440,23 @@ window.addEventListener('load', function () {
       <span class="hub-text"><span class="hub-title">Course Matrix</span><span class="hub-sub" id="hubLpmSub">Record competencies, upload exams and submit course paperwork</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
+    <button class="hub-tile" style="--accent:#6B4FA8;--soft:#FDE4EE;" onclick="showView('knowledge')">
+      <span class="hub-ic"><svg style="color:#D6336C" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path fill="#F7A8C4" d="M2 9.5L12 5l10 4.5L12 14z"/><path d="M6 11.3V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.7"/><path d="M22 9.5v5.5"/><circle cx="22" cy="16.3" r="1" fill="currentColor" stroke="none"/></svg></span>
+      <span class="hub-text"><span class="hub-title">Knowledge Centre</span><span class="hub-sub">QR pop quizzes learners answer on their phones</span></span>
+      <span class="hub-chev">&rsaquo;</span>
+    </button>
+    </div>
+
+    <div class="hub-group grp-delivery grp-practical">Practical</div>
+    <div class="hub-tiles grp-delivery grp-practical">
     <button class="hub-tile" style="--accent:#C2410C;--soft:#FFE1D6;" onclick="showView('run');rnRenderPick();">
       <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/></svg></span>
-      <span class="hub-text"><span class="hub-title">Scenarios</span><span class="hub-sub">Medical and trauma scenarios — brief, roles, sound and assessment</span></span>
+      <span class="hub-text"><span class="hub-title">Scenarios</span><span class="hub-sub">EFAW and FAW first aid scenarios — brief, roles, sound and assessment</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
     <button class="hub-tile" style="--accent:#5B3FA0;--soft:#E8E3F6;" onclick="showView('sounds')">
       <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg></span>
       <span class="hub-text"><span class="hub-title">Soundboard</span><span class="hub-sub" id="hubSoundsSub">Live scene sound mixer for scenarios</span></span>
-      <span class="hub-chev">&rsaquo;</span>
-    </button>
-    <button class="hub-tile" style="--accent:#6B4FA8;--soft:#FDE4EE;" onclick="showView('knowledge')">
-      <span class="hub-ic"><svg style="color:#D6336C" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path fill="#F7A8C4" d="M2 9.5L12 5l10 4.5L12 14z"/><path d="M6 11.3V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.7"/><path d="M22 9.5v5.5"/><circle cx="22" cy="16.3" r="1" fill="currentColor" stroke="none"/></svg></span>
-      <span class="hub-text"><span class="hub-title">Knowledge Centre</span><span class="hub-sub">QR pop quizzes learners answer on their phones</span></span>
       <span class="hub-chev">&rsaquo;</span>
     </button>
     </div>
@@ -5123,9 +5138,10 @@ const MENU_ITEMS = [
     { label:'Job Scheduling', sub:'Jobs, timesheets and payments', go:"jbOpenAdmin()" } ] },
   { g:'Course Delivery', iqaHide:true, items:[
     { label:'Course Matrix', sub:'Record competencies, upload exams, submit paperwork', go:"showView('lpm');lpmShowPick()" },
-    { label:'Scenarios', sub:'Medical and trauma — deliver and assess', go:"showView('run');rnRenderPick()" },
-    { label:'Soundboard', sub:'Live scene sound mixer', go:"showView('sounds')" },
     { label:'Knowledge Centre', sub:'QR pop quizzes', go:"showView('knowledge')" } ] },
+  { g:'Practical', iqaHide:true, items:[
+    { label:'Scenarios', sub:'EFAW and FAW first aid — deliver and assess', go:"showView('run');rnRenderPick()" },
+    { label:'Soundboard', sub:'Live scene sound mixer', go:"showView('sounds')" } ] },
   { g:'My Account', iqaHide:true, items:[
     { label:'My Schedule', sub:'Your jobs by month', go:"jbOpenMine()" },
     { label:'My Pay', sub:'Monthly totals, timesheets and invoices', go:"mpOpen()" },
@@ -11617,11 +11633,11 @@ function lpmRenderDetails() {
     <div class="lpm-field-row">
       <div class="lpm-field">
         <label>Start time</label>
-        <input type="time" value="${lpmEsc(c.startTime||'')}" oninput="lpmSetDetail('startTime', this.value)">
+        <input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" value="${lpmEsc(c.startTime||'')}" oninput="lpmSetDetail('startTime', this.value)">
       </div>
       <div class="lpm-field">
         <label>Finish time</label>
-        <input type="time" value="${lpmEsc(c.finishTime||'')}" oninput="lpmSetDetail('finishTime', this.value)">
+        <input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" value="${lpmEsc(c.finishTime||'')}" oninput="lpmSetDetail('finishTime', this.value)">
       </div>
     </div>
     <p id="lpmDateNote" style="font-size:0.8rem;color:#6B7A94;margin:-8px 0 16px;">${lpmCourseLengthNote(c)}</p>
@@ -14781,7 +14797,7 @@ function admRenderHub() {
   const owners = new Set(courses.map(c => c.owner).filter(Boolean));
   const waiting = courses.filter(c => c.submission && !iqaFor(c.id)).length;
   const cs = document.getElementById('hubAdmCoursesSub'); if (cs) cs.textContent = (waiting ? waiting + ' awaiting IQA review · ' : '') + courses.length + ' course' + (courses.length === 1 ? '' : 's') + ' · search, paperwork and packs';
-  const is = document.getElementById('hubAdmInstrSub'); if (is) is.textContent = Math.max(owners.size, admState.profiles.filter(p => p.role === 'instructor').length) + ' instructors · courses and CPD logs';
+  const is = document.getElementById('hubAdmInstrSub'); if (is) is.textContent = (n => n + (n === 1 ? ' instructor' : ' instructors'))(Math.max(owners.size, admState.profiles.filter(p => p.role === 'instructor').length)) + ' · courses and CPD logs';
 }
 
 // Pull everyone's names/roles and CPD logs (the server only allows this for admin/IQA)
@@ -15749,8 +15765,8 @@ function jbBuilder() {
     <label>Location<select onchange="{ const v = lpmTyped(this, 'Type the location', jb.draft.location); if (v !== null) { jbDraftSet('location', v); jbRenderAdmin(); } }"><option value="">Choose location…</option>${[...new Set(locs.concat(['Client location'], d.location && !locs.includes(d.location) && d.location !== 'Client location' ? [d.location] : []))].map(l => `<option ${l === d.location ? 'selected' : ''}>${lpmEsc(l)}</option>`).join('')}<option value="${LPM_TYPE}">Other — type a location…</option></select></label>
     ${d.location === 'Client location' ? `<label class="wide">Client address<textarea rows="2" placeholder="Client name and full address, including postcode" oninput="jbDraftSet('address', this.value)">${lpmEsc(d.address || '')}</textarea></label>` : ''}
     <label>Day rate (£)<input type="number" min="0" step="0.01" value="${lpmEsc(d.rate)}" placeholder="e.g. 180" oninput="jbDraftSet('rate', this.value)"></label>
-    <label>Start time<input type="time" value="${d.start}" oninput="jbDraftSet('start', this.value)"></label>
-    <label>Finish time<input type="time" value="${d.end}" oninput="jbDraftSet('end', this.value)"></label>
+    <label>Start time<input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" value="${d.start}" oninput="jbDraftSet('start', this.value)"></label>
+    <label>Finish time<input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" value="${d.end}" oninput="jbDraftSet('end', this.value)"></label>
     <div class="wide jb-bh" style="margin-top:6px;">Course days${custom ? ' <span class="jb-hint">— pick each date, e.g. a 5-day course over 3 weekends</span>' : ''}</div>
     <div class="wide">${d.days.map((day, i) => `<div class="jb-bday">
       <div class="jb-bday-top"><b>Day ${i + 1}</b><input type="date" value="${day.date || ''}" oninput="jbDraftDay(${i}, this.value)" aria-label="Date for day ${i + 1}">
@@ -15839,8 +15855,8 @@ function jbForm(j) {
     <label>Course type<select id="jbfCourse" onchange="jbFormCourse(this.value)"><option value="">Not a Course Matrix course</option>${courses.map(c => `<option ${c === j.course_name ? 'selected' : ''}>${lpmEsc(c)}</option>`).join('')}</select></label>
     <label>Start date<input type="date" id="jbfDate" value="${j.job_date || isoLocal()}"></label>
     <label>Days<input type="number" min="1" max="31" id="jbfDays" value="${j.days || 1}"></label>
-    <label>Start time<input type="time" id="jbfStart" value="${j.start_time || '09:00'}"></label>
-    <label>Finish time<input type="time" id="jbfEnd" value="${j.end_time || '17:00'}"></label>
+    <label>Start time<input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" id="jbfStart" value="${j.start_time || '09:00'}"></label>
+    <label>Finish time<input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" id="jbfEnd" value="${j.end_time || '17:00'}"></label>
     <label>Location<input id="jbfLoc" list="jbfLocs" value="${lpmEsc(j.location || '')}"><datalist id="jbfLocs">${locs.map(l => `<option value="${lpmEsc(l)}">`).join('')}</datalist></label>
     <label>Instructor<select id="jbfInstr"><option value="">Choose…</option>${ins.map(p => `<option value="${p.id}" ${p.id === j.instructor ? 'selected' : ''}>${lpmEsc(p.full_name || p.id)}</option>`).join('')}</select></label>
     <label>Day rate (£)<input type="number" min="0" step="0.01" id="jbfRate" value="${j.day_rate != null ? j.day_rate : ''}" placeholder="e.g. 180"></label>
@@ -18949,8 +18965,8 @@ function acfRenderAnnexD() {
     <div class="acf-ad-h2">Training dates and duration</div>
     ${P.days.length ? `<div class="acf-scroll"><table class="sc-table"><tr><th>Date</th><th>Time started</th><th>Time finished</th></tr>
       ${P.days.map(x => `<tr><td>${fmtD(x.date)}</td>
-        <td><input type="time" ${dis} value="${lpmEsc(x.start)}" onchange="acfSetStart('${x.date}', this.value)"></td>
-        <td><input type="time" ${dis} value="${lpmEsc(x.finish)}" onchange="acfADSet(d => { d.times['${x.date}'] = Object.assign(d.times['${x.date}'] || {}, { finish: this.value }); })"></td></tr>`).join('')}
+        <td><input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" ${dis} value="${lpmEsc(x.start)}" onchange="acfSetStart('${x.date}', this.value)"></td>
+        <td><input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM" autocomplete="off" class="tm-in" onblur="tmFix(this)" ${dis} value="${lpmEsc(x.finish)}" onchange="acfADSet(d => { d.times['${x.date}'] = Object.assign(d.times['${x.date}'] || {}, { finish: this.value }); })"></td></tr>`).join('')}
     </table></div>` : '<p class="sc-p">Set the course dates above.</p>'}
     <div class="acf-ad-h2">Lead assessor sign-off</div>
     <div class="acf-ad-grid">

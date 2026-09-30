@@ -44,6 +44,21 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .done p{font-size:.85rem;color:var(--mut)}
 footer{text-align:center;font-size:.68rem;color:var(--mut);padding:0 14px 26px}
 .load{text-align:center;color:var(--mut);font-size:.85rem;padding:40px 0}
+.addneeds{width:100%;margin-top:4px;border:1.5px dashed var(--accent);background:var(--tint);color:var(--dark);border-radius:10px;padding:13px;font:inherit;font-size:.95rem;font-weight:700;cursor:pointer;text-align:left}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--tint);color:var(--dark);border-radius:999px;padding:5px 11px;font-size:.78rem;font-weight:600}
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(10,58,36,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:#fff;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet h2{font-size:1.1rem;color:var(--dark)}
+.sheet h3{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:16px 0 6px}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt2{position:relative}.opt2 input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.opt2 span{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:8px 13px;font-size:.86rem;font-weight:600;cursor:pointer;background:#fff}
+.opt2 input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}
+.opt2 input:focus-visible+span{outline:2px solid var(--dark);outline-offset:2px}
+.sheetbar{position:sticky;bottom:-18px;background:#fff;padding-top:10px;display:flex;gap:8px}
+.sheetbar .btn{margin-top:0}
+.btn.ghost{background:#fff;color:var(--dark);border:1px solid var(--line);flex:0 0 32%}
 </style></head>
 <body>
 <header>
@@ -107,9 +122,11 @@ function render(info) {
       </select>
       <label for="fUnit">Unit / detachment <span class="opt">(optional)</span></label>
       <input id="fUnit" placeholder="e.g. A Company, Chelmsford">
-      <label for="fNeeds">Additional learner needs <span class="opt">(optional)</span></label>
-      <textarea id="fNeeds" rows="3" maxlength="1000" placeholder="For example dyslexia, a hearing or sight need, or an injury that affects the practical"></textarea>
-      <div class="hint">Anything that would help you on the course or in the assessment. Your instructor will arrange reasonable adjustments.</div>
+      <label>Additional learning needs <span class="opt">(optional)</span></label>
+      <div id="needsChips" class="chips"></div>
+      <button type="button" class="addneeds" id="needsBtn" onclick="needsOpen()">+ Add Additional Learning Needs</button>
+      <input type="hidden" id="fNeeds">
+      <div class="hint">Anything that would help you on the course or in the assessment. Your instructor will arrange reasonable adjustments. This stays private to your instructors.</div>
 
       <label style="margin-top:16px">Signature</label>
       <canvas id="pad"></canvas>
@@ -131,6 +148,35 @@ function render(info) {
   initPad();
 }
 
+
+const NEEDS = [
+  ['Learning', ['Dyslexia','Dyspraxia (DCD)','Dyscalculia','ADHD','Autism','Learning disability','Reading or writing difficulty','English is not my first language']],
+  ['Health and physical', ['Hearing impairment','Visual impairment','Colour blindness','Mobility or physical limitation','Injury affecting the practical (e.g. kneeling for CPR)','Medical condition (e.g. asthma, diabetes, epilepsy)','Anxiety or mental health']],
+  ['Support that would help me', ['Extra time in the theory paper','Questions read aloud','Coloured background or overlay','Larger print','Someone to write my answers (scribe)','Rest breaks','Sit near the front','Different position for the practical']]
+];
+let needsSel = [], needsOther = '';
+function needsText() { return needsSel.join('; ') + (needsOther ? (needsSel.length ? '; ' : '') + 'Other: ' + needsOther : ''); }
+function needsShow() {
+  document.getElementById('fNeeds').value = needsText();
+  const all = needsSel.concat(needsOther ? ['Other: ' + needsOther] : []);
+  document.getElementById('needsChips').innerHTML = all.map(n => `<span class="chip">${esc(n)}</span>`).join('');
+  document.getElementById('needsBtn').textContent = all.length ? '✎ Change Additional Learning Needs' : '+ Add Additional Learning Needs';
+}
+function needsOpen() {
+  const ov = document.createElement('div'); ov.className = 'sheet'; ov.id = 'needsSheet';
+  ov.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="needsH"><h2 id="needsH">Additional Learning Needs</h2>
+    <p class="meta">Tap everything that applies. You can pick more than one.</p>
+    ${NEEDS.map(([g, list]) => `<h3>${g}</h3><div class="opts">${list.map(n => `<label class="opt2"><input type="checkbox" value="${esc(n)}" ${needsSel.includes(n) ? 'checked' : ''}><span>${esc(n)}</span></label>`).join('')}</div>`).join('')}
+    <h3>Anything else</h3><textarea id="needsOther" rows="2" maxlength="600" placeholder="Tell us anything else that would help">${esc(needsOther)}</textarea>
+    <div class="sheetbar"><button type="button" class="btn ghost" onclick="needsClose(false)">Cancel</button><button type="button" class="btn" onclick="needsClose(true)">Done</button></div></div>`;
+  ov.onclick = e => { if (e.target === ov) needsClose(false); };
+  document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+}
+function needsClose(save) {
+  const ov = document.getElementById('needsSheet'); if (!ov) return;
+  if (save) { needsSel = [...ov.querySelectorAll('input:checked')].map(i => i.value); needsOther = ov.querySelector('#needsOther').value.trim(); needsShow(); }
+  ov.remove(); document.body.style.overflow = '';
+}
 let ctx, drawing = false, last = null, inked = false;
 function initPad() {
   const cv = document.getElementById('pad');
