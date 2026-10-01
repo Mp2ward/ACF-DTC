@@ -3000,6 +3000,35 @@ function fmtD(v) {
   .rg-needs{margin-top:8px;background:#EAF1FD;border-radius:8px;padding:8px 10px;font-size:.86rem}
   .rg-sig{display:block;max-width:220px;max-height:70px;margin-top:8px;border-bottom:1px solid #D8DEE8}
   @media (hover:none), (pointer:coarse) { .hub-tile:hover { transform:none !important; box-shadow:none !important; } .hub-tile:hover .hub-chev { transform:none; } }
+
+  /* ---- Course Matrix list: tiles in keeping with Home ---- */
+  #lpmCourseList .iqa-tiles { gap:10px; }
+  #lpmCourseList .iqa-tile { border:1px solid var(--st-line); border-left:5px solid #6B7A94; border-radius:14px; padding:11px 16px; min-width:132px; transition:transform .15s, box-shadow .15s; }
+  #lpmCourseList .iqa-tile:hover { transform:translateY(-2px); box-shadow:0 14px 26px -20px rgba(13,27,76,.55); }
+  #lpmCourseList .iqa-tile b { font-size:1.5rem; letter-spacing:-.03em; }
+  #lpmCourseList .iqa-tile.ok { border-left-color:#1F8A5B; } #lpmCourseList .iqa-tile.wait { border-left-color:#2446B8; } #lpmCourseList .iqa-tile.act { border-left-color:#C74444; }
+  #lpmCourseList .lpm-search { border-color:var(--st-line); }
+  #lpmCourseList .lpm-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; margin-top:16px; }
+  #lpmCourseList .lpm-course-row-wrap { position:relative; display:flex; align-items:stretch; background:#fff; border:1px solid var(--st-line) !important; border-radius:18px !important;
+      box-shadow:0 1px 0 rgba(13,27,76,.03); transition:transform .15s, box-shadow .15s; overflow:hidden; animation:lpmIn .45s ease both; margin:0 !important; }
+  #lpmCourseList .lpm-course-row-wrap:hover { transform:translateY(-2px); box-shadow:0 18px 30px -22px rgba(13,27,76,.55); }
+  #lpmCourseList .lpm-course-row-wrap::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:#D98A00; }
+  #lpmCourseList .lpm-course-row-wrap.sub::before { background:#2446B8; }
+  #lpmCourseList .lpm-course-row-wrap.done::before { background:#1F8A5B; }
+  #lpmCourseList .lpm-course-row-wrap.action::before { background:#C74444; }
+  #lpmCourseList .lpm-course-row-wrap.example { background:#F7F9FE !important; }
+  #lpmCourseList .lpm-course-row-wrap.example::before { background:#2B5BD7; }
+  #lpmCourseList .lpm-course-row { flex:1; text-align:left; padding:16px 12px 16px 20px !important; background:transparent; border:0; }
+  #lpmCourseList .lpm-course-name { font-family:'Fraunces',Georgia,serif; font-size:1.12rem; line-height:1.25; color:#0D1B4C; }
+  #lpmCourseList .lpm-course-meta { margin-top:6px; font-size:.82rem; color:#5E6577; line-height:1.45; }
+  #lpmCourseList .lpm-course-sub { margin-top:10px; display:inline-flex; gap:6px; align-items:center; font-size:.76rem; font-weight:700; padding:4px 10px; border-radius:999px; background:#E6F4EE; color:#0F6E56; }
+  #lpmCourseList .lpm-course-sub.bad { background:#FBE3E3; color:#B42318; }
+  #lpmCourseList .lpm-course-row-wrap.sub:not(.done) .lpm-course-sub { background:#E3E8FA; color:#2446B8; }
+  #lpmCourseList .lpm-chip-prog { display:inline-block; margin-top:10px; font-size:.76rem; font-weight:700; padding:4px 10px; border-radius:999px; background:#FFF1DB; color:#8A5200; }
+  #lpmCourseList .lpm-course-delete, #lpmCourseList .lpm-no-delete { align-self:flex-start; margin:10px 10px 0 0; }
+  @keyframes lpmIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce) { #lpmCourseList .lpm-course-row-wrap { animation:none; } }
+  @media (max-width:640px) { #lpmCourseList .lpm-cards { grid-template-columns:1fr; } }
 </style>
 
 <style id="studioTheme">
@@ -3914,11 +3943,15 @@ window.addEventListener('load', function () {
       <div class="hub-h">Course Matrix</div>
       <div class="hub-p">Course records, skills stations, theory exams, feedback and course packs.</div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
-        <button class="rn-nav-btn primary" onclick="lpmNewCourse()">+ New course record</button>
+      <div class="hub-tiles" style="margin:18px 0 26px;">
+        <button class="hub-tile lpm-new-tile" style="--accent:#2446B8;--soft:#E3E8FA;" onclick="lpmNewCourse()">
+          <span class="hub-ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span class="hub-text"><span class="hub-title">New course record</span><span class="hub-sub">EFAW, FAW or Med Cadet — pick the course type to start</span></span>
+          <span class="hub-chev">&rsaquo;</span>
+        </button>
       </div>
 
-      <div class="sc-h2" style="margin-top:0;">Existing course records</div>
+      <div class="hub-group" style="margin-top:0;">Existing course records</div>
       <div id="lpmCourseList"></div>
     </div>
   </div>
@@ -10596,7 +10629,7 @@ function lpmShowPick() {
   lpmShowView('pick');
 }
 
-let lpmOwnerFilter = '';
+let lpmOwnerFilter = '', lpmRowN = 0;
 let lpmSearchOpen = false, lpmSearchQ = '', lpmIqaFilter = '';
 function lpmIqaState(c) {
   if (!c || !c.submission) return '';
@@ -10658,11 +10691,12 @@ function lpmRenderCourseList() {
       <button class="iqa-tile act ${lpmIqaFilter === 'action' ? 'on' : ''}" onclick="lpmSetIqaFilter('action')"><b>${counts.action}</b><span>Action required</span></button>
     </div>`;
   const row = (c, isExample) => `
-    <div class="lpm-course-row-wrap${isExample ? ' example' : ''}${lpmIqaState(c) === 'action' ? ' action' : ''}">
+    <div class="lpm-course-row-wrap${isExample ? ' example' : ''}${lpmIqaState(c) === 'action' ? ' action' : ''}${c.submission ? ' sub' : ''}${lpmIqaState(c) === 'approved' ? ' done' : ''}" style="animation-delay:${Math.min((lpmRowN = (lpmRowN || 0) + 1), 12) * 40}ms">
       <button class="lpm-course-row" onclick="lpmOpenCourse('${c.id}')">
         <div class="lpm-course-name">${isExample ? '<span class="lpm-pin">📌 Example</span> ' : ''}${lpmEsc(c.courseName || 'Untitled course')}</div>
         ${!isExample && lpmIqaState(c) === 'action' ? `<span class="lpm-stamp">Action required</span>` : ''}
         <div class="lpm-course-meta">${fmtShort(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' – ' + fmtShort(c.endDate) : ''}${c.courseRef ? ' · ' + lpmEsc(c.courseRef) : ''}${c.location ? ' · ' + lpmEsc(c.location) : ''}${reviewer && c.ownerName ? ' · ' + lpmEsc(c.ownerName) : ''}</div>
+        ${!c.submission && !isExample ? `<span class="lpm-chip-prog">${c.completed ? 'Completed · ready to submit' : 'In progress'}</span>` : ''}
         ${c.submission ? (() => { const r = iqaFor(c.id), act = lpmIqaState(c) === 'action';
             return `<div class="lpm-course-sub${act ? ' bad' : ''}"><span class="lpm-tick${act ? ' bad' : ''}">${act ? '!' : '✓'}</span> Submitted ${fmtShort(c.submission.at)}${r ? ' · IQA ' + lpmEsc(r.outcome.toLowerCase()) : ' · awaiting IQA'}${act && r && r.notes ? ' — ' + lpmEsc(r.notes) : ''}</div>`; })() : ''}
       </button>
@@ -10679,10 +10713,11 @@ function lpmRenderCourseList() {
         </svg></span>`}
     </div>`;
   if (!list.length) { wrap.innerHTML = filterHtml + `<div class="rn-empty">No course records yet. Start a new one above.</div>`; return; }
-  wrap.innerHTML = filterHtml + `<div class="lpm-search-row">${search}${tiles}</div>` +
+  lpmRowN = 0;
+  wrap.innerHTML = filterHtml + `<div class="lpm-search-row">${search}${tiles}</div><div class="lpm-cards">` +
     ((example && !lpmIqaFilter && !q) ? row(example, true) : '') +
-    (rest.length ? rest.map(c => row(c, false)).join('')
-      : (q ? `<div class="rn-empty">No courses match “${lpmEsc(lpmSearchQ)}”.</div>` : (list.length === 1 ? '' : `<div class="rn-empty">No other course records yet.</div>`)));
+    (rest.length ? rest.map(c => row(c, false)).join('') : '') + `</div>` +
+    (rest.length ? '' : (q ? `<div class="rn-empty">No courses match “${lpmEsc(lpmSearchQ)}”.</div>` : (list.length === 1 ? '' : `<div class="rn-empty">No other course records yet.</div>`)));
 }
 
 function lpmDeleteCourseFromList(id) {
