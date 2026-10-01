@@ -15498,8 +15498,8 @@ async function rgRenderQrCard() {
   } catch (e) {
     const raw = String(e.message || e);
     const friendly = /row-level security|42501/.test(raw)
-      ? 'The register tables haven\'t been set up on the server yet, or this course hasn\'t finished syncing. Run supabase_register.sql, check the sync indicator is green, then try again.'
-      : /relation .* does not exist|PGRST20|42P01/.test(raw) ? 'The register tables are missing on the server. Run supabase_register.sql in Supabase, then try again.'
+      ? 'The server refused to create the register QR code (permissions). Run 16_supabase_register.sql in Supabase, then try again. Server message: ' + raw.slice(0, 160)
+      : /relation .* does not exist|PGRST20|42P01/.test(raw) ? 'The register tables are missing on the server. Run 16_supabase_register.sql in Supabase, then try again.'
       : raw;
     box.innerHTML = `<div class="fb-qr-title">Scan to sign the register</div><p class="sc-p" style="color:#C74444;">${lpmEsc(friendly)}</p><button class="rn-nav-btn" onclick="rgRenderQrCard()">Try again</button>`;
   }
