@@ -11197,11 +11197,7 @@ async function acfEnsureExamLink(paperCode) {
   if (l && l.token && new Date(l.expires) > new Date(Date.now() + 3600e3)) return l;
   const ch = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const token = Array.from(crypto.getRandomValues(new Uint8Array(22))).map(b => ch[b % ch.length]).join('');
-  await cloudPush();   // the course must exist server-side before a link can point at it
-  try {
-    const rows = await cloudRest('courses?select=id&id=eq.' + encodeURIComponent(lpmCourse.id));
-    if (!rows || !rows.length) throw new Error("This course hasn't synced to the server yet. Check the sync indicator by your name, then try again.");
-  } catch (e) { if (/hasn't synced/.test(e.message)) throw e; }
+  await cloudEnsureCourse(lpmCourse.id);   // the course must exist server-side before a link can point at it
   const expires = new Date(Date.now() + 14 * 864e5).toISOString();
   await cloudRest('exam_links', 'POST', [{ token, course_id: lpmCourse.id, paper_code: paperCode,
     owner: cloudMe(), expires_at: expires }], 'return=minimal');
@@ -14455,6 +14451,20 @@ function cloudQueue() {
   cloudSetStatus('Syncing…');
   cloud.timer = setTimeout(cloudPush, 1200);
 }
+// Make sure this course is on the server before a QR link points at it: wait for any sync already running,
+// push again, then check (a few tries, because a big photo upload can hold the first sync up).
+async function cloudEnsureCourse(id) {
+  for (let i = 0; i < 4; i++) {
+    for (let w = 0; cloud.busy && w < 60; w++) await new Promise(r => setTimeout(r, 500));
+    try { const k = 'c:' + id, sy = cloudSynced(); if (i > 0) { delete sy[k]; cloudSetSynced(sy); } } catch (e) {}   // force a re-send on retries
+    cloud.lastError = '';
+    await cloudPush();
+    try { const rows = await cloudRest('courses?select=id&id=eq.' + encodeURIComponent(id)); if (rows && rows.length) return true; } catch (e) {}
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  const why = cloud.lastError ? ' Server message: ' + cloud.lastError : '';
+  throw new Error("This course hasn't reached the server yet, so its QR code can't be made." + why);
+}
 async function cloudPush() {
   if (!cloud.session || cloud.busy) return;
   if (!navigator.onLine) { cloudSetStatus('Offline — will sync'); return; }
@@ -15313,11 +15323,7 @@ async function fbEnsureLink() {
   if (l && l.token && new Date(l.expires) > new Date(Date.now() + 3600e3)) return l;
   const ch = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const token = Array.from(crypto.getRandomValues(new Uint8Array(22))).map(b => ch[b % ch.length]).join('');
-  await cloudPush(); // the course must exist on the server before a link can point to it
-  try {
-    const rows = await cloudRest('courses?select=id&id=eq.' + encodeURIComponent(lpmCourse.id));
-    if (!rows || !rows.length) throw new Error('This course hasn\'t synced to the server yet. Check the sync indicator by your name, then try again.');
-  } catch (e) { if (/hasn\'t synced/.test(e.message)) throw e; }
+  await cloudEnsureCourse(lpmCourse.id); // the course must exist on the server before a link can point to it
   const expires = new Date(Date.now() + 14 * 864e5).toISOString();
   await cloudRest('feedback_links', 'POST', [{ token, course_id: lpmCourse.id, owner: cloudMe(), expires_at: expires }], 'return=minimal');
   lpmCourse.feedbackLink = { token, expires };
@@ -15456,11 +15462,7 @@ async function rgEnsureLink() {
   if (l && l.token && new Date(l.expires) > new Date(Date.now() + 3600e3)) return l;
   const ch = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const token = Array.from(crypto.getRandomValues(new Uint8Array(22))).map(b => ch[b % ch.length]).join('');
-  await cloudPush(); // the course must exist on the server before a link can point to it
-  try {
-    const rows = await cloudRest('courses?select=id&id=eq.' + encodeURIComponent(lpmCourse.id));
-    if (!rows || !rows.length) throw new Error('This course hasn\'t synced to the server yet. Check the sync indicator by your name, then try again.');
-  } catch (e) { if (/hasn\'t synced/.test(e.message)) throw e; }
+  await cloudEnsureCourse(lpmCourse.id); // the course must exist on the server before a link can point to it
   const expires = new Date(Date.now() + 14 * 864e5).toISOString();
   await cloudRest('register_links', 'POST', [{ token, course_id: lpmCourse.id, owner: cloudMe(), expires_at: expires }], 'return=minimal');
   lpmCourse.registerLink = { token, expires };
