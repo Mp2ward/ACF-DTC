@@ -3007,6 +3007,10 @@ function fmtD(v) {
   [style*="Fraunces"], .hub-h, .hub-tile .hub-title, .pf-name, .ht-t, .kc-qr-t, .lms-h, .ct-h, .mp-head h3, .lma-stats b { font-variation-settings:'WONK' 0, 'SOFT' 0; }
   :root { --st-ink:#16203D; --st-bg:#F6F3EC; --st-line:#E7E3DA; --st-acc:#E4572E; --st-muted:#5E6577; }
   #view-hub { background:var(--st-bg); }
+  /* same cream background on every page, not just Home */
+  html, body, .app-view, .app-view.active, .rn-wrap, .app-footer { background-color:var(--st-bg) !important; }
+  .app-footer { border-top-color:var(--st-line) !important; }
+  body { background:var(--st-bg) !important; }
   #view-hub > .hub { max-width:1320px !important; padding:36px 32px 56px !important; display:flex; gap:28px; align-items:flex-start; }
   .hub-main { flex:1; min-width:0; }
   .hub-eyebrow { color:var(--st-muted) !important; letter-spacing:0.02em !important; text-transform:none !important; font-size:0.9rem !important; }
